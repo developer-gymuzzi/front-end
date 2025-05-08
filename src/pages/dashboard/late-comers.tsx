@@ -14,7 +14,7 @@ export default function LateComers({ Responsedata }: any) {
             </div>
 
             {/* Search input */}
-            <div className="p-4 border-b">
+            {/* <div className="p-4 border-b">
                 <input
                     type="text"
                     placeholder="Search by name..."
@@ -22,7 +22,7 @@ export default function LateComers({ Responsedata }: any) {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-            </div>
+            </div> */}
 
             {/* Late comers list */}
             {/* <div className="p-4 max-h-[400px] overflow-y-auto">
