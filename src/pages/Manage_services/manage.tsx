@@ -24,7 +24,6 @@ const tabs = [
 
 ]
 
-// Sample data
 
 export default function Manageservices() {
     const initialFilters = { name: "", status: "" };

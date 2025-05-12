@@ -32,7 +32,7 @@ const Sidebar = () => {
         });
     };
 
-    const user = useSelector((state: IRootState) => state.customerConfig.user) as Record<string, string> | null;
+  
     useEffect(() => {
         const selector = document.querySelector('.sidebar ul a[href="' + window.location.pathname + '"]');
         if (selector) {
@@ -166,12 +166,12 @@ const Sidebar = () => {
                                         <NavLink to="/companylist" className="group" onClick={() => toggleMenu('')}>
                                             <div className="flex items-center">
                                                 <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Customers')}</span>
+                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Roles & User')}</span>
                                             </div>
                                         </NavLink>
                                     </li>
                                     <li className="nav-item">
-                                        <NavLink to="/newlook" className="group" onClick={() => toggleMenu('')}>
+                                        <NavLink to="/gym" className="group" onClick={() => toggleMenu('')}>
                                             <div className="flex items-center">
                                                 <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
                                                 <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Gym')}</span>

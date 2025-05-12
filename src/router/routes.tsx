@@ -11,7 +11,7 @@ const ManageSite = lazy(() => import('../pages/Manage_site/Manage'));
 const AddGaurd = lazy(() => import('../pages/HRM/AddGaurds'));
 const OTP = lazy(() => import('../pages/Auth/Otp'));
 const Manage_services = lazy(() => import('../pages/Manage_services/manage'));
-const Company = lazy(() => import('../pages/Customers/CompanyList'));
+const Company = lazy(() => import('../pages/usersRoles/RolesUserList'));
 const ManageTrash = lazy(() => import('../pages/Manage_site/manageTrash'));
 const Addpepople = lazy(() => import('../pages/HRM/Trainers/Add_gaurd'));
 const AddSite = lazy(() => import('../pages/Manage_site/AddorEditSite'));
@@ -22,10 +22,11 @@ const Permissions = lazy(() => import('../pages/Permission/crm-permissions'));
 const Editpermissions = lazy(() => import('../pages/Permission/role-editor'));
 const ScheduleInterface = lazy(() => import('../pages/shift/newtest'));
 const ProfilePage = lazy(() => import('../pages/profile'));
-const AddCompany = lazy(() => import('../pages/Customers/Companyadd'));
+const AddCompany = lazy(() => import('../pages/usersRoles/Companyadd'));
 const Customertimetable = lazy(() => import('../pages/Timeprocessing/customer-time-table'));
 const Shift = lazy(() => import('../pages/shift/schedule-interface'));
 const Geolocation = lazy(() => import('../pages/Location/googlemap'));
+const Gym = lazy(() => import('../pages/Gym/ManageGym'));
 
 // ...existing code...
 
@@ -43,6 +44,11 @@ const routes = [
     {
         path: '/dashboard',
         element:<Index/>
+    },
+    {
+        path: '/gym',
+        element: <Gym/>,
+        layout: 'default'
     },
     {
         path: '/companylist',

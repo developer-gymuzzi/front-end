@@ -4,27 +4,24 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { IRootState } from '../../store';
 import { toggleRTL, toggleTheme, toggleSidebar } from '../../store/themeConfigSlice';
 import { useTranslation } from 'react-i18next';
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } from "@nextui-org/react";
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } from '@nextui-org/react';
 import IconMenu from '../Icon/IconMenu';
 import Swal from 'sweetalert2';
 import IconLogout from '../Icon/IconLogout';
 import { ChevronDown, Power } from 'lucide-react';
-import { activeCompany, companylist } from '../../store/customerConfigSlice';
-import Cookies from "js-cookie";
-import axios from "axios";
+import Cookies from 'js-cookie';
+import axios from 'axios';
 import Profile from './Profile';
 import { Popover } from 'antd';
 const Header = () => {
-    const token = Cookies.get("token");
+    const token = Cookies.get('token');
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
     const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     const location = useLocation();
 
-
     useEffect(() => {
-
         const selector = document.querySelector('ul.horizontal-menu a[href="' + window.location.pathname + '"]');
         if (selector) {
             selector.classList.add('active');
@@ -45,18 +42,14 @@ const Header = () => {
         }
     }, [location]);
 
-    const toUpperCase = (text: any) => text ? text.toUpperCase() : "";
-
+    const toUpperCase = (text: any) => (text ? text.toUpperCase() : '');
 
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const dispatch = useDispatch<any>();
 
-
-
-
     function createMarkup(messages: any) {
         return { __html: messages };
-    };
+    }
 
     const [search, setSearch] = useState(false);
 
@@ -73,7 +66,6 @@ const Header = () => {
     const { t } = useTranslation();
     function deleteCookie(name: any) {
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-
     }
     async function SignOut() {
         Swal.fire({
@@ -87,17 +79,13 @@ const Header = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    const response = await axios.post(
-                        `${endpoint}?route=User/Log-out`,
-                        null,
-                        {
-                            headers: {
-                                "x-api-key": apiKey,
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`,
-                            },
-                        }
-                    );
+                    const response = await axios.post(`${endpoint}?route=User/Log-out`, null, {
+                        headers: {
+                            'x-api-key': apiKey,
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
 
                     if (response.data.status === true) {
                         const cookiesToDelete = ['token'];
@@ -105,35 +93,19 @@ const Header = () => {
                         Swal.fire('Logged Out!', 'You have been logged out successfully.', 'success');
                         window.location.href = '/';
                     }
-
                 } catch (error) {
-                    console.error("Logout failed:", error);
+                    console.error('Logout failed:', error);
                     Swal.fire('Error', 'Failed to log out. Please try again.', 'error');
                 }
             }
         });
     }
 
-
     const [isOpen, setIsOpen] = useState(false);
-    const [selected, setSelected] = useState('All');
-
-
 
     const toggleDropdown = () => {
-
-        setIsOpen(!isOpen)
+        setIsOpen(!isOpen);
     };
-
-    const handleSelect = (option: any) => {
-        setSelected(option);
-        setIsOpen(false);
-    };
-
-
-    const handleNavigate = () => {
-        navigate('/profile');
-    }
 
     return (
         <header className={`z-40 ${themeConfig.semidark && themeConfig.menu === 'horizontal' ? 'dark' : ''}`}>
@@ -146,14 +118,12 @@ const Header = () => {
                                 src={activeCompanyData?.logo}
                                 alt={activeCompanyData?.Name}
                             /> */}
-                              <img className="w-[140px]" src="/assets/images/gym_logo.png" alt="logo" />
+                            <img className="w-[140px]" src="/assets/images/gym_logo.png" alt="logo" />
                         </Link>
                     </div>
 
                     <div className="sm:flex-1 ltr:sm:ml-0 ltr:ml-auto sm:rtl:mr-0 rtl:mr-auto flex items-center space-x-1.5 lg:space-x-2 rtl:space-x-reverse dark:text-[#d0d2d6]">
-
                         <div className="sm:ltr:mr-auto sm:rtl:ml-auto">
-
                             <button
                                 type="button"
                                 className="collapse-icon w-8 h-8 rounded-full flex items-center  dark:text-white-light transition duration-300 rtl:rotate-180"
@@ -169,44 +139,40 @@ const Header = () => {
                                 onClick={toggleDropdown}
                                 className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
-                              
-                                <ChevronDown
-                                    className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                                />
+                                <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {/* Dropdown menu */}
                             {isOpen && (
                                 <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                                    <ul className="py-1 max-h-60 overflow-auto">
-                                 
-
-                                   
-                                    </ul>
+                                    <ul className="py-1 max-h-60 overflow-auto"></ul>
                                 </div>
                             )}
                         </div>
-
                         <div className="dropdown shrink-0 flex items-center space-x-2">
-                            <Popover trigger={'hover'} arrow={false} rootClassName='w-[700px]' content={
-                                <Suspense fallback={<div>Loading...</div>}>
-                                    <Profile />
-                                </Suspense>
-                            }>
-                                {/* <div className='hover:bg-[#ffffff29] bg-[#ffffff00] h-[40px]  rounded-[10px] p-[10px] h-[50px] flex'>
-                                    <Avatar size='sm' className='ml-1 ' src={''} color='secondary' showFallback name={user?.first_name} />
-                                    <span className='mt-1 ml-2 truncate w-auto pr-1 text-[14px]'> {user?.first_name} {user?.last_name} </span>
-                                </div> */}
-                            </Popover>
+                            
+                            {/* <Popover
+                                trigger={'hover'}
+                                arrow={false}
+                                rootClassName="w-[700px]"
+                                content={
+                                    <Suspense fallback={<div>Loading...</div>}>
+                                        <Profile />
+                                    </Suspense>
+                                }
+                            >
+                                <div className="hover:bg-[#ffffff29] bg-[#ffffff00] h-[40px]  rounded-[10px] p-[10px] h-[50px] flex">
+                                    <Avatar size="sm" className="ml-1 " src={''} color="secondary" showFallback name="sdc" />
+                                    <span className="mt-1 ml-2 truncate w-auto pr-1 text-[14px]"> </span>
+                                </div>
+                            </Popover> */}
 
                             <div className="dropdown shrink-0 flex">
                                 <NavLink to="#" onClick={SignOut}>
                                     <Power className="text-red-500" />
                                 </NavLink>
-
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -215,6 +181,3 @@ const Header = () => {
 };
 
 export default Header;
-
-
-
