@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, IRootState } from '../../store';
 import { fetchGym } from '../../store/customerConfigSlice';
-import { Check, X } from 'lucide-react';
+import { Check, X ,Eye} from 'lucide-react';
 import { message } from 'antd';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
-const PendingGym = () => {
+const PendingGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
     const { gym, loading, pagination } = useSelector((state: IRootState) => state.customerConfig) as {
         gym: { _id: string; gymphotos?: string[]; name?: string; email?: string; phone?: string; pan?: string; license_no?: string; address?: string }[];
@@ -18,9 +18,9 @@ const PendingGym = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
 
-    useEffect(() => {
-        dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'pending' }));
-    }, [dispatch, currentPage, pageSize]);
+  useEffect(() => {
+    dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters  , status: 'pending', }));
+  }, [dispatch, currentPage, pageSize, filters]);
 
     const handlePageChange = (page: number) => {
         if (page !== currentPage) setCurrentPage(page);
@@ -45,7 +45,7 @@ const PendingGym = () => {
 
             if (data.success) {
                 message.success(data.message);
-                dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'pending' })); // Refresh list
+                dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'pending' })); 
             } else {
                 message.error(data.message);
             }
@@ -97,6 +97,13 @@ const PendingGym = () => {
                                       <td className="px-4 py-3 text-gray-700">{entry.address || '---'}</td>
                                       <td className="px-4 py-3">
                                           <div className="flex items-center gap-2">
+                                                  <button
+                                                  className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 hover:bg-yellow-200 transition"
+                                              
+                                               
+                                              >
+                                                  <Eye size={18} className="text-green-600" />
+                                              </button>
                                               <button
                                                   className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 transition"
                                                   title="Approve"

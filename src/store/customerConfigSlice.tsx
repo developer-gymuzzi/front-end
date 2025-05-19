@@ -112,6 +112,7 @@ export const fetchGym = createAsyncThunk(
           phone = '',
           status = '',
         } = args;
+
   
         const { data } = await axios.get(`${endpoint}/v1/admin/list/listingGym`, {
           params: {

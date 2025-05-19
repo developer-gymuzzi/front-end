@@ -11,7 +11,15 @@ import RejectedGymList from './RejectedGym';
 import { fetchGym } from '../../store/customerConfigSlice';
 
 export default function ManageServices() {
-    const initialFilters = { name: '', status: '' };
+    const initialFilters = {
+        name: '',
+        email: '',
+        phone: '',
+        pan: '',
+        license_no: '',
+        address: '',
+        status: '',
+    };
     const dispatch: AppDispatch = useDispatch();
     const [filters, setFilters] = useState(initialFilters);
     const [activeTab, setActiveTab] = useState('pendinggym');
@@ -23,9 +31,8 @@ export default function ManageServices() {
     };
 
     useEffect(() => {
-        dispatch(fetchGym({status: "pending"}));
-
-      }, [dispatch]);
+        dispatch(fetchGym({ status: 'pending' }));
+    }, [dispatch]);
 
     const clearAllFilters = () => {
         setFilters(initialFilters);
@@ -38,11 +45,11 @@ export default function ManageServices() {
     const renderActiveTab = () => {
         switch (activeTab) {
             case 'pendinggym':
-                return <PendingGymList key={refreshKey} />;
+                return <PendingGymList key={refreshKey} filters={filters} />;
             case 'approvedgym':
-                return <ApprovedGymList key={refreshKey} />;
+                return <ApprovedGymList key={refreshKey} filters={filters} />;
             case 'rejectedgym':
-                return <RejectedGymList key={refreshKey} />;
+                return <RejectedGymList key={refreshKey} filters={filters} />;
             default:
                 return null;
         }
@@ -56,10 +63,24 @@ export default function ManageServices() {
                     <p className="CRM-Page-Structure">
                         Dashboard / <span className="CRM-Page-Name">Gym</span>
                     </p>
+                    {Object.entries(filters).some(([_, val]) => val) && (
+                        <div className="flex flex-wrap gap-3 items-center mt-3">
+                            {Object.entries(filters).map(([key, value]) =>
+                                value ? (
+                                    <Button key={key} className="yellow-color" onClick={() => removeFilter(key)}>
+                                        {`${value}`} <RxCross2 />
+                                    </Button>
+                                ) : null
+                            )}
+                            <h5 className="text-yellow cursor-pointer" onClick={clearAllFilters}>
+                                Clear all filters
+                            </h5>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-wrap items-center justify-end gap-3">
-                    <Filter filterValues={filters} key={JSON.stringify(filters)} />
+                    <Filter onSearch={(filters) => setFilters(filters)} filterValues={filters} key={JSON.stringify(filters)} />
                 </div>
             </div>
 

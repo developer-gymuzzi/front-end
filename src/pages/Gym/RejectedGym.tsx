@@ -7,7 +7,7 @@ import { message } from 'antd';
 import { Check } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-const RejectedGym = () => {
+const RejectedGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
     const { gym, loading, pagination } = useSelector((state: IRootState) => state.customerConfig) as {
         gym: { _id: string; gymphotos?: string[]; name?: string; email?: string; phone?: string; pan?: string; license_no?: string; address?: string }[];
@@ -18,9 +18,10 @@ const RejectedGym = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
 
-    useEffect(() => {
-        dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'rejected' }));
-    }, [dispatch, currentPage, pageSize]);
+useEffect(() => {
+  dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters, status: 'rejected' }));
+}, [dispatch, currentPage, pageSize, filters]);
+
 
     const handlePageChange = (page: number) => {
         if (page !== currentPage) setCurrentPage(page);
