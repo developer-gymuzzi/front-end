@@ -46,7 +46,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
 
             if (data.success) {
                 message.success(data.message);
-                dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'pending' }));
+                dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'approved' }));
             } else {
                 message.error(data.message);
             }

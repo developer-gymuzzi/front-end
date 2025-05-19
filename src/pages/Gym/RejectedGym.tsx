@@ -46,7 +46,7 @@ useEffect(() => {
 
             if (data.success) {
                 message.success(data.message);
-                dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'rejected' })); // Refresh list
+                dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'rejected' }));
             } else {
                 message.error(data.message);
             }
