@@ -9,7 +9,6 @@ import Sidebar from './Sidebar';
 import Portals from '../../components/Portals';
 import Cookies from 'js-cookie';
 import { debounce } from 'lodash';
-import { defaultCompany } from '../../store/customerConfigSlice';
 const DefaultLayout = ({ children }: PropsWithChildren) => {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const dispatch = useDispatch();

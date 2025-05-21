@@ -5,8 +5,9 @@ import { fetchGym } from '../../store/customerConfigSlice';
 import axios from 'axios';
 import { message } from 'antd';
 import Swal from 'sweetalert2';
-import { X } from 'lucide-react';
+import { Eye, X, PencilOff  } from 'lucide-react';
 import filter from '../Manage_site/filter';
+import { useNavigate } from 'react-router-dom';
 
 const ApprovedGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
@@ -54,6 +55,8 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
             message.error('Something went wrong');
         }
     };
+
+    const navigate = useNavigate()
 
     return (
         <div className="inventory-table table-containers">
@@ -112,6 +115,10 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
 
                                       <td className="px-4 py-3">
                                           <div className="flex items-center gap-2">
+                                              <button className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 hover:bg-yellow-200 transition"  onClick={() => navigate(`/gymView/${entry._id}`, { state: { gymData: entry } })}>
+                                                  <Eye size={18} className="text-green-600" />
+                                              </button>
+                                           
                                               <button
                                                   className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition"
                                                   title="Reject"

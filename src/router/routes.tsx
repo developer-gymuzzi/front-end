@@ -1,6 +1,6 @@
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
-import ProtectedRoute from '../components/ProtectedRoutes';
+import ProtectedRoute from "../components/ProtectedRoutes";
 const RejectedShift = lazy(() => import('../pages/HRM/rejectedShifts'));
 const Index = lazy(() => import('../pages/dashboard/Index'));
 const Login = lazy(() => import('../pages/Auth/Login'));
@@ -27,8 +27,8 @@ const Customertimetable = lazy(() => import('../pages/Timeprocessing/customer-ti
 const Shift = lazy(() => import('../pages/shift/schedule-interface'));
 const Geolocation = lazy(() => import('../pages/Location/googlemap'));
 const Gym = lazy(() => import('../pages/Gym/ManageGym'));
+const GYmPage = lazy(() => import('../pages/Gym/Viewgym'));
 
-// ...existing code...
 
 const routes = [
     {
@@ -47,12 +47,17 @@ const routes = [
     },
     {
         path: '/gym',
-        element: <Gym/>,
+        element: <ProtectedRoute><Gym /></ProtectedRoute>,
         layout: 'default'
     },
     {
         path: '/companylist',
         element: <Company />,
+        layout: 'default'
+    },
+        {
+        path: '/gymView/:id',
+        element: <GYmPage />,
         layout: 'default'
     },
     {

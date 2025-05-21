@@ -1,222 +1,246 @@
-import React, { useState, useEffect } from 'react';
-import { Button, InputOtp } from "@nextui-org/react";
-import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import CryptoJS from 'crypto-js';
-import Cookies from 'js-cookie';
+'use client';
+
+import type React from 'react';
+import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from 'react';
+import { Dumbbell } from 'lucide-react';
 import Animation from './Animation';
+import { Button, message } from 'antd';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
-const secretkey = import.meta.env.VITE_DECREYPT_KEY;
-
-function decryptExpireAt(encryptedExpireAt: any) {
-    try {
-        const bytes = CryptoJS.AES.decrypt(encryptedExpireAt, secretkey);
-        const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-        return decryptedData ? parseInt(decryptedData, 10) : null;
-    } catch (error) {
-        console.error('Error decrypting expireAt:', error);
-        return null;
-    }
-}
-
-function encryptExpireAt(expireAt: number): string {
-    try {
-        const encrypted = CryptoJS.AES.encrypt(expireAt.toString(), secretkey).toString();
-        return encrypted;
-    } catch (error) {
-        console.error('Error encrypting expireAt:', error);
-        return '';
-    }
-}
-
-function Otp() {
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [formData, setFormData] = useState<{ otp: string }>({ otp: '' });
-    const [isExpired, setIsExpired] = useState<boolean>(false);
-    const [clientId, setClientId] = useState<string | null>(null);
-    const [expireAt, setExpireAt] = useState<number | null>(null);
-    const [loadingResend, setLoadingResend] = useState<boolean>(false);
-    const [loadingOtp, setLoadingOtp] = useState<boolean>(false);
-    const [timeLeft, setTimeLeft] = useState<number>(120); // Set 2 minutes (120 seconds)
-
-    const navigate = useNavigate();
+export default function OtpVerification() {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const location = useLocation();
-    const endpoint = import.meta.env.VITE_API_LIVEHOST;
-    const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
+const navigate = useNavigate();
 
+const queryParams = new URLSearchParams(location.search);
+const clientEmail = queryParams.get("clientEmail");
+const expire = queryParams.get("expire");
+
+    const [timer, setTimer] = useState(120); // 2 minutes countdown
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    // Initialize refs array
     useEffect(() => {
-        const queryParams = new URLSearchParams(location.search);
-        const newClientId = queryParams.get('clientId');
-        const newExpireAt = queryParams.get('expire');
+        inputRefs.current = inputRefs.current.slice(0, 6);
+    }, []);
 
-        if (newClientId && newExpireAt) {
-            const decryptedExpireAt = decryptExpireAt(newExpireAt);
-            setClientId(newClientId);
-            setExpireAt(decryptedExpireAt);
-        } else {
-            toast.error('Invalid link, clientId or expire time missing.');
-            navigate('/');
-        }
-    }, [location.search, navigate]);
-
+    // Timer countdown
     useEffect(() => {
-        if (expireAt && Date.now() > expireAt) {
-            setIsExpired(true);
+        if (timer > 0) {
+            const interval = setInterval(() => {
+                setTimer((prevTimer) => prevTimer - 1);
+            }, 1000);
+            return () => clearInterval(interval);
         }
-    }, [expireAt]);
+    }, [timer]);
 
-    // Countdown timer for Resend OTP
-    useEffect(() => {
-        if (timeLeft > 0) {
-            const timer = setInterval(() => {
-                setTimeLeft(prevTime => prevTime - 1);
-            }, 1000); // Decrement every second
-
-            return () => clearInterval(timer);
-        } else {
-            // Enable resend button after 2 minutes
-            setIsExpired(false);
-        }
-    }, [timeLeft]);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+    // Format time as MM:SS
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const handleChange = (index: number, value: string) => {
+        // Only allow numbers
+        if (value && !/^\d+$/.test(value)) return;
 
-        setLoadingOtp(true);
+        const newOtp = [...otp];
+        newOtp[index] = value;
 
-        const body = {
-            client_id: clientId,
-            verificationCode: formData.otp,
-        };
+        setOtp(newOtp);
 
-        try {
-            const { data } = await axios.post(`${endpoint}?route=admin/auth/two-factor`, body, {
-                headers: {
-                    'x-api-key': apiKey,
-                    'Content-Type': 'application/json',
-                },
-            });
+        // Auto-focus next input
+  if (value && index < 5) { // change from 3 to 5
+  inputRefs.current[index + 1]?.focus();
+}
 
-            setLoadingOtp(false);
+    };
 
-            if (data.status === true) {
-                toast.success('OTP Verified Successfully!');
-                Cookies.set('token', data.jwt, { expires: 3 });
-              
-                setTimeout(() => {
-                    navigate('/dashboard');
-                    window.location.reload(); 
-                }, 2000);
-            } else {
-                toast.error('OTP Verification Failed. Please try again.');
-            }
-        } catch (error) {
-            setLoadingOtp(false); 
-            toast.error('An error occurred. Please try again later.');
+    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Move to previous input on backspace if current input is empty
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            inputRefs.current[index - 1]?.focus();
         }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text/plain').trim();
+
+        // Check if pasted content is a 4-digit number
+    if (/^\d{6}$/.test(pastedData)) {
+  const digits = pastedData.split("");
+  setOtp(digits);
+  inputRefs.current[5]?.focus(); // focus last input
+}
+
     };
 
     const resendOtp = async () => {
-        if (timeLeft > 0) {
-            toast.warning(`You must wait ${timeLeft} seconds before resending OTP.`);
-            return;
-        }
-
-        setLoadingResend(true); // Set loader for resend OTP
-
-        const body = {
-            client_id: clientId,
-        };
-
+        setIsLoading(true);
         try {
-            const { data } = await axios.post(`${endpoint}?route=admin/otp/resend`, body, {
-                headers: {
-                    'x-api-key': apiKey,
-                    'Content-Type': 'application/json',
-                },
-            });
+            // Implement your resend OTP logic here
+            // const response = await axios.post(...)
 
-            setLoadingResend(false); // Remove loader after API response
-
-            if (data.status === true) {
-                toast.success('OTP Resent Successfully!');
-                const newClientId = data.data.client_id;
-                const newExpireAt = data.data.expireAt;
-
-                // Encrypt the new expireAt value
-                const encryptedExpireAt = encryptExpireAt(newExpireAt);
-
-                // Update query params in the URL with encrypted expireAt
-                setClientId(newClientId); updateQueryParams(newClientId, encryptedExpireAt);
-                setExpireAt(newExpireAt);
-                setIsExpired(false); // Reset expiry state when OTP is resent
-                setTimeLeft(120); // Reset countdown timer to 2 minutes
-            } else {
-                toast.error('Failed to resend OTP. Please try again.');
-            }
+            // Reset timer
+            setTimer(120);
+            setError('');
         } catch (error) {
-            setLoadingResend(false); // Remove loader after error
-            toast.error('An error occurred. Please try again later.');
+            console.error('Error resending OTP:', error);
+            setError('Failed to resend OTP. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const updateQueryParams = (newClientId: string, newExpireAt: string) => { // Expect newExpireAt to be a string
-        const url = new URL(window.location.href);
-        url.searchParams.set('clientId', newClientId);
-        url.searchParams.set('expire', newExpireAt);
-        window.history.pushState({}, '', url.toString());
-    };
+ const verifyOtp = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const otpValue = otp.join("");
+
+  if (otpValue.length !== 6 || !/^\d{6}$/.test(otpValue)) {
+    setError("Please enter a valid 6-digit OTP");
+    return;
+  }
+
+  if (!clientEmail) {
+    setError("Missing email information. Please login again.");
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const endpoint = import.meta.env.VITE_API_LIVEHOST;
+
+    const response = await axios.post(`${endpoint}/v1/auth/verification`, {
+      email: clientEmail,
+      verificationCode: otpValue,
+    });
+
+    if (response.data.success === 1) {
+      message.success("OTP verified successfully!");
+
+      Cookies.set("token", response.data.token, { expires: 7 });
+
+      navigate("/gym");
+    } else {
+      setError(response.data.message || "Verification failed");
+      message.error(response.data.message || "Invalid OTP");
+    }
+  } catch (error: any) {
+    console.error("OTP verification error:", error);
+    setError("Verification failed. Please try again.");
+    message.error("Something went wrong. Try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
     return (
-        <div className="relative flex items-center justify-center min-h-screen bg-[url(/assets/images/login_bg.jpg)] bg-cover bg-center bg-no-repeat px-4 py-6 dark:bg-[#060818] sm:px-8 overflow-hidden">
+        <div className="relative flex items-center justify-center min-h-screen bg-[url(/assets/images/gym_bg.png)] bg-cover bg-center bg-no-repeat px-4 py-6 dark:bg-[#060818] sm:px-8 overflow-hidden">
             <Animation />
-            <div className="relative w-full max-w-[360px] sm:max-w-[400px] md:max-w-[450px] lg:max-w-[480px] xl:max-w-[500px] h-auto mx-2 sm:mx-4 rounded-xl bg-gradient-to-br from-[#ffffff] via-[#f1f1f1] to-[#e4e4e4] dark:bg-gradient-to-br from-[#0E1726] to-[#1A2436] overflow-hidden shadow-lg">
-                <div className="relative flex flex-col justify-center rounded-xl bg-white/90 backdrop-blur-xl dark:bg-black/90 px-6 py-8 sm:w-full h-full mx-auto shadow-2xl">
+            {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+                </div>
+            )}
+
+            <div className="relative w-full max-w-[480px] h-auto mx-2 sm:mx-4 rounded-xl overflow-hidden shadow-lg">
+                {/* Background with gym pattern */}
+                <div className="absolute inset-0 bg-black opacity-50 z-0"></div>
+                <div
+                    className="absolute inset-0 z-0 bg-gradient-to-br from-[#1a2a36] to-[#0d1c28]"
+                    style={{
+                        backgroundImage: `url('/placeholder.svg?height=600&width=800')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundBlendMode: 'overlay',
+                    }}
+                ></div>
+
+                <div className="relative flex flex-col justify-center rounded-xl bg-black/80 backdrop-blur-sm px-6 py-8 sm:w-full h-full mx-auto shadow-2xl z-10">
                     <div className="mx-auto w-full max-w-[380px] sm:max-w-[420px]">
                         <div className="mb-8 text-center">
-                            <h1 className="text-2xl font-extrabold uppercase !leading-snug text-[#0d3051] md:text-3xl">Enter OTP</h1>
-                            <p className="text-sm font-bold leading-normal text-gray-700 dark:text-gray-300">Please enter the OTP sent to your email</p>
-                        </div>
-                        <form className="space-y-5 dark:text-white" onSubmit={onSubmit}>
-                            <div>
-                                <div className="relative flex items-center justify-center">
-                                    <InputOtp
-                                        type='number'
-                                        value={formData.otp}
-                                        onChange={handleChange}
-                                        name="otp"
-                                        length={6}
-                                        placeholder="Enter OTP"
-                                        disabled={isExpired || isLoading || loadingOtp}
-                                        className=""
-                                    />
+                            <div className="flex justify-center mb-4">
+                                <div className="bg-red-600 p-3 rounded-full">
+                                    <Dumbbell size={32} className="text-white" />
                                 </div>
                             </div>
-                            <Button
-                                disabled={!formData.otp || isLoading || loadingOtp}
-                                type="submit"
-                                className="!mt-6 w-full border-0 uppercase shadow-xl bg-[#0d3051] text-white hover:bg-primary-dark active:bg-primary-dark transition"
-                            >
-                                {loadingOtp ? 'Verifying OTP...' : 'Submit OTP'}
-                            </Button>
-                        </form>
-                        <div className="relative my-7 text-center md:mb-9">
-                            <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-gray-300 dark:bg-gray-600"></span>
+                            <h1 className="text-2xl font-extrabold uppercase !leading-snug text-white md:text-3xl">
+                                OTP <span className="text-red-600">VERIFICATION</span>
+                            </h1>
+                            <p className="text-sm font-bold leading-normal text-gray-300">Enter the 4-digit code sent to your email</p>
                         </div>
 
-                        <div className="text-center dark:text-white">
-                            <Button onPress={resendOtp} disabled={loadingResend || timeLeft > 0} >
-                                {loadingResend ? 'Resending OTP...' : timeLeft > 0 ? `Resend in ${timeLeft}s` : 'RESEND OTP'}
+                        <form className="space-y-5 text-white" onSubmit={verifyOtp}>
+                            {error && <p className="text-red-500 text-sm mt-2 text-center bg-black/50 p-2 rounded-md">{error}</p>}
+
+                            <div className="mb-6">
+                                <label className="text-sm font-medium block mb-3 text-center">Verification Code</label>
+                                <div className="flex justify-center gap-3 sm:gap-4">
+                                    {otp.map((digit, index) => (
+                                        <input
+                                            key={index}
+                                            ref={(el) => (inputRefs.current[index] = el)}
+                                            type="text"
+                                            maxLength={1}
+                                            value={digit}
+                                            onChange={(e) => handleChange(index, e.target.value)}
+                                            onKeyDown={(e) => handleKeyDown(index, e)}
+                                            onPaste={index === 0 ? handlePaste : undefined}
+                                            className="w-12 h-14 sm:w-14 sm:h-16 text-center text-xl font-bold border border-gray-700 rounded-md bg-gray-900/80 focus:border-red-600 focus:ring-red-600 transition-all"
+                                            disabled={isLoading}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="text-center">
+                                <p className="text-sm text-gray-400 mb-4">
+                                    Time remaining: <span className="font-bold text-red-500">{formatTime(timer)}</span>
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={resendOtp}
+                                    disabled={isLoading || timer > 0}
+                                    className={`text-sm ${timer > 0 ? 'text-gray-500' : 'text-red-500 hover:text-red-400'} font-bold underline transition`}
+                                >
+                                    {timer > 0 ? 'Resend OTP' : 'Resend OTP'}
+                                </button>
+                            </div>
+
+                            <Button
+                                disabled={isLoading || otp.join('').length !== 6}
+                                type="text"
+                                onClick={verifyOtp}
+                                style={{ color: 'white' }}
+                                className="!mt-6 w-full border-0 uppercase shadow-xl bg-gradient-to-r from-red-700 to-red-500 text-white hover:from-red-600 hover:to-red-400 active:from-red-800 active:to-red-600 transition-all font-bold py-6 h-auto"
+                            >
+                                {isLoading ? (
+                                    <div className="flex items-center justify-center">
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
+                                        </svg>
+                                        VERIFYING...
+                                    </div>
+                                ) : (
+                                    'VERIFY OTP'
+                                )}
                             </Button>
+                        </form>
+
+                        <div className="mt-8 border-t border-gray-700 pt-6">
+                            <p className="text-xs text-center text-gray-400">💪 Train hard. Recover smart. Repeat. 💪</p>
                         </div>
                     </div>
                 </div>
@@ -224,5 +248,3 @@ function Otp() {
         </div>
     );
 }
-
-export default Otp;

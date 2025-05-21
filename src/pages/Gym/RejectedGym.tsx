@@ -4,8 +4,9 @@ import { AppDispatch, IRootState } from '../../store';
 import { fetchGym } from '../../store/customerConfigSlice';
 import axios from 'axios';
 import { message } from 'antd';
-import { Check } from 'lucide-react';
+import { Check, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 const RejectedGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
@@ -17,11 +18,11 @@ const RejectedGym = ({ filters }: { filters: any }) => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
+    const navigate = useNavigate()
 
-useEffect(() => {
-  dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters, status: 'rejected' }));
-}, [dispatch, currentPage, pageSize, filters]);
-
+    useEffect(() => {
+        dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters, status: 'rejected' }));
+    }, [dispatch, currentPage, pageSize, filters]);
 
     const handlePageChange = (page: number) => {
         if (page !== currentPage) setCurrentPage(page);
@@ -74,31 +75,34 @@ useEffect(() => {
                         </tr>
                     </thead>
                     <tbody>
-                        {loading ? (
-                            [...Array(6)].map((_, idx) => (
-                                <tr key={idx} className="border-b">
-                                    {[...Array(9)].map((_, i) => (
-                                        <td key={i} className="px-4 py-3">
-                                            <div className="h-5 bg-gray-200 rounded w-full" />
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))
-                        ) : (
-                            gym.map((entry, index) => (
-                                <tr key={entry._id} className="border-b hover:shadow-md">
-                                    <td className="px-4 py-3">{(currentPage - 1) * pageSize + index + 1}</td>
-                                    <td className="px-4 py-3">
-                                        <img src={entry.gymphotos?.[0]} alt="Gym" className="h-12 w-12 rounded-md object-cover" />
-                                    </td>
-                                    <td className="px-4 py-3 text-gray-700">{entry.name || '---'}</td>
-                                    <td className="px-4 py-3 text-gray-700">{entry.email || '---'}</td>
-                                    <td className="px-4 py-3 text-gray-700">{entry.phone || '---'}</td>
-                                    <td className="px-4 py-3 text-gray-700">{entry.pan || '---'}</td>
-                                    <td className="px-4 py-3 text-gray-700">{entry.license_no || '---'}</td>
-                                    <td className="px-4 py-3 text-gray-700">{entry.address || '---'}</td>
-                                    <td className="px-4 py-3">
+                        {loading
+                            ? [...Array(6)].map((_, idx) => (
+                                  <tr key={idx} className="border-b">
+                                      {[...Array(9)].map((_, i) => (
+                                          <td key={i} className="px-4 py-3">
+                                              <div className="h-5 bg-gray-200 rounded w-full" />
+                                          </td>
+                                      ))}
+                                  </tr>
+                              ))
+                            : gym.map((entry, index) => (
+                                  <tr key={entry._id} className="border-b hover:shadow-md">
+                                      <td className="px-4 py-3">{(currentPage - 1) * pageSize + index + 1}</td>
+                                      <td className="px-4 py-3">
+                                          <img src={entry.gymphotos?.[0]} alt="Gym" className="h-12 w-12 rounded-md object-cover" />
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-700">{entry.name || '---'}</td>
+                                      <td className="px-4 py-3 text-gray-700">{entry.email || '---'}</td>
+                                      <td className="px-4 py-3 text-gray-700">{entry.phone || '---'}</td>
+                                      <td className="px-4 py-3 text-gray-700">{entry.pan || '---'}</td>
+                                      <td className="px-4 py-3 text-gray-700">{entry.license_no || '---'}</td>
+                                      <td className="px-4 py-3 text-gray-700">{entry.address || '---'}</td>
+                                      <td className="px-4 py-3">
                                           <div className="flex items-center gap-2">
+                                              <button className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 hover:bg-yellow-200 transition" onClick={() => navigate(`/gymView/${entry._id}`, { state: { gymData: entry } })}>
+                                                  <Eye size={18} className="text-green-600" />
+                                              </button>
+
                                               <button
                                                   className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 transition"
                                                   title="Approve"
@@ -121,13 +125,10 @@ useEffect(() => {
                                               >
                                                   <Check size={18} className="text-green-600" />
                                               </button>
-
-                                         
                                           </div>
                                       </td>
-                                </tr>
-                            ))
-                        )}
+                                  </tr>
+                              ))}
                     </tbody>
                 </table>
             </div>
@@ -138,11 +139,7 @@ useEffect(() => {
                         ‹ Prev
                     </button>
                     {Array.from({ length: pagination.totalPages || 1 }, (_, i) => (
-                        <button
-                            key={i + 1}
-                            onClick={() => handlePageChange(i + 1)}
-                            className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-yellow text-white' : 'bg-gray-100'}`}
-                        >
+                        <button key={i + 1} onClick={() => handlePageChange(i + 1)} className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-yellow text-white' : 'bg-gray-100'}`}>
                             {i + 1}
                         </button>
                     ))}
@@ -152,13 +149,11 @@ useEffect(() => {
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Items per page</span>
-                    <select
-                        className="h-8 rounded-md border border-gray-300 bg-white p-1 text-sm"
-                        value={pageSize}
-                        onChange={handlePageSizeChange}
-                    >
-                        {[5, 10, 20, 50].map(size => (
-                            <option key={size} value={size}>{size}</option>
+                    <select className="h-8 rounded-md border border-gray-300 bg-white p-1 text-sm" value={pageSize} onChange={handlePageSizeChange}>
+                        {[5, 10, 20, 50].map((size) => (
+                            <option key={size} value={size}>
+                                {size}
+                            </option>
                         ))}
                     </select>
                 </div>

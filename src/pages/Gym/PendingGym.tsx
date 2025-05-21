@@ -6,6 +6,7 @@ import { Check, X ,Eye} from 'lucide-react';
 import { message } from 'antd';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 const PendingGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
@@ -17,6 +18,7 @@ const PendingGym = ({ filters }: { filters: any }) => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
+    const navigate = useNavigate()
 
   useEffect(() => {
     dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters  , status: 'pending', }));
@@ -98,9 +100,7 @@ const PendingGym = ({ filters }: { filters: any }) => {
                                       <td className="px-4 py-3">
                                           <div className="flex items-center gap-2">
                                                   <button
-                                                  className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 hover:bg-yellow-200 transition"
-                                              
-                                               
+                                                  className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 hover:bg-yellow-200 transition" onClick={() => navigate(`/gymView/${entry._id}`, { state: { gymData: entry } })}
                                               >
                                                   <Eye size={18} className="text-green-600" />
                                               </button>
