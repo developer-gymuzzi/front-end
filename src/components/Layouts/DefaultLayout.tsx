@@ -15,7 +15,8 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
 
     const [showLoader, setShowLoader] = useState(true);
     const [showTopButton, setShowTopButton] = useState(false);
-
+    const [showToButton , setShowToButton] = useState(false)
+    
     const goToTop = () => {
         document.body.scrollTop = 0;
         document.documentElement.scrollTop = 0;

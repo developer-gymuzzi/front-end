@@ -114,10 +114,10 @@ const Sidebar = () => {
                                     </li>
 
                                     <li className="nav-item">
-                                        <NavLink to="/managepeople" className="group" onClick={() => toggleMenu('')}>
+                                        <NavLink to="/earning" className="group" onClick={() => toggleMenu('')}>
                                             <div className="flex items-center">
                                                 <HRM className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Trainers')}</span>
+                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Earning')}</span>
                                             </div>
                                         </NavLink>
                                     </li>

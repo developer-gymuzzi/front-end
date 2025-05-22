@@ -28,6 +28,7 @@ const Shift = lazy(() => import('../pages/shift/schedule-interface'));
 const Geolocation = lazy(() => import('../pages/Location/googlemap'));
 const Gym = lazy(() => import('../pages/Gym/ManageGym'));
 const GYmPage = lazy(() => import('../pages/Gym/Viewgym'));
+const Earning  = lazy(() => import('../pages/Earnings/list'));
 
 
 const routes = [
@@ -53,6 +54,11 @@ const routes = [
     {
         path: '/companylist',
         element: <Company />,
+        layout: 'default'
+    },
+        {
+        path: '/earning',
+        element: <Earning />,
         layout: 'default'
     },
         {

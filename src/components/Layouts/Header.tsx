@@ -63,25 +63,27 @@ const Header = () => {
         }
     };
 
-useEffect(() => {
-    socket.emit('join-admin');
+    useEffect(() => {
+        socket.emit('join-admin');
 
-    socket.on('gym_updated', (notification: any) => {
-        setNotifications((prev) => [notification, ...prev]);
-    });
+        socket.on('gym_updated', (notification: any) => {
+            setNotifications((prev) => [notification, ...prev]);
+        });
 
-    socket.on('gym_registered', (notification: any) => {
-        setNotifications((prev) => [notification, ...prev]);
-    });
+        socket.on('gym_registered', (notification: any) => {
+            setNotifications((prev) => [notification, ...prev]);
+        });
 
-    fetchNotification();
+        fetchNotification();
 
-    return () => {
-        socket.off('gym_updated');
-        socket.off('gym_registered');
-    };
-}, []);
+        return () => {
+            socket.off('gym_updated');
+            socket.off('gym_registered');
+        };
+    }, []);
 
+
+     
 
     // Logout function
     const SignOut = () => {

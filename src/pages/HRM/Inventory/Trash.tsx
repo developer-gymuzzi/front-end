@@ -30,11 +30,8 @@ export default function TrashList() {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [pagesize, setpagesize] = useState<number>(10);
     const [totalItems, setTotalItems] = useState<number>(0);
-    const permissions = useSelector((state: IRootState) => state.customerConfig.permissions) as Record<string, string[]>;
 
-    const checkPermission = (module: string, action: string) => {
-        return permissions?.[module]?.includes(action);
-    };
+  
 
     const getdeletedata = async (page: number, size: number) => {
         try {
