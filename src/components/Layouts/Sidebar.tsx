@@ -17,6 +17,8 @@ import CRMPermissionIcon from '../../../public/assets/sidebar/CRMPermissions';
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
     const [errorSubMenu, setErrorSubMenu] = useState(false);
+    const userRole = localStorage.getItem("userRole");
+
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const semidark = useSelector((state: IRootState) => state.themeConfig.semidark);
     interface Company {
@@ -112,7 +114,8 @@ const Sidebar = () => {
                                             </div>
                                         </NavLink>
                                     </li>
-
+                       {userRole === 'admin' && (
+                        <>
                                     <li className="nav-item">
                                         <NavLink to="/earning" className="group" onClick={() => toggleMenu('')}>
                                             <div className="flex items-center">
@@ -122,45 +125,7 @@ const Sidebar = () => {
                                         </NavLink>
                                     </li>
 
-                                    {/* {(hasPermission('inventory') || hasPermission('clockInOut') || hasPermission('managePeople')) && (
-                                        <li className="menu nav-item">
-                                            <button type="button" className={`${currentMenu === 'HRM' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('HRM')}>
-                                                <div className="flex items-center">
-                                                    <HRM className="group-hover:!text-primary shrink-0" />
-                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">
-                                                        {t('HRM')}
-                                                    </span>
-                                                </div>
-
-                                                <div className={currentMenu !== 'HRM' ? 'rtl:rotate-180 -rotate-180' : ''}>
-                                                    <Down className='IconCaretDown' />
-                                                </div>
-                                            </button>
-
-                                            <AnimateHeight duration={300} height={currentMenu === 'HRM' ? 'auto' : 0}>
-                                                <ul className="sub-menu text-gray-500">
-                                                    {hasPermission('inventory') && (
-                                                        <li>
-                                                            <NavLink to="/inventory">{t('Inventory')}</NavLink>
-                                                        </li>
-                                                    )}
-                                                    {hasPermission('clockInOut') && (
-                                                        <li>
-                                                            <NavLink to="/clock">{t('Clock IN/OUT')}</NavLink>
-                                                        </li>
-                                                    )}
-                                                    {hasPermission('managePeople') && (
-                                                        <li>
-                                                            <NavLink to="/managepeople">{t('Manage People')}</NavLink>
-                                                        </li>
-                                                    )}
-                                                    <li>
-                                                        <NavLink to="/rejectedShifts">{t('Rejected Shifts')}</NavLink>
-                                                    </li>
-                                                </ul>
-                                            </AnimateHeight>
-                                        </li>
-                                    )} */}
+                                
 
                                     <li className="nav-item">
                                         <NavLink to="/companylist" className="group" onClick={() => toggleMenu('')}>
@@ -170,7 +135,11 @@ const Sidebar = () => {
                                             </div>
                                         </NavLink>
                                     </li>
-                                    <li className="nav-item">
+                            
+                                    </>
+                       )}
+
+                                  <li className="nav-item">
                                         <NavLink to="/gym" className="group" onClick={() => toggleMenu('')}>
                                             <div className="flex items-center">
                                                 <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />

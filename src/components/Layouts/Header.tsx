@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { IRootState } from '../../store';
+import { AppDispatch, IRootState } from '../../store';
 import { toggleSidebar, toggleRTL } from '../../store/themeConfigSlice';
 import { useTranslation } from 'react-i18next';
-import { Bell, Power } from 'lucide-react';
+import { Bell, ChevronDown, Power } from 'lucide-react';
 import { Badge, message, Dropdown, Menu } from 'antd';
 import Cookies from 'js-cookie';
 import axios from 'axios';
@@ -12,17 +12,39 @@ import Swal from 'sweetalert2';
 import socket from '../../socket';
 import IconMenu from '../Icon/IconMenu';
 import moment from 'moment';
+import { activeGym } from '../../store/customerConfigSlice';
 
 const Header = () => {
-    const dispatch = useDispatch();
+    const dispatch :AppDispatch = useDispatch();
     const location = useLocation();
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
+    const userRole = localStorage.getItem('userRole');
     const [notifications, setNotifications] = useState<any[]>([]);
     const [flag, setFlag] = useState(themeConfig.locale);
 
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
     const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
+
+    const [isOpen, setIsOpen] = useState(false);
+    const [selected, setSelected] = useState('All');
     const token = Cookies.get('token');
+
+    const toggleDropdown = () => {
+        setIsOpen(!isOpen);
+    };
+
+    interface Gym {
+        _id: string;
+        name: string;
+        // add other properties if needed
+    }
+    const { gyms } = useSelector((state: IRootState) => state.customerConfig) as { gyms: Gym[] };
+
+    const handleSelectGym = (gymId:string) => {
+    
+        dispatch(activeGym(gymId));
+        toggleDropdown(); 
+    };
 
     useEffect(() => {
         const selector = document.querySelector(`ul.horizontal-menu a[href="${window.location.pathname}"]`);
@@ -81,9 +103,6 @@ const Header = () => {
             socket.off('gym_registered');
         };
     }, []);
-
-
-     
 
     // Logout function
     const SignOut = () => {
@@ -168,6 +187,35 @@ const Header = () => {
                                     <Badge count={notifications.length} className="absolute -top-1 -right-1" />
                                 </div>
                             </Dropdown>
+                            {userRole === 'gym_owner' && (
+                                <div className="relative w-64">
+                                    {/* Dropdown button */}
+                                    <button
+                                        onClick={toggleDropdown}
+                                        className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <span className="text-gray-700">Select Gym</span>
+                                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {/* Dropdown menu */}
+                                    {isOpen && (
+                                        <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                                            <ul className="py-1 max-h-60 overflow-auto">
+                                                {gyms.map((gym) => (
+                                                    <li
+                                                        key={gym._id}
+                                                        className="px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors duration-150"
+                                                        onClick={() => handleSelectGym(gym._id)}
+                                                    >
+                                                        {gym.name}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <NavLink to="#" onClick={SignOut}>
                                 <Power className="text-red-500" />

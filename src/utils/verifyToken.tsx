@@ -15,9 +15,12 @@ const verifyToken = async()=>{
         }
     })
 
-  if(data.success === 1){
-         return true;
-  }
+        if (data.success === 1 && data.user) {
+
+            localStorage.setItem("userRole", data.user.role);
+      return data.user; 
+    }
+
     } catch (error) {
         message.error('Failed to verify token')
     }

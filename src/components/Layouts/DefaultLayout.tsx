@@ -1,7 +1,7 @@
 import { PropsWithChildren, Suspense, useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import App from '../../App';
-import { IRootState } from '../../store';
+import { AppDispatch, IRootState } from '../../store';
 import { toggleSidebar } from '../../store/themeConfigSlice';
 import Footer from './Footer';
 import Header from './Header';
@@ -9,14 +9,16 @@ import Sidebar from './Sidebar';
 import Portals from '../../components/Portals';
 import Cookies from 'js-cookie';
 import { debounce } from 'lodash';
+import { fetchGymOwneGym } from '../../store/customerConfigSlice';
 const DefaultLayout = ({ children }: PropsWithChildren) => {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
-    const dispatch = useDispatch();
+    const dispatch: AppDispatch = useDispatch();
+    const userRole = localStorage.getItem('userRole');
 
     const [showLoader, setShowLoader] = useState(true);
     const [showTopButton, setShowTopButton] = useState(false);
-    const [showToButton , setShowToButton] = useState(false)
-    
+    const [showToButton, setShowToButton] = useState(false);
+
     const goToTop = () => {
         document.body.scrollTop = 0;
         document.documentElement.scrollTop = 0;
@@ -46,10 +48,14 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
         };
     }, []);
 
-    const TokenData = Cookies.get('token')
+    const TokenData = Cookies.get('token');
 
-
-
+    {
+        userRole === 'gym_owner' &&
+            useEffect(() => {
+                dispatch(fetchGymOwneGym());
+            }, [dispatch, TokenData]);
+    }
 
     return (
         <App>

@@ -1,24 +1,36 @@
-import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
-import  verifyToken  from "../utils/verifyToken"; 
+import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import verifyToken from '../utils/verifyToken';
 
 interface ProtectedRouteProps {
   children: JSX.Element;
+  allowedRoles?: string[];
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const [isValid, setIsValid] = useState<boolean | null>(null);
+const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
+  const [authState, setAuthState] = useState<{ valid: boolean; role: string | null } | null>(null);
 
   useEffect(() => {
     const check = async () => {
-      const valid = await verifyToken();
-      setIsValid(valid ?? false);
+      const user = await verifyToken(); 
+      if (user) {
+        const role = user.role;
+        if (!allowedRoles || allowedRoles.includes(role)) {
+          setAuthState({ valid: true, role });
+        } else {
+          setAuthState({ valid: false, role });
+        }
+      } else {
+        setAuthState({ valid: false, role: null });
+      }
     };
     check();
-  }, []);
+  }, [allowedRoles]);
 
-  if (isValid === null) return null; 
-  if (!isValid) return <Navigate to="/" />;
+  if (authState === null) return null; // Or show a loader
+
+  if (!authState.valid) return <Navigate to="/" replace />;
+
   return children;
 };
 

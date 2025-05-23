@@ -1,7 +1,5 @@
-'use client';
-
 import type React from 'react';
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { Dumbbell } from 'lucide-react';
 import Animation from './Animation';
@@ -14,21 +12,19 @@ export default function OtpVerification() {
     const [error, setError] = useState('');
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const location = useLocation();
-const navigate = useNavigate();
+    const navigate = useNavigate();
 
-const queryParams = new URLSearchParams(location.search);
-const clientEmail = queryParams.get("clientEmail");
-const expire = queryParams.get("expire");
+    const queryParams = new URLSearchParams(location.search);
+    const clientEmail = queryParams.get('clientEmail');
+    const expire = queryParams.get('expire');
 
-    const [timer, setTimer] = useState(120); // 2 minutes countdown
+    const [timer, setTimer] = useState(120);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    // Initialize refs array
     useEffect(() => {
         inputRefs.current = inputRefs.current.slice(0, 6);
     }, []);
 
-    // Timer countdown
     useEffect(() => {
         if (timer > 0) {
             const interval = setInterval(() => {
@@ -47,7 +43,7 @@ const expire = queryParams.get("expire");
 
     const handleChange = (index: number, value: string) => {
         // Only allow numbers
-        if (value && !/^\d+$/.test(value)) return;
+        if (value && !/^\d+$/.test(value)) return; 
 
         const newOtp = [...otp];
         newOtp[index] = value;
@@ -55,14 +51,14 @@ const expire = queryParams.get("expire");
         setOtp(newOtp);
 
         // Auto-focus next input
-  if (value && index < 5) { // change from 3 to 5
-  inputRefs.current[index + 1]?.focus();
-}
-
+        if (value && index < 5) {
+            // change from 3 to 5
+            inputRefs.current[index + 1]?.focus();
+        }
     };
 
     const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-        // Move to previous input on backspace if current input is empty
+
         if (e.key === 'Backspace' && !otp[index] && index > 0) {
             inputRefs.current[index - 1]?.focus();
         }
@@ -72,13 +68,11 @@ const expire = queryParams.get("expire");
         e.preventDefault();
         const pastedData = e.clipboardData.getData('text/plain').trim();
 
-        // Check if pasted content is a 4-digit number
-    if (/^\d{6}$/.test(pastedData)) {
-  const digits = pastedData.split("");
-  setOtp(digits);
-  inputRefs.current[5]?.focus(); // focus last input
-}
-
+        if (/^\d{6}$/.test(pastedData)) {
+            const digits = pastedData.split('');
+            setOtp(digits);
+            inputRefs.current[5]?.focus(); 
+        }
     };
 
     const resendOtp = async () => {
@@ -98,48 +92,55 @@ const expire = queryParams.get("expire");
         }
     };
 
- const verifyOtp = async (e: React.FormEvent) => {
-  e.preventDefault();
-  const otpValue = otp.join("");
+    const verifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const otpValue = otp.join('');
 
-  if (otpValue.length !== 6 || !/^\d{6}$/.test(otpValue)) {
-    setError("Please enter a valid 6-digit OTP");
-    return;
-  }
+        if (otpValue.length !== 6 || !/^\d{6}$/.test(otpValue)) {
+            setError('Please enter a valid 6-digit OTP');
+            return;
+        }
 
-  if (!clientEmail) {
-    setError("Missing email information. Please login again.");
-    return;
-  }
+        if (!clientEmail) {
+            setError('Missing email information. Please login again.');
+            return;
+        }
 
-  setIsLoading(true);
-  try {
-    const endpoint = import.meta.env.VITE_API_LIVEHOST;
+        setIsLoading(true);
+        try {
+            const endpoint = import.meta.env.VITE_API_LIVEHOST;
 
-    const response = await axios.post(`${endpoint}/v1/auth/verification`, {
-      email: clientEmail,
-      verificationCode: otpValue,
-    });
+            const response = await axios.post(`${endpoint}/v1/auth/verification`, {
+                email: clientEmail,
+                verificationCode: otpValue,
+            });
 
-    if (response.data.success === 1) {
-      message.success("OTP verified successfully!");
+            if (response.data.success === 1) {
+                message.success('OTP verified successfully!');
 
-      Cookies.set("token", response.data.token, { expires: 7 });
+                Cookies.set('token', response.data.token, { expires: 7 });
+                 localStorage.setItem('userRole', response.data.user.role);
+                const { role } = response.data.user;
 
-      navigate("/gym");
-    } else {
-      setError(response.data.message || "Verification failed");
-      message.error(response.data.message || "Invalid OTP");
-    }
-  } catch (error: any) {
-    console.error("OTP verification error:", error);
-    setError("Verification failed. Please try again.");
-    message.error("Something went wrong. Try again.");
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+                if (role === 'admin') {
+                    navigate('/companylist');
+                } else if (role === 'gym_owner') {
+                    navigate('/gym');
+                } else {
+                    navigate('/');
+                }
+            } else {
+                setError(response.data.message || 'Verification failed');
+                message.error(response.data.message || 'Invalid OTP');
+            }
+        } catch (error: any) {
+            console.error('OTP verification error:', error);
+            setError('Verification failed. Please try again.');
+            message.error('Something went wrong. Try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-[url(/assets/images/gym_bg.png)] bg-cover bg-center bg-no-repeat px-4 py-6 dark:bg-[#060818] sm:px-8 overflow-hidden">

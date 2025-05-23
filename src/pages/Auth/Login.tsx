@@ -13,6 +13,7 @@ import Animation from './Animation';
 import Cookies from 'js-cookie';
 import IconEye from '../../components/Icon/IconEye';
 import { Mail, Lock, Eye, EyeOff, Dumbbell } from 'lucide-react';
+import verifyToken from '../../utils/verifyToken';
 const LoginBoxed = () => {
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const navigate = useNavigate();
@@ -99,21 +100,33 @@ const LoginBoxed = () => {
             }
         } catch (error) {
             console.error('Error during login:', error);
-            toast.error('Something went wrong. Please try again.');
+            toast.error('Something went wrong. Please try again.'); 
         } finally {
             setIsLoading(false);
         }
     }
 
-    // React.useEffect(() => {
-    //   const token = Cookies.get("token");
-    //   if (!token) {
+      React.useEffect(() => {
+    const checkAuth = async () => {
+      const token = Cookies.get("token");
+      if (!token) return; // No token, stay on login page
 
-    //     return;
-    //   } else {
-    //     navigate(`/dashboard`);
-    //   }
-    // }, []);
+      const user = await verifyToken();
+      if (user) {
+        // Redirect based on role
+        if (user.role === "admin") {
+          navigate("/companylist", { replace: true });
+        } else if (user.role === "gym_owner") {
+          navigate("/gym", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
+      }
+      // else token invalid: stay on login page
+    };
+
+    checkAuth();
+  }, [navigate]);
 
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-[url(/assets/images/gym_bg.png)] bg-cover bg-center bg-no-repeat px-4 py-6 dark:bg-[#060818] sm:px-8 overflow-hidden">

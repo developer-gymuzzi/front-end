@@ -1,6 +1,6 @@
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
-import ProtectedRoute from "../components/ProtectedRoutes";
+import ProtectedRoute from '../components/ProtectedRoutes';
 const RejectedShift = lazy(() => import('../pages/HRM/rejectedShifts'));
 const Index = lazy(() => import('../pages/dashboard/Index'));
 const Login = lazy(() => import('../pages/Auth/Login'));
@@ -28,151 +28,156 @@ const Shift = lazy(() => import('../pages/shift/schedule-interface'));
 const Geolocation = lazy(() => import('../pages/Location/googlemap'));
 const Gym = lazy(() => import('../pages/Gym/ManageGym'));
 const GYmPage = lazy(() => import('../pages/Gym/Viewgym'));
-const Earning  = lazy(() => import('../pages/Earnings/list'));
-
+const Earning = lazy(() => import('../pages/Earnings/list'));
 
 const routes = [
     {
         path: '/',
         element: <Login />,
-        layout: 'blank'
+        layout: 'blank',
     },
     {
         path: '/otp',
         element: <OTP />,
-        layout: 'blank'
+        layout: 'blank',
     },
     {
         path: '/dashboard',
-        element:<Index/>
+        element: <Index />,
     },
     {
         path: '/gym',
-        element: <ProtectedRoute><Gym /></ProtectedRoute>,
-        layout: 'default'
+        element: (
+            <ProtectedRoute allowedRoles={['gym_owner']}>
+                <Gym />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
     },
     {
         path: '/companylist',
         element: <Company />,
-        layout: 'default'
+        layout: 'default',
     },
-        {
+    {
         path: '/earning',
-        element: <Earning />,
-        layout: 'default'
+        element: (
+            <ProtectedRoute allowedRoles={['admin']}>
+                <Earning />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
     },
-        {
+    {
         path: '/gymView/:id',
         element: <GYmPage />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/addCompany',
         element: <AddCompany />,
-        layout: 'blank'
+        layout: 'blank',
     },
     {
         path: '/inventory',
         element: <Inventory />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/clock',
         element: <Clock />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/managepeople',
         element: <ManagePeople />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/add/user',
         element: <Addpepople />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/edit/user/:id',
         element: <EditGaurd />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/manage_site',
         element: <ManageSite />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/add/site',
         element: <AddSite />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/edit/site/:siteId',
         element: <AddSite />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/manage_customer',
         element: <ManageTrash />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/manage_services',
         element: <Manage_services />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/schedule',
         element: <Shift />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/add/Shift',
         element: <AddShift />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/timeprocessing',
         element: <Customertimetable />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/crm-permissions',
         element: <Permissions />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/crm-permissions/edit/:role_id',
         element: <Editpermissions />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/profile',
         element: <ProfilePage />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/rejectedShifts',
         element: <RejectedShift />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/guard/shift',
         element: <Guardshift />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/Geolocation',
         element: <Geolocation />,
-        layout: 'default'
+        layout: 'default',
     },
     {
         path: '/ScheduleInterface',
         element: <ScheduleInterface />,
-        layout: 'default'
+        layout: 'default',
     },
 ];
 
 export { routes };
-
-
