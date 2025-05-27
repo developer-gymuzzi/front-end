@@ -17,7 +17,7 @@ import CRMPermissionIcon from '../../../public/assets/sidebar/CRMPermissions';
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
     const [errorSubMenu, setErrorSubMenu] = useState(false);
-    const userRole = localStorage.getItem("userRole");
+    const userRole = localStorage.getItem('userRole');
 
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const semidark = useSelector((state: IRootState) => state.themeConfig.semidark);
@@ -34,7 +34,6 @@ const Sidebar = () => {
         });
     };
 
-  
     useEffect(() => {
         const selector = document.querySelector('.sidebar ul a[href="' + window.location.pathname + '"]');
         if (selector) {
@@ -114,39 +113,49 @@ const Sidebar = () => {
                                             </div>
                                         </NavLink>
                                     </li>
-                       {userRole === 'admin' && (
-                        <>
-                                    <li className="nav-item">
-                                        <NavLink to="/earning" className="group" onClick={() => toggleMenu('')}>
-                                            <div className="flex items-center">
-                                                <HRM className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Earning')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
+                                    {userRole === 'admin' && (
+                                        <>
+                                            <li className="nav-item">
+                                                <NavLink to="/earning" className="group" onClick={() => toggleMenu('')}>
+                                                    <div className="flex items-center">
+                                                        <HRM className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
+                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Earning')}</span>
+                                                    </div>
+                                                </NavLink>
+                                            </li>
 
-                                
+                                            <li className="nav-item">
+                                                <NavLink to="/companylist" className="group" onClick={() => toggleMenu('')}>
+                                                    <div className="flex items-center">
+                                                        <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
+                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Roles & User')}</span>
+                                                    </div>
+                                                </NavLink>
+                                            </li>
+                                        </>
+                                    )}
 
-                                    <li className="nav-item">
-                                        <NavLink to="/companylist" className="group" onClick={() => toggleMenu('')}>
-                                            <div className="flex items-center">
-                                                <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Roles & User')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
-                            
-                                    </>
-                       )}
+                                          {userRole === 'admin' && (
+                                        <li className="nav-item">
+                                            <NavLink to="/gym" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Gym')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
 
-                                  <li className="nav-item">
-                                        <NavLink to="/gym" className="group" onClick={() => toggleMenu('')}>
-                                            <div className="flex items-center">
-                                                <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Gym')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
+                                    {userRole === 'gym_owner' && (
+                                        <li className="nav-item">
+                                            <NavLink to="/gym_ownerGym" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Gym')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
 
                                     {/* <li className="menu nav-item">
                                             <button type="button" className={`${currentMenu === 'Manage Site' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Manage Site')}>

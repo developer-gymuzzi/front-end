@@ -125,7 +125,7 @@ export default function OtpVerification() {
                 if (role === 'admin') {
                     navigate('/companylist');
                 } else if (role === 'gym_owner') {
-                    navigate('/gym');
+                    navigate('/gym_ownerGym');
                 } else {
                     navigate('/');
                 }

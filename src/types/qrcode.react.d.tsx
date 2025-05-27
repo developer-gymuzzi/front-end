@@ -11,5 +11,5 @@ declare module 'qrcode.react' {
     renderAs?: 'canvas' | 'svg';
   }
 
-  export const QRCode: React.FC<QRCodeProps>;  // Named export
-}
+  export const QRCode: React.FC<QRCodeProps>;
+} 

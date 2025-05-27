@@ -36,7 +36,6 @@ const Header = () => {
     interface Gym {
         _id: string;
         name: string;
-        // add other properties if needed
     }
     const { gyms } = useSelector((state: IRootState) => state.customerConfig) as { gyms: Gym[] };
 
@@ -187,35 +186,7 @@ const Header = () => {
                                     <Badge count={notifications.length} className="absolute -top-1 -right-1" />
                                 </div>
                             </Dropdown>
-                            {userRole === 'gym_owner' && (
-                                <div className="relative w-64">
-                                    {/* Dropdown button */}
-                                    <button
-                                        onClick={toggleDropdown}
-                                        className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    >
-                                        <span className="text-gray-700">Select Gym</span>
-                                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-
-                                    {/* Dropdown menu */}
-                                    {isOpen && (
-                                        <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                                            <ul className="py-1 max-h-60 overflow-auto">
-                                                {gyms.map((gym) => (
-                                                    <li
-                                                        key={gym._id}
-                                                        className="px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors duration-150"
-                                                        onClick={() => handleSelectGym(gym._id)}
-                                                    >
-                                                        {gym.name}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                            
 
                             <NavLink to="#" onClick={SignOut}>
                                 <Power className="text-red-500" />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, IRootState } from '../../store';
-import { fetchGym } from '../../store/customerConfigSlice';
+import { fetchGym, GymownerGymList } from '../../store/customerConfigSlice';
 import axios from 'axios';
 import { message } from 'antd';
 import Swal from 'sweetalert2';
@@ -12,10 +12,10 @@ import { Modal } from 'antd';
 
 const ApprovedGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
-    const { gym, loading, pagination } = useSelector((state: IRootState) => state.customerConfig) as {
-        gym: { _id: string; gymphotos?: string[]; name?: string; email?: string; phone?: string; pan?: string; license_no?: string; address?: string; updatedAt?: any; qr_payload?: any }[];
+    const { GymownerGym, loading, gymOwnerpagination } = useSelector((state: IRootState) => state.customerConfig) as {
+        GymownerGym: { _id: string; gymphotos?: string[]; name?: string; email?: string; phone?: string; pan?: string; license_no?: string; address?: string; updatedAt?: any; qr_payload?: any }[];
         loading: boolean;
-        pagination: { totalPages: number };
+        gymOwnerpagination: { totalPages: number };
     };
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -24,7 +24,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
     const [selectedQrPayload, setSelectedQrPayload] = useState<string>(''); 
 
     useEffect(() => {
-        dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters, status: 'approved' }));
+        dispatch(GymownerGymList({ page: currentPage, limit: pageSize, ...filters, status: 'approved' }));
     }, [dispatch, currentPage, pageSize, filters]);
 
     const handlePageChange = (page: number) => {
@@ -119,7 +119,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                                       ))}
                                   </tr>
                               ))
-                            : gym.map((entry, index) => (
+                            : GymownerGym.map((entry, index) => (
                                   <tr key={entry._id} className="border-b hover:shadow-md">
                                       <td className="px-4 py-3">{(currentPage - 1) * pageSize + index + 1}</td>
                                       <td className="px-4 py-3">
@@ -157,12 +157,12 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                                           <div className="flex items-center gap-2">
                                               <button
                                                   className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 hover:bg-yellow-200 transition"
-                                                  onClick={() => navigate(`/gymView/${entry._id}`, { state: { gymData: entry } })}
+                                                  onClick={() => navigate(`/viewGym/${entry._id}`, { state: { gymData: entry } })}
                                               >
                                                   <Eye size={18} className="text-green-600" />
                                               </button>
 
-                                              <button
+                                              {/* <button
                                                   className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 transition"
                                                   title="Reject"
                                                   onClick={() => {
@@ -183,7 +183,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                                                   }}
                                               >
                                                   <X size={18} className="text-red-600" />
-                                              </button>
+                                              </button> */}
                                           </div>
                                       </td>
                                   </tr>
@@ -208,12 +208,12 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                     <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1} className="pagination-button">
                         ‹ Prev
                     </button>
-                    {Array.from({ length: pagination.totalPages || 1 }, (_, i) => (
+                    {Array.from({ length: gymOwnerpagination.totalPages || 1 }, (_, i) => (
                         <button key={i + 1} onClick={() => handlePageChange(i + 1)} className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-yellow text-white' : 'bg-gray-100'}`}>
                             {i + 1}
                         </button>
                     ))}
-                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= (pagination.totalPages || 1)} className="pagination-button">
+                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= (gymOwnerpagination.totalPages || 1)} className="pagination-button">
                         Next ›
                     </button>
                 </div>

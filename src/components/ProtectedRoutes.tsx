@@ -27,7 +27,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     check();
   }, [allowedRoles]);
 
-  if (authState === null) return null; // Or show a loader
+  if (authState === null) return null; 
 
   if (!authState.valid) return <Navigate to="/" replace />;
 

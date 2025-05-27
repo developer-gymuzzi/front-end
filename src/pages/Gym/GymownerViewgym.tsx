@@ -4,6 +4,7 @@ import { X, Plus, Upload, Edit2, Save, ChevronDown, ChevronUp, MapPin, Phone, Ma
 import { useLocation } from 'react-router-dom';
 import { message } from 'antd';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export default function CustomGymForm() {
     const [isEditing, setIsEditing] = useState(false);
@@ -55,12 +56,13 @@ export default function CustomGymForm() {
     const location = useLocation();
     const { gymData } = location.state || {};
 
+
     useEffect(() => {
         if (gymData) {
             setFormData({
                 name: gymData.name || '',
-                lat: gymData.lat || 0,
-                lon: gymData.lon || 0,
+                lat: gymData.location.coordinates[1] || 0, 
+                lon: gymData.location.coordinates[0] || 0, 
                 address: gymData.address || '',
                 phone: gymData.phone || '',
                 email: gymData.email || '',
@@ -97,7 +99,7 @@ export default function CustomGymForm() {
         const filtered = selected.slice(0, maxAllowed);
 
         const newPreviews = filtered.map((file) => URL.createObjectURL(file));
- 
+
         setNewFiles((prev) => [...prev, ...filtered]);
         setFilePreviews((prev) => [...prev, ...newPreviews]);
 
@@ -106,6 +108,8 @@ export default function CustomGymForm() {
             fileInputRef.current.value = '';
         }
     };
+
+    const Token = Cookies.get('token');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -122,7 +126,6 @@ export default function CustomGymForm() {
             form.append('gst', formData.gst);
             form.append('license_no', formData.license_no);
             form.append('gymtype', formData.gymtype);
-            form.append('isPendingApproval', formData.isPendingApproval);
 
             if (amenities.length > 0) {
                 amenities.forEach((amenity) => {
@@ -133,9 +136,9 @@ export default function CustomGymForm() {
             newFiles.forEach((file) => {
                 form.append('gymphotos', file);
             });
-
-            const { data } = await axios.post(`${endpoint}/v1/admin/edit/editGym`, form, {
+            const { data } = await axios.post(`${endpoint}/v1/gym/updateData`, form, {
                 headers: {
+                    token: Token,
                     'Content-Type': 'multipart/form-data',
                 },
             });
@@ -381,13 +384,14 @@ export default function CustomGymForm() {
                                                 onChange={handleChange}
                                                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white"
                                             >
-                                                <option value="gym">Fitness Gym</option>
-                                                <option value="yoga">Yoga Studio</option>
-                                                <option value="crossfit">CrossFit Box</option>
-                                                <option value="pilates">Pilates Studio</option>
-                                                <option value="dance">Dance Studio</option>
-                                                <option value="martial arts">Martial Arts</option>
-                                                <option value="other">Other</option>
+                                                <option value="Commercial Gym">Commercial Gym</option>
+                                                <option value="Boutique Fitness">Boutique Fitness</option>
+                                                <option value="CrossFit Box">CrossFit Box</option>
+                                                <option value="Yoga Studio">Yoga Studio</option>
+                                                <option value="Dance Studio">Dance Studio</option>
+                                                <option value="Martial Arts">Martial Arts</option>
+                                                <option value="Personal Training">Personal Training</option>
+                                                <option value="Sports Complex">Sports Complex</option>
                                             </select>
                                         ) : (
                                             <p className="text-gray-900 py-2.5">{gymTypeOptions[formData.gymtype as keyof typeof gymTypeOptions]}</p>
@@ -507,6 +511,7 @@ export default function CustomGymForm() {
                                         </div>
                                         {isEditing ? (
                                             <input
+                                            readOnly
                                                 type="text"
                                                 name="owner.name"
                                                 value={formData.owner?.name || ''}
@@ -532,6 +537,7 @@ export default function CustomGymForm() {
                                         </div>
                                         {isEditing ? (
                                             <input
+                                            readOnly
                                                 type="email"
                                                 name="owner.email"
                                                 value={formData.owner?.email || ''}
@@ -640,6 +646,7 @@ export default function CustomGymForm() {
                                         </div>
                                         {isEditing ? (
                                             <input
+                                            readOnly
                                                 type="number"
                                                 name="earnings"
                                                 value={formData.earnings}
@@ -657,6 +664,7 @@ export default function CustomGymForm() {
                                         </div>
                                         {isEditing ? (
                                             <input
+                                            readOnly
                                                 type="number"
                                                 name="commissionPercentage"
                                                 value={formData.commissionPercentage}
@@ -671,7 +679,7 @@ export default function CustomGymForm() {
                                         )}
                                     </div>
 
-                                    <div>
+                                    {/* <div>
                                         <div className="flex items-center justify-between mb-2">
                                             <label className="block text-sm font-medium text-gray-700">Approval Status</label>
                                         </div>
@@ -689,7 +697,7 @@ export default function CustomGymForm() {
                                         ) : (
                                             <p className="text-gray-900 py-2.5">{approvalStatusOptions[formData.isPendingApproval as keyof typeof approvalStatusOptions]}</p>
                                         )}
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         )}

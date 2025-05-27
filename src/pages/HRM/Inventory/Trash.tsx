@@ -120,24 +120,10 @@ export default function TrashList() {
     };
 
 
-    {
-        checkPermission("inventory", "trash") &&
-            useEffect(() => {
-                setLoading(true);
-                getdeletedata(currentPage, pagesize)
-                    .then(() => {
-                        setLoading(false);
-                    })
-                    .catch(() => {
-                        setLoading(false);
-                    });
-            }, [currentPage, pagesize]);
-    }
-
     return (
         <>
             {/* Table Section */}
-            {checkPermission("inventory", "trash") &&
+            
                 <div className="trash-table mt-4">
 
                     <div className="rounded-lg border border-gray-200 bg-white">
@@ -191,7 +177,7 @@ export default function TrashList() {
                                                 <td className="px-4 py-3 text-gray-600">
                                                     <div className='flex gap-2'>
                                                         <span onClick={() => handleOpenDrawer(entry)} ><View className="h-5 w-5 text-gray-400" /></span>
-                                                        {checkPermission("inventory", "permanentdelete") &&
+                                                       
                                                             <span
                                                                 onClick={() => {
                                                                     Swal.fire({
@@ -210,8 +196,8 @@ export default function TrashList() {
                                                                     });
                                                                 }}
                                                             ><Delete className="h-5 w-5 text-gray-500" /></span>
-                                                        }
-                                                        {checkPermission("inventory", "restore") &&
+                                                 
+                                                       
                                                             <span
                                                                 onClick={() => {
                                                                     Swal.fire({
@@ -231,7 +217,7 @@ export default function TrashList() {
                                                                     });
                                                                 }}
                                                             ><Restore className="h-5 w-5 text-gray-500" /></span>
-                                                        }
+                                                      
                                                     </div>
                                                 </td>
                                             </tr>
@@ -277,7 +263,7 @@ export default function TrashList() {
 
 
                 </div>
-            }
+     
 
             {/* Pagination Component */}
 

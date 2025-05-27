@@ -5,7 +5,8 @@ import Cookies from 'js-cookie';
 
 const endpoint = import.meta.env.VITE_API_LIVEHOST;
 const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
-const token = Cookies.get('token') || '';
+const token = Cookies.get('token');
+
 const initialState = {
     customers: [],
     loading: false,
@@ -13,8 +14,14 @@ const initialState = {
     users: [],
     gym: [],
     gyms: [],
+    GymownerGym: [],
     activeGym: null,
     gymCounts: {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+    },
+    GymOwnergymCounts: {
         pending: 0,
         approved: 0,
         rejected: 0,
@@ -28,7 +35,18 @@ const initialState = {
         nextPage: null,
         previousPage: null,
     },
+    gymOwnerpagination: {
+        totalUsers: 0,
+        totalPages: 1,
+        currentPage: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        nextPage: null,
+        previousPage: null,
+    },
 };
+
+
 
 export const fetchCustomers = createAsyncThunk('customer/fetchCustomers', async (_, { rejectWithValue }) => {
     try {
@@ -136,6 +154,11 @@ export const fetchGym = createAsyncThunk(
 );
 
 export const fetchGymOwneGym = createAsyncThunk('customer/fetchGymOwneGym', async (_, { rejectWithValue }) => {
+    const token = Cookies.get('token');
+
+    if (!token) {
+        return rejectWithValue('Token is not available');
+    }
     try {
         const { data } = await axios.get(`${endpoint}/v1/gymOwner/listing/gymlisting`, {
             headers: {
@@ -161,7 +184,7 @@ export const activeGym = createAsyncThunk('customer/activeGym', async (gymId: st
             { gymId },
             {
                 headers: {
-                    token,
+                    token: token,
                 },
             }
         );
@@ -177,6 +200,47 @@ export const activeGym = createAsyncThunk('customer/activeGym', async (gymId: st
         return rejectWithValue(error?.response?.data?.message || 'Error fetching gym data.');
     }
 });
+
+export const GymownerGymList = createAsyncThunk(
+    'customer/GymownerGymList',
+    async (
+        args: {
+            page?: number;
+            limit?: number;
+            name?: string;
+            status?: string;
+        } = {},
+        { rejectWithValue }
+    ) => {
+        try {
+            const { page = 1, limit = 10, name = '', status = '' } = args;
+
+            const { data } = await axios.get(`${endpoint}/v1/gymOwner/listing/gymList`, {
+                params: {
+                    page,
+                    limit,
+                    name,
+                    status,
+                },
+                headers: {
+                    'Content-Type': 'application/json',
+                    token: token,
+                },
+            });
+            if (data.success) {
+                return {
+                    gyms: data.data,
+                    pagination: data.pagination,
+                    counts: data.counts,
+                };
+            } else {
+                return rejectWithValue('Failed to fetch gym data.');
+            }
+        } catch (error: any) {
+            return rejectWithValue(error?.response?.data?.message || 'Error fetching gym data.');
+        }
+    }
+);
 
 const customerSlice = createSlice({
     name: 'customer',
@@ -248,6 +312,24 @@ const customerSlice = createSlice({
                 state.activeGym = action.payload.activeGym;
             })
             .addCase(activeGym.rejected, (state, action) => {
+                state.loading = false;
+                message.error(action.payload as string);
+            })
+            .addCase(GymownerGymList.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(GymownerGymList.fulfilled, (state, action) => {
+                state.loading = false;
+                state.GymownerGym = action.payload.gyms;
+                state.gymOwnerpagination = action.payload.pagination;
+                state.GymOwnergymCounts = action.payload.counts || {
+                    pending: 0,
+                    approved: 0,
+                    rejected: 0,
+                };
+            })
+            .addCase(GymownerGymList.rejected, (state, action) => {
                 state.loading = false;
                 message.error(action.payload as string);
             });

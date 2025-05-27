@@ -19,6 +19,8 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
     const [showTopButton, setShowTopButton] = useState(false);
     const [showToButton, setShowToButton] = useState(false);
 
+
+
     const goToTop = () => {
         document.body.scrollTop = 0;
         document.documentElement.scrollTop = 0;
@@ -48,13 +50,14 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
         };
     }, []);
 
-    const TokenData = Cookies.get('token');
-
     {
         userRole === 'gym_owner' &&
             useEffect(() => {
-                dispatch(fetchGymOwneGym());
-            }, [dispatch, TokenData]);
+                const token = Cookies.get('token');
+                if (token) {
+                    dispatch(fetchGymOwneGym());
+                }
+            }, [dispatch]);
     }
 
     return (

@@ -109,7 +109,7 @@ const LoginBoxed = () => {
       React.useEffect(() => {
     const checkAuth = async () => {
       const token = Cookies.get("token");
-      if (!token) return; // No token, stay on login page
+      if (!token) return; 
 
       const user = await verifyToken();
       if (user) {
@@ -117,7 +117,7 @@ const LoginBoxed = () => {
         if (user.role === "admin") {
           navigate("/companylist", { replace: true });
         } else if (user.role === "gym_owner") {
-          navigate("/gym", { replace: true });
+          navigate("/gym_ownerGym", { replace: true });
         } else {
           navigate("/", { replace: true });
         }

@@ -29,6 +29,9 @@ const Geolocation = lazy(() => import('../pages/Location/googlemap'));
 const Gym = lazy(() => import('../pages/Gym/ManageGym'));
 const GYmPage = lazy(() => import('../pages/Gym/Viewgym'));
 const Earning = lazy(() => import('../pages/Earnings/list'));
+const GymOwnerGym = lazy(() => import('../pages/Gym/gym_ownerManage'));
+const GymView = lazy(()=>import('../pages/Gym/GymownerViewgym'))
+const AddGym = lazy(()=> import('../pages/Gym/addGym'))
 
 const routes = [
     {
@@ -48,7 +51,7 @@ const routes = [
     {
         path: '/gym',
         element: (
-            <ProtectedRoute allowedRoles={['gym_owner']}>
+            <ProtectedRoute allowedRoles={['admin']}>
                 <Gym />
             </ProtectedRoute>
         ),
@@ -56,7 +59,30 @@ const routes = [
     },
     {
         path: '/companylist',
-        element: <Company />,
+                       element: (
+            <ProtectedRoute allowedRoles={['admin']}>
+                <Company />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
+    },
+    {
+        path: '/gym_ownerGym',
+        element: (
+            <ProtectedRoute allowedRoles={['gym_owner']}>
+                <GymOwnerGym />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
+    },
+
+        {
+        path: '/addGym',
+        element: (
+            <ProtectedRoute allowedRoles={['gym_owner']}>
+                <AddGym />
+            </ProtectedRoute>
+        ),
         layout: 'default',
     },
     {
@@ -71,6 +97,11 @@ const routes = [
     {
         path: '/gymView/:id',
         element: <GYmPage />,
+        layout: 'default',
+    },
+        {
+        path: '/viewGym/:id',
+        element: <GymView />,
         layout: 'default',
     },
     {
