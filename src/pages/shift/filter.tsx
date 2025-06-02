@@ -5,7 +5,6 @@ import { Filter } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../store';
-import { fetchCustomersSite } from '../../store/customerConfigSlice';
 
 const { RangePicker } = DatePicker;
 
@@ -31,24 +30,7 @@ export default function FilterComponent({ filters, setFilters, onFilterChange, a
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
     const dispatch: AppDispatch = useDispatch();
 
-    const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const { name, value } = e.target;
 
-        setFilters((prev) => {
-            const updatedFilters = { ...prev, [name]: value };
-
-            if (name === "customer_id") {
-                updatedFilters.site_id = '';
-                updatedFilters.service_id = '';
-
-                if (value) {
-                    dispatch(fetchCustomersSite({ customerId: value }));
-                }
-            }
-
-            return updatedFilters;
-        });
-    };
 
     const handleDateRangeChange = (dates: any, dateStrings: [string, string]) => {
         setFilters((prev) => ({
@@ -83,7 +65,7 @@ export default function FilterComponent({ filters, setFilters, onFilterChange, a
                             name="customer_id"
                             className="w-full border border-gray-300 rounded-md"
                             value={filters.customer_id}
-                            onChange={handleChange}
+                       
                         >
                             <option value="">Select Customer</option>
                             {allcustomers?.map((customer: any) => (
@@ -101,7 +83,7 @@ export default function FilterComponent({ filters, setFilters, onFilterChange, a
                             name="site_id"
                             className="w-full border border-gray-300 rounded-md"
                             value={filters.site_id}
-                            onChange={handleChange}
+                        
                         >
                             <option value="">Select Site</option>
                             {site?.map((s: any) => (
@@ -133,7 +115,7 @@ export default function FilterComponent({ filters, setFilters, onFilterChange, a
                             name="service_id"
                             className="w-full border border-gray-300 rounded-md"
                             value={filters.service_id}
-                            onChange={handleChange}
+                    
 
                         >
                             <option value="">Select Service</option>
@@ -152,7 +134,7 @@ export default function FilterComponent({ filters, setFilters, onFilterChange, a
                             name="Guard_Schedule.guard_id"
                             className="w-full border border-gray-300 rounded-md"
                             value={filters["Guard_Schedule.guard_id"]}
-                            onChange={handleChange}
+                        
                         >
                             <option value="">Select Guard</option>
                             {gaurds?.map((guard: any) => (
