@@ -9,7 +9,7 @@ import Sidebar from './Sidebar';
 import Portals from '../../components/Portals';
 import Cookies from 'js-cookie';
 import { debounce } from 'lodash';
-import { fetchGymOwneGym } from '../../store/customerConfigSlice';
+import { profile } from '../../store/customerConfigSlice';
 const DefaultLayout = ({ children }: PropsWithChildren) => {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const dispatch: AppDispatch = useDispatch();
@@ -18,8 +18,6 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
     const [showLoader, setShowLoader] = useState(true);
     const [showTopButton, setShowTopButton] = useState(false);
     const [showToButton, setShowToButton] = useState(false);
-
-
 
     const goToTop = () => {
         document.body.scrollTop = 0;
@@ -50,15 +48,12 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
         };
     }, []);
 
-    {
-        userRole === 'gym_owner' &&
-            useEffect(() => {
-                const token = Cookies.get('token');
-                if (token) {
-                    dispatch(fetchGymOwneGym());
-                }
-            }, [dispatch]);
-    }
+    useEffect(() => {
+        const token = Cookies.get('token');
+        if (token) {
+            dispatch(profile());
+        }
+    }, [dispatch]);
 
     return (
         <App>

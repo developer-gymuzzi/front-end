@@ -29,6 +29,7 @@ export default function CustomGymForm() {
         commissionPercentage: 0,
         gymtype: '',
         isPendingApproval: '',
+        price:0
     };
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -74,6 +75,7 @@ export default function CustomGymForm() {
                 commissionPercentage: gymData.commissionPercentage || 20,
                 gymtype: gymData.gymtype || 'gym',
                 isPendingApproval: gymData.isPendingApproval || 'pending',
+                price:gymData.price || 0
             });
 
             setPhotos(gymData.gymphotos || []);
@@ -126,6 +128,8 @@ export default function CustomGymForm() {
             form.append('gst', formData.gst);
             form.append('license_no', formData.license_no);
             form.append('gymtype', formData.gymtype);
+            form.append('price',formData.price.toString())
+
 
             if (amenities.length > 0) {
                 amenities.forEach((amenity) => {
@@ -679,25 +683,24 @@ export default function CustomGymForm() {
                                         )}
                                     </div>
 
-                                    {/* <div>
+                                     <div>
                                         <div className="flex items-center justify-between mb-2">
-                                            <label className="block text-sm font-medium text-gray-700">Approval Status</label>
+                                            <label className="block text-sm font-medium text-gray-700">Price</label>
                                         </div>
                                         {isEditing ? (
-                                            <select
-                                                name="isPendingApproval"
-                                                value={formData.isPendingApproval}
+                                            <input
+                                                type="number"
+                                                name="price"
+                                                value={formData.price}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white"
-                                            >
-                                                <option value="pending">Pending</option>
-                                                <option value="approved">Approved</option>
-                                                <option value="rejected">Rejected</option>
-                                            </select>
+                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                            />
                                         ) : (
-                                            <p className="text-gray-900 py-2.5">{approvalStatusOptions[formData.isPendingApproval as keyof typeof approvalStatusOptions]}</p>
+                                            <p className="text-gray-900 py-2.5 flex items-center">
+                                                {formData.price}
+                                            </p>
                                         )}
-                                    </div> */}
+                                    </div>
                                 </div>
                             </div>
                         )}

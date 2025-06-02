@@ -32,6 +32,8 @@ const Earning = lazy(() => import('../pages/Earnings/list'));
 const GymOwnerGym = lazy(() => import('../pages/Gym/gym_ownerManage'));
 const GymView = lazy(()=>import('../pages/Gym/GymownerViewgym'))
 const AddGym = lazy(()=> import('../pages/Gym/addGym'))
+const AdminTicket = lazy(()=>import('../pages/ticket/list'))
+const AdminMessage = lazy(()=>import('../pages/ticket/messages'))
 
 const routes = [
     {
@@ -53,6 +55,24 @@ const routes = [
         element: (
             <ProtectedRoute allowedRoles={['admin']}>
                 <Gym />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
+    },
+        {
+        path: '/adminticket',
+        element: (
+            <ProtectedRoute allowedRoles={['admin']}>
+                <AdminTicket />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
+    },
+     {
+        path: '/adminmessages/:id',
+        element: (
+            <ProtectedRoute allowedRoles={['admin']}>
+                <AdminMessage />
             </ProtectedRoute>
         ),
         layout: 'default',
@@ -184,9 +204,13 @@ const routes = [
         element: <Editpermissions />,
         layout: 'default',
     },
-    {
+     {
         path: '/profile',
-        element: <ProfilePage />,
+        element: (
+            <ProtectedRoute allowedRoles={['admin', 'gym_owner']}>
+                <ProfilePage />
+            </ProtectedRoute>
+        ),
         layout: 'default',
     },
     {

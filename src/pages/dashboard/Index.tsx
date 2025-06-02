@@ -1,212 +1,158 @@
-import { NavLink } from "react-router-dom";
-import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/react";
-import Cookies from "js-cookie";
-import axios from "axios";
-import { message } from "antd";
-import React, { useState } from "react";
-import ScheduleOverview from "./schedule-overview";
-import LateComers from "./late-comers";
-import { Clock, CalendarCheck } from "lucide-react"
-import Loader from "../../components/Loader";
-import CustomDatePicker from "../shift/custom-datepicker";
-import Filter from './filter';
-import { IRootState } from '../../store';
-import { useSelector } from "react-redux";
-const Index = () => {
-    const user = useSelector((state: IRootState) => state.customerConfig.user) as Record<string, string> | null;
-    const endpoint = import.meta.env.VITE_API_LIVEHOST;
-    const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
-    const token = Cookies.get("token") || "";
-    const secretKey = import.meta.env.VITE_DECREYPT_KEY;
+"use client"
 
-    const [filters, setFilters] = useState({
-        guard: '',
-        site_name: '',
-    });
-    const [Loading, setLoading] = React.useState(true);
-    const [Response, setresponse]: any = React.useState([]);
-    const getCurrentWeekRange = () => {
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const start = new Date(today);
-        start.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-        const end = new Date(start);
-        end.setDate(start.getDate() + 6);
+export default function Component() {
+  const chartData = [
+    { day: "Sun", visits: 30, x: 50, y: 180 },
+    { day: "Mon", visits: 45, x: 100, y: 150 },
+    { day: "Tue", visits: 25, x: 150, y: 200 },
+    { day: "Wed", visits: 60, x: 200, y: 120 },
+    { day: "Thu", visits: 50, x: 250, y: 140 },
+    { day: "Fri", visits: 70, x: 300, y: 100 },
+    { day: "Sat", visits: 55, x: 350, y: 130 },
+  ]
 
-        return { start, end };
-    };
-    const [selectedRange, setSelectedRange] = React.useState<{ start: Date; end: Date }>(getCurrentWeekRange());
-    const formatDate = (date: Date) => {
-        console.log(date.getFullYear())
-        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    };
-    const Dashdata = async () => {
-        setLoading(true);
-        try {
-            const { start, end } = selectedRange;
-            const startDate = formatDate(start); // Format as YYYY-MM-DD
-            const endDate = formatDate(end);
+  const pathData = chartData.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ")
 
-            let query = `route=dashboard&start_date=${startDate}&end_date=${endDate}`;
-
-            // Append filters if they are not empty
-            if (filters.guard) {
-                query += `&guard=${filters.guard}`;
-            }
-            if (filters.site_name) {
-                query += `&site_name=${filters.site_name}`;
-            }
-
-            const { data } = await axios.get(`${endpoint}?${query}`, {
-                headers: {
-                    "x-api-key": apiKey,
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (data.status === false) {
-                message.error(data.message);
-            }
-            setresponse(data.data);
-        } catch (error) {
-            message.error("Something went wrong while fetching roles!");
-
-        }
-        setLoading(false);
-    };
-
-    // React.useEffect(() => {
-    //     Dashdata();
-    // }, [selectedRange, filters]);
-
-
-
-    return (
-
-        <div className="">
-      
-                <div className="flex items-center justify-between p-2">
-                    {/* Date range selector */}
-                    < div className="grid gap-3" >
-                        {/* <h1 className="text-2xl font-bold mb-6 text-gray-800">Schedule Management</h1> */}
-                    </div>
-                    <div className="flex items-center w-1/1.5 gap-2">
-                        <CustomDatePicker selectedRange={selectedRange} onRangeChange={setSelectedRange} />
-                        <Filter onFilterChange={setFilters} />
-                    </div>
-
-                </div>
-            
-       
-                <div>
-          
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                            <Card className='Dashboardtop'>
-
-                                <CardBody className="flex flex-col items-center justify-center p-4 gap-4">
-                                    <div className="Dashboardtop-icon">
-                                        <div className='icon'>
-                                            <img src="/assets/images/guard.png" alt="people" width={'40px'} />
-                                        </div>
-                                    </div>
-                                    {/* <div className="total_number grid text-center"> People <span className="">{Response.Employee_total}</span></div> */}
-                                </CardBody>
-
-                            </Card>
-                            <Card className='Dashboardtops'>
-
-                                <CardBody className="flex flex-col items-center justify-center p-4 gap-4">
-                                    <div className="Dashboardtop-icon">
-                                        <div className='icon'>
-                                            <p className='default-icon'>
-                                                <img src="/assets/images/scheduling.png" alt="people" width={'40px'} />
-                                            </p>
-
-                                        </div>
-                                    </div>
-                                    <div className="total_number grid text-center"> Shifts <span className="">{Response.Shift_total}</span></div>
-                                </CardBody>
-                            </Card>
-                            <Card className='Dashboardtop'>
-
-                                <CardBody className="flex flex-col items-center justify-center p-4 gap-4">
-                                    <div className="Dashboardtop-icon">
-                                        <div className='icon'>
-                                            <img src="/assets/images/working-time.png" alt="people" width={'40px'} />
-                                        </div>
-                                    </div>
-                                    <div className="total_number grid text-center"> Time <span className="">{Response.total_hours} hr</span></div>
-                                </CardBody>
-                            </Card>
-                            <Card className='Dashboardtop'>
-                                <CardBody className="flex flex-col items-center justify-center p-4 gap-4">
-                                    <div className="Dashboardtop-icon">
-                                        <div className='icon'>
-                                            <img src="/assets/images/survey.png" alt="people" width={'40px'} />
-                                        </div>
-                                    </div>
-                                    <div className="total_number grid text-center"> Sites <span className="">{Response.site_total}</span></div>
-                                </CardBody>
-                            </Card>
-                            <Card className='Dashboardtop'>
-                                <CardBody className="flex flex-col items-center justify-center p-4 gap-4">
-                                    <div className="Dashboardtop-icon">
-                                        <div className='icon'>
-                                            <img src="/assets/images/cooperation.png" alt="people" width={'40px'} />
-                                        </div>
-                                    </div>
-                                    <div className="total_number grid text-center"> customer <span className="">{Response.Customer_total}</span></div>
-                                </CardBody>
-                            </Card>
-                        </div>
-                  
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className=" w-full mt-4">
-                         
-                                <Card className="p-4 h-[400px]">
-                                    <div>
-                                        <h3 className="text-base font-medium">Schedule overview</h3>
-                                        <p className="text-xs text-muted-foreground">
-                                            Data shown includes saved shifts for the selected date range and filters
-                                        </p>
-                                    </div>
-                                    <CardBody className="flex flex-col items-center justify-center min-h-[200px] text-center">
-                                        <div className="rounded-full bg-gray-100 p-6 mb-4">
-                                            <CalendarCheck className="w-12 h-12 text-gray-400" />
-                                        </div>
-                                        <h3 className="text-lg font-medium mb-2">We couldn&apos;t find any data</h3>
-                                        <p className="text-sm text-muted-foreground">No shifts data found for the selected date range and filters.</p>
-                                    </CardBody>
-                                </Card>
-                       
-                                {/* <ScheduleOverview Responsedata={Response.Schedule_overview} daterange={selectedRange} /> */}
-                          
-                        </div>
-                        <div className=" w-full mt-4">
-                        
-                                <Card className="p-4 h-[400px]">
-                                    <div>
-                                        <h3 className="text-base font-medium">Late comers</h3>
-
-                                    </div>
-                                    <CardBody className="flex flex-col items-center justify-center min-h-[200px] text-center">
-                                        <div className="rounded-full bg-gray-100 p-6 mb-4">
-                                            <Clock className="w-12 h-12 text-gray-400" />
-                                        </div>
-                                        <h3 className="text-lg font-medium mb-2">We couldn&apos;t find any late comers</h3>
-                                        <p className="text-sm text-muted-foreground">No late comers found for the selected date range and filters.</p>
-                                    </CardBody>
-                                </Card>
-                                
-                                {/* <LateComers Responsedata={Response.getLateComers} /> */}
-                     
-                        </div>
-                    </div>
-                </div>
-            
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-10xl mx-auto">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <p className="text-gray-500 text-sm mb-2">Members</p>
+            <p className="text-4xl font-bold text-purple-600">120</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <p className="text-gray-500 text-sm mb-2">Revenue</p>
+            <p className="text-4xl font-bold text-green-500">$8,250</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <p className="text-gray-500 text-sm mb-2">Visits Today</p>
+            <p className="text-4xl font-bold text-orange-500">46</p>
+          </div>
         </div>
-    );
-};
 
-export default Index;
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Gyms Status */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Gyms Status</h2>
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">Powerhouse Gym</h3>
+                  <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                    Approved
+                  </button>
+                </div>
+                <p className="text-gray-500 text-sm">Last updated: May 20, 2025</p>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">Elite Fitness Center</h3>
+                  <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                    Pending
+                  </button>
+                </div>
+                <p className="text-gray-500 text-sm">Last updated: May 18, 2025</p>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">Iron Paradise</h3>
+                  <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                    Rejected
+                  </button>
+                </div>
+                <p className="text-gray-500 text-sm">Last updated: May 15, 2025</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Weekly Visits Chart */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Weekly Visits</h2>
+            <div className="relative">
+              {/* Chart Container */}
+              <div className="h-64 relative">
+                {/* Y-axis labels */}
+                <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-sm text-gray-500">
+                  <span>70</span>
+                  <span>53</span>
+                  <span>35</span>
+                  <span>18</span>
+                  <span>0</span>
+                </div>
+
+                {/* Chart Area */}
+                <div className="ml-8 h-full relative">
+                  {/* Grid lines */}
+                  <div className="absolute inset-0">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div key={i} className="absolute w-full border-t border-gray-200" style={{ top: `${i * 25}%` }} />
+                    ))}
+                  </div>
+
+                  {/* Chart SVG */}
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 240">
+                    {/* Chart line */}
+                    <path d={pathData} stroke="#8b5cf6" strokeWidth="3" fill="none" className="drop-shadow-sm" />
+
+                    {/* Data points */}
+                    {chartData.map((point, index) => (
+                      <circle
+                        key={index}
+                        cx={point.x}
+                        cy={point.y}
+                        r="5"
+                        fill="#8b5cf6"
+                        className="drop-shadow-sm hover:r-6 transition-all cursor-pointer"
+                      />
+                    ))}
+                  </svg>
+                </div>
+              </div>
+
+              {/* X-axis labels */}
+              <div className="flex justify-between mt-4 ml-8 text-sm text-gray-500">
+                {chartData.map((point) => (
+                  <span key={point.day}>{point.day}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center mt-6">
+              <div className="w-4 h-4 bg-purple-600 rounded-full mr-3"></div>
+              <span className="text-sm font-medium text-gray-900">Weekly Visits</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Stats Row */}
+        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <p className="text-gray-500 text-sm mb-2">Active Memberships</p>
+            <p className="text-2xl font-bold text-blue-600">98</p>
+            <p className="text-green-500 text-sm mt-1">↗ +5% from last week</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <p className="text-gray-500 text-sm mb-2">Equipment Usage</p>
+            <p className="text-2xl font-bold text-indigo-600">87%</p>
+            <p className="text-green-500 text-sm mt-1">↗ +12% from last week</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <p className="text-gray-500 text-sm mb-2">Peak Hours</p>
+            <p className="text-2xl font-bold text-pink-600">6-8 PM</p>
+            <p className="text-gray-500 text-sm mt-1">Most active time</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border">
+            <p className="text-gray-500 text-sm mb-2">Monthly Growth</p>
+            <p className="text-2xl font-bold text-emerald-600">+15%</p>
+            <p className="text-green-500 text-sm mt-1">↗ Above target</p>
+          </div>
+        </div> */}
+      </div>
+    </div>
+  )
+}

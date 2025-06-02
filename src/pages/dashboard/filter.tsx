@@ -3,7 +3,6 @@ import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/react";
 import { Filter } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { AppDispatch, IRootState } from '../../store';
-import { fetchCustomersSite, fetchGaurd } from '../../store/customerConfigSlice';
 import { useDispatch } from 'react-redux';
 
 interface ShiftFilters {
@@ -25,18 +24,11 @@ interface Site {
 export default function FilterComponent({ onFilterChange }: { onFilterChange: (filters: ShiftFilters) => void }) {
     const dispatch: any = useDispatch();
 
-    // Fetch guards and sites from Redux store
-    const guards = useSelector((state: IRootState) => state.customerConfig.gaurds) as Guards[];
-    const sites = useSelector((state: IRootState) => state.customerConfig.site) as Site[];
+
 
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Format guards for dropdown
-    const formattedGuards = guards.map(guard => ({
-        id: guard.ID,
-        name: `${guard.first_name} ${guard.last_name}`.trim(),
-    }));
 
     const [filters, setFilters] = useState<ShiftFilters>({
         guard: '',
@@ -86,11 +78,7 @@ export default function FilterComponent({ onFilterChange }: { onFilterChange: (f
                             onChange={handleChange}
                         >
                             <option value="">Select a Guard</option>
-                            {formattedGuards?.map((Guard) => (
-                                <option key={Guard.id} value={Guard.id}>
-                                    {Guard.name}
-                                </option>
-                            ))}
+                     
                         </select>
                     </div>
 
@@ -105,11 +93,7 @@ export default function FilterComponent({ onFilterChange }: { onFilterChange: (f
                             onChange={handleChange}
                         >
                             <option value="">Select a Site</option>
-                            {sites?.map((site) => (
-                                <option key={site.ID} value={site.ID}>
-                                    {site.site_name}
-                                </option>
-                            ))}
+                    
                         </select>
                     </div>
                     {/* Buttons */}

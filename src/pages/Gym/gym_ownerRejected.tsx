@@ -101,7 +101,7 @@ const RejectedGym = ({ filters }: { filters: any }) => {
                                           <div className="flex items-center gap-2">
                                               <button
                                                   className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 hover:bg-yellow-200 transition"
-                                                  onClick={() => navigate(`/viewGyms/${entry._id}`, { state: { gymData: entry } })}
+                                                  onClick={() => navigate(`/viewGym/${entry._id}`, { state: { gymData: entry } })}
                                               >
                                                   <Eye size={18} className="text-green-600" />
                                               </button>

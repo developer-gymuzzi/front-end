@@ -120,6 +120,7 @@ export default function OtpVerification() {
 
                 Cookies.set('token', response.data.token, { expires: 7 });
                  localStorage.setItem('userRole', response.data.user.role);
+                 localStorage.setItem('userId', response.data.user.userId)
                 const { role } = response.data.user;
 
                 if (role === 'admin') {

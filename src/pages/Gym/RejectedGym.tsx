@@ -7,6 +7,7 @@ import { message } from 'antd';
 import { Check, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 const RejectedGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
@@ -35,11 +36,13 @@ const RejectedGym = ({ filters }: { filters: any }) => {
 
     const approval = async (gymId: string, approvalStatus: 'approved' | 'rejected') => {
         try {
+              const token = Cookies.get('token')
             const { data } = await axios.post(
                 `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/approve/approveRequest`,
                 { gymId, approvalStatus },
                 {
                     headers: {
+                        token:token,
                         'Content-Type': 'application/json',
                     },
                 }

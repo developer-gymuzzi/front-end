@@ -14,6 +14,7 @@ const initialState = {
     users: [],
     gym: [],
     gyms: [],
+    profileData: [],
     GymownerGym: [],
     activeGym: null,
     gymCounts: {
@@ -45,8 +46,6 @@ const initialState = {
         previousPage: null,
     },
 };
-
-
 
 export const fetchCustomers = createAsyncThunk('customer/fetchCustomers', async (_, { rejectWithValue }) => {
     try {
@@ -153,29 +152,7 @@ export const fetchGym = createAsyncThunk(
     }
 );
 
-export const fetchGymOwneGym = createAsyncThunk('customer/fetchGymOwneGym', async (_, { rejectWithValue }) => {
-    const token = Cookies.get('token');
 
-    if (!token) {
-        return rejectWithValue('Token is not available');
-    }
-    try {
-        const { data } = await axios.get(`${endpoint}/v1/gymOwner/listing/gymlisting`, {
-            headers: {
-                token,
-            },
-        });
-        if (data.success) {
-            return {
-                gyms: data.gyms,
-            };
-        } else {
-            return rejectWithValue('Failed to fetch gym data.');
-        }
-    } catch (error: any) {
-        return rejectWithValue(error?.response?.data?.message || 'Error fetching gym data.');
-    }
-});
 
 export const activeGym = createAsyncThunk('customer/activeGym', async (gymId: string, { rejectWithValue }) => {
     try {
@@ -242,6 +219,30 @@ export const GymownerGymList = createAsyncThunk(
     }
 );
 
+export const profile = createAsyncThunk(
+  'customer/profile',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`${endpoint}/v1/auth/getProfile`, {
+        headers: {
+          token: token,
+        },
+      });
+
+      if (data.success) {
+           return data.data[0]
+      } else {
+        return rejectWithValue('Failed to fetch profile data.');
+      }
+    } catch (error: any) {
+      return rejectWithValue(
+        error?.response?.data?.message || 'Error fetching profile data.'
+      );
+    }
+  }
+);
+
+
 const customerSlice = createSlice({
     name: 'customer',
     initialState,
@@ -291,18 +292,7 @@ const customerSlice = createSlice({
                 state.loading = false;
                 message.error(action.payload as string);
             })
-            .addCase(fetchGymOwneGym.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(fetchGymOwneGym.fulfilled, (state, action) => {
-                state.loading = false;
-                state.gyms = action.payload.gyms;
-            })
-            .addCase(fetchGymOwneGym.rejected, (state, action) => {
-                state.loading = false;
-                message.error(action.payload as string);
-            })
+
             .addCase(activeGym.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -330,6 +320,18 @@ const customerSlice = createSlice({
                 };
             })
             .addCase(GymownerGymList.rejected, (state, action) => {
+                state.loading = false;
+                message.error(action.payload as string);
+            })
+            .addCase(profile.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(profile.fulfilled, (state, action) => {
+                state.loading = false;
+                state.profileData = action.payload;
+            })
+            .addCase(profile.rejected, (state, action) => {
                 state.loading = false;
                 message.error(action.payload as string);
             });

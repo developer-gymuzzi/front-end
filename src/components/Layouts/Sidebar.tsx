@@ -135,7 +135,8 @@ const Sidebar = () => {
                                         </>
                                     )}
 
-                                          {userRole === 'admin' && (
+                                 {userRole === 'admin' && (
+                                    <>
                                         <li className="nav-item">
                                             <NavLink to="/gym" className="group" onClick={() => toggleMenu('')}>
                                                 <div className="flex items-center">
@@ -144,9 +145,19 @@ const Sidebar = () => {
                                                 </div>
                                             </NavLink>
                                         </li>
+
+                                               <li className="nav-item">
+                                            <NavLink to="/adminticket" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Ticket')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                        </>
                                     )}
 
-                                    {userRole === 'gym_owner' && (
+                                {userRole === 'gym_owner' && (
                                         <li className="nav-item">
                                             <NavLink to="/gym_ownerGym" className="group" onClick={() => toggleMenu('')}>
                                                 <div className="flex items-center">

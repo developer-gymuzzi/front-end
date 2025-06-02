@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AppDispatch, IRootState } from '../../store';
 import { toggleSidebar, toggleRTL } from '../../store/themeConfigSlice';
 import { useTranslation } from 'react-i18next';
 import { Bell, ChevronDown, Power } from 'lucide-react';
-import { Badge, message, Dropdown, Menu } from 'antd';
+import { Badge, message, Dropdown, Menu, Popover, Avatar } from 'antd';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -13,14 +13,25 @@ import socket from '../../socket';
 import IconMenu from '../Icon/IconMenu';
 import moment from 'moment';
 import { activeGym } from '../../store/customerConfigSlice';
+import Profile from './Profile';
+
+interface ProfileData {
+    profileImage?: string;
+    avatar?: string;
+
+    // add other fields as needed
+}
 
 const Header = () => {
-    const dispatch :AppDispatch = useDispatch();
+    const dispatch: AppDispatch = useDispatch();
     const location = useLocation();
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const userRole = localStorage.getItem('userRole');
     const [notifications, setNotifications] = useState<any[]>([]);
     const [flag, setFlag] = useState(themeConfig.locale);
+    const { profileData } = useSelector((state: IRootState) => state.customerConfig) as { profileData: ProfileData };
+    const imageUrl = profileData.profileImage || profileData.avatar || '';
+    const navigate = useNavigate()
 
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
     const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
@@ -39,10 +50,9 @@ const Header = () => {
     }
     const { gyms } = useSelector((state: IRootState) => state.customerConfig) as { gyms: Gym[] };
 
-    const handleSelectGym = (gymId:string) => {
-    
+    const handleSelectGym = (gymId: string) => {
         dispatch(activeGym(gymId));
-        toggleDropdown(); 
+        toggleDropdown();
     };
 
     useEffect(() => {
@@ -63,10 +73,14 @@ const Header = () => {
         }
     }, [location]);
 
-    // Fetch unread notifications
     const fetchNotification = async () => {
         try {
-            const { data } = await axios.get(`${endpoint}/v1/admin/list/listingNotify`);
+            const token = Cookies.get('token');
+            const { data } = await axios.get(`${endpoint}/v1/admin/list/listingNotify`, {
+                headers: {
+                    token: token,
+                },
+            });
             if (data.success) {
                 setNotifications(data.data || []);
             }
@@ -85,21 +99,31 @@ const Header = () => {
     };
 
     useEffect(() => {
-        socket.emit('join-admin');
+        if (userRole === 'admin') {
+            socket.emit('join-admin');
 
-        socket.on('gym_updated', (notification: any) => {
-            setNotifications((prev) => [notification, ...prev]);
-        });
+            socket.on('gym_registered', (notification: any) => {
+                setNotifications((prev) => [notification, ...prev]);
+            });
 
-        socket.on('gym_registered', (notification: any) => {
-            setNotifications((prev) => [notification, ...prev]);
-        });
+            socket.on('gym_updated', (notification: any) => {
+                setNotifications((prev) => [notification, ...prev]);
+            });
+        } else if (userRole === 'gym_owner') {
+            const userId = localStorage.getItem('userId');
+            socket.emit('join-gym-owner', userId);
+
+            socket.on('approval_status', (notification: any) => {
+                setNotifications((prev) => [notification, ...prev]);
+            });
+        }
 
         fetchNotification();
 
         return () => {
-            socket.off('gym_updated');
             socket.off('gym_registered');
+            socket.off('gym_updated');
+            socket.off('approval_status');
         };
     }, []);
 
@@ -162,6 +186,10 @@ const Header = () => {
         </Menu>
     );
 
+    const handleNavigation = ()=>{
+        navigate('/profile')
+    }
+
     return (
         <header className={`z-40 ${themeConfig.semidark && themeConfig.menu === 'horizontal' ? 'dark' : ''}`}>
             <div className="shadow-sm">
@@ -173,23 +201,43 @@ const Header = () => {
                     </div>
 
                     <div className="sm:flex-1 flex justify-between items-center dark:text-[#d0d2d6]">
+                        {/* Left: Sidebar Toggle */}
                         <div>
-                            <button type="button" className="collapse-icon w-8 h-8 rounded-full flex items-center" onClick={() => dispatch(toggleSidebar())}>
+                            <button type="button" className="collapse-icon w-8 h-8 rounded-full flex items-center justify-center" onClick={() => dispatch(toggleSidebar())}>
                                 <IconMenu className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-5 relative">
+                        {/* Right: Notifications, Profile, Logout */}
+                        <div className="flex items-center gap-3 relative">
+                            {/* Notifications */}
                             <Dropdown overlay={renderNotificationMenu()} trigger={['click']}>
                                 <div className="cursor-pointer relative">
                                     <Bell className="text-xl" />
                                     <Badge count={notifications.length} className="absolute -top-1 -right-1" />
                                 </div>
                             </Dropdown>
-                            
 
+                            {/* Profile Popover */}
+                            <Popover
+                                trigger={'hover'}
+                                
+                                arrow={false}
+                                rootClassName="w-[366px]"
+                                content={
+                                    <Suspense fallback={<div>Loading...</div>}>
+                                        <Profile />
+                                    </Suspense>
+                                }
+                            >
+                                <div className="hover:bg-[#ffffff29] h-[40px] rounded-[10px] px-2 flex items-center cursor-pointer transition-all">
+                                    <Avatar size="small" src={imageUrl} />
+                                </div>
+                            </Popover>
+
+                            {/* Logout */}
                             <NavLink to="#" onClick={SignOut}>
-                                <Power className="text-red-500" />
+                                <Power className="text-red-500 w-5 h-5" />
                             </NavLink>
                         </div>
                     </div>
