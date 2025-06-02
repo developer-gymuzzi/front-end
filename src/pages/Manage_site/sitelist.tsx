@@ -31,11 +31,8 @@ export default function Sitelist() {
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
     const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
     const token = Cookies.get('token') || '';
-    const permissions = useSelector((state: IRootState) => state.customerConfig.permissions) as Record<string, string[]>;
 
-    const checkPermission = (module: string, action: string) => {
-        return permissions?.[module]?.includes(action);
-    };
+
     const getsitlist = async (page = 1, pageSize = 5) => {
         try {
             const { data } = await axios.get(`${endpoint}?route=admin/Get/site&page=${page}&pageSize=${pageSize}`, {
@@ -57,13 +54,12 @@ export default function Sitelist() {
             message.error('Something went wrong while fetching inventory data.');
         }
     };
-    {
-        checkPermission("manageSite", "show") && (
+    
             useEffect(() => {
                 getsitlist(currentPage, pageSize);
             }, [currentPage, pageSize])
-        )
-    }
+        
+   
     const handleNextPage = () => {
         if (currentPage < totalPages) {
             setCurrentPage(currentPage + 1);
@@ -193,12 +189,11 @@ export default function Sitelist() {
                                                             <span className="cursor-pointer" onClick={() => handleView(entry)}>
                                                                 <View className="h-5 w-5 text-gray-500" />
                                                             </span>
-                                                            {checkPermission("manageSite", "edit") && (
+                                                    
                                                                 <span onClick={() => handleEdit(entry)} className="cursor-pointer">
                                                                     <Edit className="h-5 w-5 text-gray-500 " />
                                                                 </span>
-                                                            )}
-                                                            {checkPermission("manageSite", "delete") && (
+                                                        
                                                                 <span className="cursor-pointer"
                                                                     onClick={() => {
                                                                         Swal.fire({
@@ -217,7 +212,7 @@ export default function Sitelist() {
                                                                         });
                                                                     }}
                                                                 ><Delete className="h-5 w-5 text-gray-500" /></span>
-                                                            )}
+                                                     
                                                         </div>
                                                     </td>
                                                 </tr>

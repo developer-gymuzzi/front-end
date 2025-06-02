@@ -32,7 +32,6 @@ export default function customerTrash() {
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
     const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
     const token = Cookies.get('token') || '';
-    const permissions = useSelector((state: IRootState) => state.customerConfig.permissions) as Record<string, string[]>;
 
 
     const getsitlist = async (page = 1, pageSize = 5) => {

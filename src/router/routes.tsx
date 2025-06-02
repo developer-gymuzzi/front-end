@@ -1,23 +1,17 @@
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoutes';
-const RejectedShift = lazy(() => import('../pages/HRM/rejectedShifts'));
 const Index = lazy(() => import('../pages/dashboard/Index'));
 const Login = lazy(() => import('../pages/Auth/Login'));
-const Inventory = lazy(() => import('../pages/HRM/Inventory/Inventory'));
-const Clock = lazy(() => import('../pages/HRM/Clocking/list'));
-const ManagePeople = lazy(() => import('../pages/HRM/Trainers/Managepepople'));
 const ManageSite = lazy(() => import('../pages/Manage_site/Manage'));
 const AddGaurd = lazy(() => import('../pages/HRM/AddGaurds'));
 const OTP = lazy(() => import('../pages/Auth/Otp'));
-const Manage_services = lazy(() => import('../pages/Manage_services/manage'));
 const Company = lazy(() => import('../pages/usersRoles/RolesUserList'));
 const ManageTrash = lazy(() => import('../pages/Manage_site/manageTrash'));
 const Addpepople = lazy(() => import('../pages/HRM/Trainers/Add_gaurd'));
 const AddSite = lazy(() => import('../pages/Manage_site/AddorEditSite'));
-const EditGaurd = lazy(() => import('../pages/HRM/Trainers/Edit_gaurd'));
 const AddShift = lazy(() => import('../pages/Schedule/addShift'));
-const Guardshift = lazy(() => import('../pages/guard/shift'));
+// const Guardshift = lazy(() => import('../pages/guard/shift'));
 const Permissions = lazy(() => import('../pages/Permission/crm-permissions'));
 const Editpermissions = lazy(() => import('../pages/Permission/role-editor'));
 const ScheduleInterface = lazy(() => import('../pages/shift/newtest'));
@@ -129,31 +123,31 @@ const routes = [
         element: <AddCompany />,
         layout: 'blank',
     },
-    {
-        path: '/inventory',
-        element: <Inventory />,
-        layout: 'default',
-    },
-    {
-        path: '/clock',
-        element: <Clock />,
-        layout: 'default',
-    },
-    {
-        path: '/managepeople',
-        element: <ManagePeople />,
-        layout: 'default',
-    },
+    // {
+    //     path: '/inventory',
+    //     element: <Inventory />,
+    //     layout: 'default',
+    // },
+    // {
+    //     path: '/clock',
+    //     element: <Clock />,
+    //     layout: 'default',
+    // },
+    // {
+    //     path: '/managepeople',
+    //     element: <ManagePeople />,
+    //     layout: 'default',
+    // },
     {
         path: '/add/user',
         element: <Addpepople />,
         layout: 'default',
     },
-    {
-        path: '/edit/user/:id',
-        element: <EditGaurd />,
-        layout: 'default',
-    },
+    // {
+    //     path: '/edit/user/:id',
+    //     element: <EditGaurd />,
+    //     layout: 'default',
+    // },
     {
         path: '/manage_site',
         element: <ManageSite />,
@@ -174,11 +168,11 @@ const routes = [
         element: <ManageTrash />,
         layout: 'default',
     },
-    {
-        path: '/manage_services',
-        element: <Manage_services />,
-        layout: 'default',
-    },
+    // {
+    //     path: '/manage_services',
+    //     element: <Manage_services />,
+    //     layout: 'default',
+    // },
     {
         path: '/schedule',
         element: <Shift />,
@@ -213,16 +207,16 @@ const routes = [
         ),
         layout: 'default',
     },
-    {
-        path: '/rejectedShifts',
-        element: <RejectedShift />,
-        layout: 'default',
-    },
-    {
-        path: '/guard/shift',
-        element: <Guardshift />,
-        layout: 'default',
-    },
+    // {
+    //     path: '/rejectedShifts',
+    //     element: <RejectedShift />,
+    //     layout: 'default',
+    // },
+    // {
+    //     path: '/guard/shift',
+    //     element: <Guardshift />,
+    //     layout: 'default',
+    // },
     {
         path: '/Geolocation',
         element: <Geolocation />,

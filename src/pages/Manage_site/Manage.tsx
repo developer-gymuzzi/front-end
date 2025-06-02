@@ -23,7 +23,6 @@ const tabs = [
 export default function Managepepople() {
     const [activeTab, setActiveTab] = useState('add-Site')
     const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set([]))
-    const permissions = useSelector((state: IRootState) => state.customerConfig.permissions) as Record<string, string[]>;
     const navigate = useNavigate();
     const handleClick = () => {
         navigate(`/add/site`);

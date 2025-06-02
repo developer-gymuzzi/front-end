@@ -14,7 +14,6 @@ import axios from "axios";
 import { toast } from 'react-toastify';
 import { message } from 'antd';
 import { useDispatch } from 'react-redux';
-import { toggleState } from '../../store/customerConfigSlice';
 export default function App() {
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
@@ -66,7 +65,7 @@ export default function App() {
             });
             if (response.data.status === true) {
                 message.success(response.data.message);
-                dispatch(toggleState())
+          
                 setFormData(initialFormData);
                 onOpenChange();
             } else if (response.data.status === false) {

@@ -7,7 +7,6 @@ import { useDispatch } from "react-redux"
 import Cookies from "js-cookie"
 import { useSelector } from "react-redux"
 import Loader from "../../components/Loader"
-import { fetchAllCustomers, fetchGaurd, fetchServices, fetchtimeprocessing } from "../../store/customerConfigSlice"
 import axios from "axios"
 import { Button, message, Modal, Skeleton } from "antd"
 import Filter from "./filter"
@@ -360,13 +359,7 @@ export default function CustomerTimeTable() {
 
       if (data.status === true) {
         message.success("Clock In/Out Updated Successfully!");
-        await dispatch(
-          fetchtimeprocessing({
-            start: selectedRange.start,
-            end: selectedRange.end,
-            filters: filters,
-          })
-        );
+       
 
         setEditedShifts((prev) => {
           const newState = { ...prev };

@@ -5,7 +5,6 @@ import { Filter } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../store';
-import { fetchCustomersSite } from '../../store/customerConfigSlice';
 
 const { RangePicker } = DatePicker;
 
@@ -42,7 +41,7 @@ export default function FilterComponent({ filters, setFilters, onFilterChange, a
                 updatedFilters.service_id = '';
     
                 if (value) {
-                    dispatch(fetchCustomersSite({ customerId: value })); 
+                  
                 }
             }
     

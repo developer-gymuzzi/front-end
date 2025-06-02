@@ -12,7 +12,6 @@ export default function Add_pepople() {
 
 
     const [loading, setLoading] = useState(false);
-    const activecompany: any = useSelector((state: IRootState) => state.customerConfig.activecompany) as { activecompany: { Name: any, ID: any } };
 
 
     const stateOptions = [
@@ -382,10 +381,7 @@ export default function Add_pepople() {
                                             value={formData.companies || undefined}
                                             onChange={(value) => setFormData((prev: any) => ({ ...prev, companies: value }))} // Updates state
                                             style={{ width: '100%' }}
-                                            options={activecompany?.map((company: any) => ({
-                                                value: company.ID,
-                                                label: company.Name,
-                                            }))}
+                                            
                                         />
                                         <span
                                             aria-hidden="true"

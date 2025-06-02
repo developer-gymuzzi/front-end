@@ -23,10 +23,7 @@ export default function ManageTrash() {
     const [activeTab, setActiveTab] = useState('customer')
     const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set([]))
     const navigate = useNavigate();
-    const permissions = useSelector((state: IRootState) => state.customerConfig.permissions) as Record<string, string[]>;
-    const checkPermission = (module: string, action: string) => {
-        return permissions?.[module]?.includes(action);
-    };
+
     return (
         <>
             <div className="flex flex-wrap items-center justify-between gap-3" >
@@ -43,9 +40,9 @@ export default function ManageTrash() {
                 </div >
 
                 <div className="flex flex-wrap items-center justify-end gap-3">
-                    {activeTab === 'customer' && checkPermission("managecustomer", "add") && (
+                
                         <Customeradd />
-                    )}
+              
                     {/* <Filter /> */}
 
 

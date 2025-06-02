@@ -31,7 +31,7 @@ const Header = () => {
     const [flag, setFlag] = useState(themeConfig.locale);
     const { profileData } = useSelector((state: IRootState) => state.customerConfig) as { profileData: ProfileData };
     const imageUrl = profileData.profileImage || profileData.avatar || '';
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
     const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
@@ -137,25 +137,11 @@ const Header = () => {
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
         }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const response = await axios.post(`${endpoint}?route=User/Log-out`, null, {
-                        headers: {
-                            'x-api-key': apiKey,
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-
-                    if (response.data.status === true) {
-                        document.cookie = `token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-                        Swal.fire('Logged Out!', 'You have been logged out.', 'success');
-                        window.location.href = '/';
-                    }
-                } catch (error) {
-                    Swal.fire('Error', 'Logout failed. Please try again.', 'error');
-                }
-            }
+         if (result.isConfirmed) {
+      Cookies.remove('token'); // Just remove the token
+      Swal.fire('Logged Out!', 'You have been logged out.', 'success');
+      navigate('/'); // Redirect to home
+    }
         });
     };
 
@@ -186,9 +172,9 @@ const Header = () => {
         </Menu>
     );
 
-    const handleNavigation = ()=>{
-        navigate('/profile')
-    }
+    const handleNavigation = () => {
+        navigate('/profile');
+    };
 
     return (
         <header className={`z-40 ${themeConfig.semidark && themeConfig.menu === 'horizontal' ? 'dark' : ''}`}>
@@ -221,7 +207,6 @@ const Header = () => {
                             {/* Profile Popover */}
                             <Popover
                                 trigger={'hover'}
-                                
                                 arrow={false}
                                 rootClassName="w-[366px]"
                                 content={
