@@ -114,7 +114,11 @@ const routes = [
     },
         {
         path: '/viewGym/:id',
-        element: <GymView />,
+            element: (
+            <ProtectedRoute allowedRoles={['admin','gym_owner']}>
+                <GymView />
+            </ProtectedRoute>
+        ),
         layout: 'default',
     },
     {
