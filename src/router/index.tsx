@@ -9,7 +9,6 @@ const finalRoutes = routes.map((route) => {
         element: route.layout === 'blank' ? <BlankLayout>{route.element}</BlankLayout> : <DefaultLayout>{route.element}</DefaultLayout>,
     };
 });
-
 const router =createBrowserRouter(finalRoutes);
 
 export default router;
