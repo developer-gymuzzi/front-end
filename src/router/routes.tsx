@@ -23,10 +23,10 @@ const Gym = lazy(() => import('../pages/Gym/ManageGym'));
 const GYmPage = lazy(() => import('../pages/Gym/Viewgym'));
 const Earning = lazy(() => import('../pages/Earnings/list'));
 const GymOwnerGym = lazy(() => import('../pages/Gym/gym_ownerManage'));
-const GymView = lazy(()=>import('../pages/Gym/GymownerViewgym'))
-const AddGym = lazy(()=> import('../pages/Gym/addGym'))
-const AdminTicket = lazy(()=>import('../pages/ticket/list'))
-const AdminMessage = lazy(()=>import('../pages/ticket/messages'))
+const GymView = lazy(() => import('../pages/Gym/GymownerViewgym'));
+const AddGym = lazy(() => import('../pages/Gym/addGym'));
+const AdminTicket = lazy(() => import('../pages/ticket/list'));
+const AdminMessage = lazy(() => import('../pages/ticket/messages'));
 
 const routes = [
     {
@@ -52,7 +52,7 @@ const routes = [
         ),
         layout: 'default',
     },
-        {
+    {
         path: '/adminticket',
         element: (
             <ProtectedRoute allowedRoles={['admin']}>
@@ -61,7 +61,7 @@ const routes = [
         ),
         layout: 'default',
     },
-     {
+    {
         path: '/adminmessages/:id',
         element: (
             <ProtectedRoute allowedRoles={['admin']}>
@@ -72,7 +72,7 @@ const routes = [
     },
     {
         path: '/companylist',
-                       element: (
+        element: (
             <ProtectedRoute allowedRoles={['admin']}>
                 <Company />
             </ProtectedRoute>
@@ -89,7 +89,7 @@ const routes = [
         layout: 'default',
     },
 
-        {
+    {
         path: '/addGym',
         element: (
             <ProtectedRoute allowedRoles={['gym_owner']}>
@@ -112,10 +112,10 @@ const routes = [
         element: <GYmPage />,
         layout: 'default',
     },
-        {
+    {
         path: '/viewGym/:id',
-            element: (
-            <ProtectedRoute allowedRoles={['admin','gym_owner']}>
+        element: (
+            <ProtectedRoute allowedRoles={['admin', 'gym_owner']}>
                 <GymView />
             </ProtectedRoute>
         ),
@@ -201,7 +201,7 @@ const routes = [
         element: <Editpermissions />,
         layout: 'default',
     },
-     {
+    {
         path: '/profile',
         element: (
             <ProtectedRoute allowedRoles={['admin', 'gym_owner']}>
