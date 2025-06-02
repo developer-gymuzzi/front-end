@@ -7,7 +7,6 @@ import { Drawer, DrawerContent, Switch } from "@nextui-org/react"
 import { useDispatch } from "react-redux"
 import type { AppDispatch } from "../../../store"
 import { ChevronUpIcon, ChevronDownIcon } from "lucide-react"
-import { fetchCustomersSite } from "../../../store/customerConfigSlice"
 import Cookies from "js-cookie"
 import axios from "axios"
 import { Modal } from "antd"
@@ -141,10 +140,7 @@ export default function EditShift({ isOpen, setIsOpen, gaurds, allcustomers, ser
             })
         }
 
-        // Fetch sites for the selected customer
-        if (customerId) {
-            dispatch(fetchCustomersSite({ customerId }))
-        }
+
     }
 
 

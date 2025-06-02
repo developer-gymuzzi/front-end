@@ -7,7 +7,6 @@ import { message, Modal } from "antd"
 import { useDispatch } from "react-redux"
 import type { AppDispatch } from "../../../store"
 import { ChevronUpIcon, ChevronDownIcon, X } from "lucide-react"
-import { fetchCustomersSite } from "../../../store/customerConfigSlice"
 import Cookies from "js-cookie"
 import axios from "axios"
 import { format, addMonths, isAfter, isSameDay } from "date-fns"
@@ -107,7 +106,7 @@ export default function Add_shift({ selectDate, isOpen, setIsOpen, gaurds, allcu
       })
     }
 
-    dispatch(fetchCustomersSite({ customerId }))
+
   }
 
   // Recurring shift handlers

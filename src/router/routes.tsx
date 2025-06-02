@@ -18,7 +18,6 @@ const ScheduleInterface = lazy(() => import('../pages/shift/newtest'));
 const ProfilePage = lazy(() => import('../pages/profile'));
 const AddCompany = lazy(() => import('../pages/usersRoles/Companyadd'));
 const Customertimetable = lazy(() => import('../pages/Timeprocessing/customer-time-table'));
-const Shift = lazy(() => import('../pages/shift/schedule-interface'));
 const Geolocation = lazy(() => import('../pages/Location/googlemap'));
 const Gym = lazy(() => import('../pages/Gym/ManageGym'));
 const GYmPage = lazy(() => import('../pages/Gym/Viewgym'));
@@ -173,11 +172,11 @@ const routes = [
     //     element: <Manage_services />,
     //     layout: 'default',
     // },
-    {
-        path: '/schedule',
-        element: <Shift />,
-        layout: 'default',
-    },
+    // {
+    //     path: '/schedule',
+    //     element: <Shift />,
+    //     layout: 'default',
+    // },
     {
         path: '/add/Shift',
         element: <AddShift />,
