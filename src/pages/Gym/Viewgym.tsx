@@ -4,6 +4,16 @@ import { X, Plus, Upload, Edit2, Save, ChevronDown, ChevronUp, MapPin, Phone, Ma
 import { useLocation } from 'react-router-dom';
 import { message } from 'antd';
 import axios from 'axios';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { useMap } from 'react-leaflet';
+
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 export default function CustomGymForm() {
     const [isEditing, setIsEditing] = useState(false);
@@ -59,8 +69,9 @@ export default function CustomGymForm() {
         if (gymData) {
             setFormData({
                 name: gymData.name || '',
-                lat: gymData.lat || 0,
-                lon: gymData.lon || 0,
+                lat: gymData?.location?.coordinates?.[1] || 0,
+                lon: gymData?.location?.coordinates?.[0] || 0,
+
                 address: gymData.address || '',
                 phone: gymData.phone || '',
                 email: gymData.email || '',
@@ -81,9 +92,21 @@ export default function CustomGymForm() {
         }
     }, [gymData]);
 
+    useEffect(() => {
+        console.log('Coordinates:', gymData?.location?.coordinates);
+        console.log('Form Data:', formData.lat, formData.lon);
+    }, [formData.lat, formData.lon]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        if (name === 'lat' || name === 'lon') {
+            const numValue = parseFloat(value);
+            if (!isNaN(numValue)) {
+                setFormData((prev) => ({ ...prev, [name]: numValue }));
+            }
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+        }
     };
     const [newFiles, setNewFiles] = useState<File[]>([]);
     const [filePreviews, setFilePreviews] = useState<string[]>([]);
@@ -97,7 +120,7 @@ export default function CustomGymForm() {
         const filtered = selected.slice(0, maxAllowed);
 
         const newPreviews = filtered.map((file) => URL.createObjectURL(file));
- 
+
         setNewFiles((prev) => [...prev, ...filtered]);
         setFilePreviews((prev) => [...prev, ...newPreviews]);
 
@@ -219,6 +242,16 @@ export default function CustomGymForm() {
         approved: 'Approved',
         rejected: 'Rejected',
     };
+
+    function ResizeMapOnLoad() {
+        const map = useMap();
+        useEffect(() => {
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+        }, [map]);
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -394,6 +427,50 @@ export default function CustomGymForm() {
                                         )}
                                     </div>
 
+                                    <div className="md:col-span-2 mt-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-semibold text-gray-800">Map Location</h3>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const coords = `${formData.lat}, ${formData.lon}`;
+                                                        navigator.clipboard.writeText(coords);
+                                                        message.success('Coordinates copied to clipboard!');
+                                                    }}
+                                                    className="px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                                                >
+                                                    Copy Coordinates
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => window.open(`https://www.google.com/maps?q=${formData.lat},${formData.lon}`, '_blank')}
+                                                    className="px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
+                                                >
+                                                    Open in Google Maps
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Coordinate Display */}
+                                        <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">Exact Coordinates</label>
+                                                    <p className="text-sm font-mono text-gray-900">
+                                                        {formData.lat.toFixed(6)}, {formData.lon.toFixed(6)}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">DMS Format</label>
+                                                    <p className="text-sm text-gray-900">
+                                                        {Math.abs(formData.lat).toFixed(4)}° {formData.lat >= 0 ? 'N' : 'S'}, {Math.abs(formData.lon).toFixed(4)}° {formData.lon >= 0 ? 'E' : 'W'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div className="md:col-span-2">
                                         <div className="flex items-center justify-between mb-2">
                                             <label className="block text-sm font-medium text-gray-700">Address</label>
@@ -417,7 +494,8 @@ export default function CustomGymForm() {
                                         </div>
                                         {isEditing ? (
                                             <input
-                                                type="text"
+                                                type="number"
+                                                step="any"
                                                 name="lat"
                                                 value={formData.lat}
                                                 onChange={handleChange}
@@ -434,7 +512,8 @@ export default function CustomGymForm() {
                                         </div>
                                         {isEditing ? (
                                             <input
-                                                type="text"
+                                                type="number"
+                                                step="any"
                                                 name="lon"
                                                 value={formData.lon}
                                                 onChange={handleChange}
@@ -813,7 +892,7 @@ export default function CustomGymForm() {
                                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                                 {filePreviews.map((preview, index) => (
                                                     <div key={index} className="relative">
-                                                        <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
+                                                        <img src={preview || '/placeholder.svg'} alt={`Preview ${index + 1}`} className="w-full h-32 object-cover rounded-md" />
                                                         <button
                                                             type="button"
                                                             onClick={() => removeSelectedImage(index)}

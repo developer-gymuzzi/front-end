@@ -176,7 +176,7 @@ export default function OtpVerification() {
                             <h1 className="text-2xl font-extrabold uppercase !leading-snug text-white md:text-3xl">
                                 OTP <span className="text-red-600">VERIFICATION</span>
                             </h1>
-                            <p className="text-sm font-bold leading-normal text-gray-300">Enter the 4-digit code sent to your email</p>
+                            <p className="text-sm font-bold leading-normal text-gray-300">Enter the 6-digit code sent to your email</p>
                         </div>
 
                         <form className="space-y-5 text-white" onSubmit={verifyOtp}>

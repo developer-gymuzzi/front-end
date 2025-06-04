@@ -27,6 +27,7 @@ const GymView = lazy(() => import('../pages/Gym/GymownerViewgym'));
 const AddGym = lazy(() => import('../pages/Gym/addGym'));
 const AdminTicket = lazy(() => import('../pages/ticket/list'));
 const AdminMessage = lazy(() => import('../pages/ticket/messages'));
+const Request = lazy(()=>import('../pages/Requests/list'))
 
 const routes = [
     {
@@ -48,6 +49,15 @@ const routes = [
         element: (
             <ProtectedRoute allowedRoles={['admin']}>
                 <Gym />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
+    },
+        {
+        path: '/request',
+        element: (
+            <ProtectedRoute allowedRoles={['gym_owner']}>
+                <Request />
             </ProtectedRoute>
         ),
         layout: 'default',

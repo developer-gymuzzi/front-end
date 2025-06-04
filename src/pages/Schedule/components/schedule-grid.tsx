@@ -22,7 +22,7 @@ export default function ScheduleGrid() {
                     <div key={date.toISOString()} className="bg-white p-4 font-medium">
                         {formatDate(date)}
                     </div>
-                ))}
+                ))} 
 
                 {/* Site rows */}
                 {sites.map((site) => {

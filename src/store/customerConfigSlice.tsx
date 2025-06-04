@@ -14,6 +14,7 @@ const initialState = {
     users: [],
     gym: [],
     gyms: [],
+    requests: [],
     profileData: [],
     GymownerGym: [],
     activeGym: null,
@@ -152,8 +153,6 @@ export const fetchGym = createAsyncThunk(
     }
 );
 
-
-
 export const activeGym = createAsyncThunk('customer/activeGym', async (gymId: string, { rejectWithValue }) => {
     try {
         const { data } = await axios.post(
@@ -219,29 +218,41 @@ export const GymownerGymList = createAsyncThunk(
     }
 );
 
-export const profile = createAsyncThunk(
-  'customer/profile',
-  async (_, { rejectWithValue }) => {
+export const profile = createAsyncThunk('customer/profile', async (_, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${endpoint}/v1/auth/getProfile`, {
-        headers: {
-          token: token,
-        },
-      });
+        const { data } = await axios.get(`${endpoint}/v1/auth/getProfile`, {
+            headers: {
+                token: token,
+            },
+        });
 
-      if (data.success) {
-           return data.data[0]
-      } else {
-        return rejectWithValue('Failed to fetch profile data.');
-      }
+        if (data.success) {
+            return data.data[0];
+        } else {
+            return rejectWithValue('Failed to fetch profile data.');
+        }
     } catch (error: any) {
-      return rejectWithValue(
-        error?.response?.data?.message || 'Error fetching profile data.'
-      );
+        return rejectWithValue(error?.response?.data?.message || 'Error fetching profile data.');
     }
-  }
-);
+});
 
+export const requestList = createAsyncThunk('customer/requestList', async (_, { rejectWithValue }) => {
+    try {
+        const { data } = await axios.get(`${endpoint}/v1/gymOwner/listing/reqList`, {
+            headers: {
+                token: token,
+            },
+        });
+
+        if (data.success) {
+            return data.data;
+        } else {
+            return rejectWithValue('Failed to fetch profile data.');
+        }
+    } catch (error: any) {
+        return rejectWithValue(error?.response?.data?.message || 'Error fetching profile data.');
+    }
+});
 
 const customerSlice = createSlice({
     name: 'customer',
@@ -332,6 +343,18 @@ const customerSlice = createSlice({
                 state.profileData = action.payload;
             })
             .addCase(profile.rejected, (state, action) => {
+                state.loading = false;
+                message.error(action.payload as string);
+            })
+            .addCase(requestList.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(requestList.fulfilled, (state, action) => {
+                state.loading = false;
+                state.requests = action.payload;
+            })
+            .addCase(requestList.rejected, (state, action) => {
                 state.loading = false;
                 message.error(action.payload as string);
             });
