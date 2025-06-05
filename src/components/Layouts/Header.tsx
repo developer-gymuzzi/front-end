@@ -109,6 +109,9 @@ const Header = () => {
             socket.on('gym_updated', (notification: any) => {
                 setNotifications((prev) => [notification, ...prev]);
             });
+            socket.on('location_change_request', (notification: any) => {
+                setNotifications((prev) => [notification, ...prev]);
+            });
         } else if (userRole === 'gym_owner') {
             const userId = localStorage.getItem('userId');
             socket.emit('join-gym-owner', userId);
@@ -124,6 +127,7 @@ const Header = () => {
             socket.off('gym_registered');
             socket.off('gym_updated');
             socket.off('approval_status');
+            socket.off('location_change_request');
         };
     }, []);
 
@@ -137,11 +141,11 @@ const Header = () => {
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
         }).then(async (result) => {
-         if (result.isConfirmed) {
-      Cookies.remove('token'); // Just remove the token
-      Swal.fire('Logged Out!', 'You have been logged out.', 'success');
-      navigate('/'); // Redirect to home
-    }
+            if (result.isConfirmed) {
+                Cookies.remove('token'); // Just remove the token
+                Swal.fire('Logged Out!', 'You have been logged out.', 'success');
+                navigate('/'); // Redirect to home
+            }
         });
     };
 

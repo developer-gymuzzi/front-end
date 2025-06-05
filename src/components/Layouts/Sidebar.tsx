@@ -88,15 +88,6 @@ const Sidebar = () => {
                                     </li>
 
                                     <li className="nav-item">
-                                        <NavLink to="/schedule" className="group" onClick={() => toggleMenu('')}>
-                                            <div className="flex items-center">
-                                                <Schedule className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Members')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
-
-                                    <li className="nav-item">
                                         <NavLink to="/inventory" className="group" onClick={() => toggleMenu('')}>
                                             <div className="flex items-center">
                                                 <Inventory className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
@@ -119,7 +110,16 @@ const Sidebar = () => {
                                                 <NavLink to="/companylist" className="group" onClick={() => toggleMenu('')}>
                                                     <div className="flex items-center">
                                                         <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Roles & User')}</span>
+                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('People')}</span>
+                                                    </div>
+                                                </NavLink>
+                                            </li>
+
+                                            <li className="nav-item">
+                                                <NavLink to="/adminRequest" className="group" onClick={() => toggleMenu('')}>
+                                                    <div className="flex items-center">
+                                                        <Schedule className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
+                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Requests')}</span>
                                                     </div>
                                                 </NavLink>
                                             </li>

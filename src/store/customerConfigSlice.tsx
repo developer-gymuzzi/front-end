@@ -23,6 +23,7 @@ const initialState = {
         approved: 0,
         rejected: 0,
     },
+    AdminReqList:[],
     GymOwnergymCounts: {
         pending: 0,
         approved: 0,
@@ -220,6 +221,7 @@ export const GymownerGymList = createAsyncThunk(
 
 export const profile = createAsyncThunk('customer/profile', async (_, { rejectWithValue }) => {
     try {
+        const token = Cookies.get('token');
         const { data } = await axios.get(`${endpoint}/v1/auth/getProfile`, {
             headers: {
                 token: token,
@@ -239,6 +241,24 @@ export const profile = createAsyncThunk('customer/profile', async (_, { rejectWi
 export const requestList = createAsyncThunk('customer/requestList', async (_, { rejectWithValue }) => {
     try {
         const { data } = await axios.get(`${endpoint}/v1/gymOwner/listing/reqList`, {
+            headers: {
+                token: token,
+            },
+        });
+
+        if (data.success) {
+            return data.data;
+        } else {
+            return rejectWithValue('Failed to fetch profile data.');
+        }
+    } catch (error: any) {
+        return rejectWithValue(error?.response?.data?.message || 'Error fetching profile data.');
+    }
+});
+
+export const AdminrequestList = createAsyncThunk('customer/AdminrequestList', async (_, { rejectWithValue }) => {
+    try {
+        const { data } = await axios.get(`${endpoint}/v1/admin/list/listingreq`, {
             headers: {
                 token: token,
             },
@@ -355,6 +375,18 @@ const customerSlice = createSlice({
                 state.requests = action.payload;
             })
             .addCase(requestList.rejected, (state, action) => {
+                state.loading = false;
+                message.error(action.payload as string);
+            })
+            .addCase(AdminrequestList.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(AdminrequestList.fulfilled, (state, action) => {
+                state.loading = false;
+                state.AdminReqList = action.payload;
+            })
+            .addCase(AdminrequestList.rejected, (state, action) => {
                 state.loading = false;
                 message.error(action.payload as string);
             });

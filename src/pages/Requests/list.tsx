@@ -156,7 +156,7 @@ export default function ComapnyList() {
                                               <td className="px-4 py-3">
                                                   <span
                                                       className={`inline-block px-2 py-1 text-xs rounded-full font-semibold ${
-                                                          status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                          status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : status === 'Resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                                       }`}
                                                   >
                                                       {status}

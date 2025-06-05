@@ -96,7 +96,7 @@ export default function ChatScreen() {
         try {
             const res = await axios.post(`${endpoint}/v1/user/ticket/messanging/${id}`, { message }, { headers: { token } });
 
-            if (res.data.success) {
+            if (res.data.success) { 
                 setMessage('');
             } else {
                 antdMessage.error('Failed to send message');

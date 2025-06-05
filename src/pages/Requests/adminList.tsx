@@ -6,14 +6,22 @@ import Filter from './Filters';
 import { useDispatch } from 'react-redux';
 import { AppDispatch, IRootState } from '../../store';
 import { useSelector } from 'react-redux';
-import { fetchUsers } from '../../store/customerConfigSlice';
+import { AdminrequestList, fetchUsers, requestList } from '../../store/customerConfigSlice';
+import Swal from 'sweetalert2';
+import { Check } from 'lucide-react';
+import { message } from 'antd';
+import Cookies from 'js-cookie';
+import axios from 'axios';
 
 export default function ComapnyList() {
     const [viewMode, setViewMode] = useState<boolean>(false);
-    const { users } = useSelector((state: IRootState) => state.customerConfig) as { users: { id: string; name: string; email: string; role: string; wallet: string }[] };
+    const requests = useSelector((state: IRootState) => state.customerConfig.AdminReqList);
+
     const loading = useSelector((state: IRootState) => state.customerConfig.loading);
 
     const dispatch: AppDispatch = useDispatch();
+    const endpoint = import.meta.env.VITE_API_LIVEHOST;
+    const token = Cookies.get('token');
 
     const [filters, setFilters] = useState({ name: '', email: '', role: '' });
     const [appliedFilters, setAppliedFilters] = useState({ name: '', email: '', role: '' });
@@ -24,6 +32,10 @@ export default function ComapnyList() {
     useEffect(() => {
         dispatch(fetchUsers({ page: currentPage, limit: pageSize, ...appliedFilters }));
     }, [dispatch, currentPage, pageSize, appliedFilters]);
+
+    useEffect(() => {
+        dispatch(AdminrequestList());
+    }, []);
 
     const handleNextPage = () => {
         if (currentPage < totalPages) {
@@ -75,13 +87,34 @@ export default function ComapnyList() {
         return val.charAt(0).toUpperCase() + val.slice(1);
     };
 
+    const updateStatus = async (requestId: any) => {
+        try {
+            const { data } = await axios.put(
+                `${endpoint}/v1/admin/approve/updateStatus?requestId=${requestId}`,
+                {},
+                {
+                    headers: {
+                        token: token,
+                    },
+                }
+            );
+
+            if (data.success == 1) {
+                message.success('Status Updated successfully');
+                dispatch(AdminrequestList());
+            }
+        } catch (error) {
+            message.error('Failed to update status');
+        }
+    };
+
     return (
         <div>
             <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="grid gap-1">
-                    <h2 className="CRM-Page-Title">People</h2>
+                    <h2 className="CRM-Page-Title">Requests</h2>
                     <p className="CRM-Page-Structure">
-                        Dashboard / <span className="CRM-Page-Name">People</span>
+                        Dashboard / <span className="CRM-Page-Name">Requests</span>
                     </p>
                     {Object.entries(appliedFilters).some(([_, val]) => val) && (
                         <div className="flex flex-wrap gap-3 items-center mt-3">
@@ -114,107 +147,82 @@ export default function ComapnyList() {
                     <table className="data-table">
                         <thead>
                             <tr className="border-b bg-gray-50">
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">S.No</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Name</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Email</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Role</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Wallet</th>
-                                {/* <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Action</th> */}
+                                <th className="px-4 py-3">S.No</th>
+                                <th className="px-4 py-3">Gym</th>
+                                <th className="px-4 py-3">User</th>
+                                <th className="px-4 py-3">Description</th>
+                                <th className="px-4 py-3">Address</th>
+                                <th className="px-4 py-3">Status</th>
+                                <th className="px-4 py-3">Coordinates</th>
+                                <th className="px-4 py-3">Map</th>
+                                <th className="px-4 py-3">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading
                                 ? [...Array(5)].map((_, index) => (
-                                      <tr key={index} className="border-b last:border-b-0">
-                                          <td className="px-4 py-3">
-                                              <div className="w-12 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="w-24 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="w-16 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="w-12 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="w-12 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="flex gap-2">
-                                                  <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                                  <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                                  <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                              </div>
-                                          </td>
+                                      <tr key={index} className="border-b">
+                                          {[...Array(7)].map((_, i) => (
+                                              <td key={i} className="px-4 py-3">
+                                                  <div className="h-5 w-full bg-gray-200 rounded"></div>
+                                              </td>
+                                          ))}
                                       </tr>
                                   ))
-                                : users.map((entry, index) => {
-                                      const rowIndex = (currentPage - 1) * pageSize + (index + 1);
+                                : requests?.map((entry: any, index: number) => {
+                                      const rowIndex = (currentPage - 1) * pageSize + index + 1;
+                                      const { gym, user, description, address, status, location } = entry;
+                                      const mapUrl = `https://www.google.com/maps?q=${location.coordinates[1]},${location.coordinates[0]}`;
 
                                       return (
-                                          <tr key={entry.id} className="border-b last:border-b-0 hover:shadow-md hover:font-semibold">
+                                          <tr key={entry._id} className="border-b hover:bg-gray-50">
                                               <td className="px-4 py-3">{rowIndex}</td>
-                                              <td className="px-4 py-3 text-gray-600">{entry.name || '---'} </td>
-                                              <td className="px-4 py-3 text-gray-600">{entry.email || '---'}</td>
-                                              <td>
+                                              <td className="px-4 py-3">{gym?.name || '---'}</td>
+                                              <td className="px-4 py-3">{user?.name || '---'}</td>
+                                              <td className="px-4 py-3">{description || '---'}</td>
+                                              <td className="px-4 py-3">{address || '---'}</td>
+
+                                              <td className="px-4 py-3">
                                                   <span
                                                       className={`inline-block px-2 py-1 text-xs rounded-full font-semibold ${
-                                                          entry.role === 'admin'
-                                                              ? 'bg-blue-100 text-blue-700'
-                                                              : entry.role === 'user'
-                                                              ? 'bg-purple-100 text-purple-700'
-                                                              : entry.role === 'gym_owner'
-                                                              ? 'bg-yellow-100 text-yellow-800'
-                                                              : 'bg-gray-100 text-gray-600'
+                                                          status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : status === 'Resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                                       }`}
                                                   >
-                                                      {entry.role === 'gym_owner' ? 'Gym Owner' : entry.role.charAt(0).toUpperCase() + entry.role.slice(1)}
+                                                      {status}
                                                   </span>
                                               </td>
-
-                                              <td>
-                                                  <span className="inline-block px-2 py-1 text-xs rounded-full font-semibold bg-green-100 text-green-700">₹ {entry.wallet ?? '0'}</span>
+                                              <td className="px-4 py-3">{`${location.coordinates[1]},${location.coordinates[0]}` || '---'}</td>
+                                              <td className="px-4 py-3">
+                                                  <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline text-sm">
+                                                      Open on Google Maps
+                                                  </a>
                                               </td>
-
-                                              {/* <td className="px-4 py-3 text-gray-600">
-                                                  <div className="flex gap-2">
-                                                      <span
-                                                          className="cursor-pointer"
+                                              <td>
+                                                  {status !== 'Resolved' && (
+                                                      <button
+                                                          className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 transition"
+                                                          title="Approve"
                                                           onClick={() => {
-                                                              setCompany(entry);
-                                                              setViewModalOpen(true);
+                                                              Swal.fire({
+                                                                  title: 'Approve this gym?',
+                                                                  icon: 'question',
+                                                                  showCancelButton: true,
+                                                                  confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--yellow-color').trim(),
+                                                                  cancelButtonColor: '#d33',
+                                                                  confirmButtonText: 'Yes, approve it!',
+                                                                  cancelButtonText: 'Cancel',
+                                                              }).then((result) => {
+                                                                  if (result.isConfirmed) {
+                                                                      updateStatus(entry._id);
+                                                                      Swal.fire('Approved!', 'The gym has been approved.', 'success');
+                                                                  }
+                                                              });
                                                           }}
                                                       >
-                                                          <View className="h-5 w-5 text-gray-400" />
-                                                      </span>
-                                                      <span className="cursor-pointer">
-                                                          <Edit className="h-5 w-5 text-gray-500" />
-                                                      </span>
-                                                      <span
-                                                          className="cursor-pointer"
-                                                          onClick={() => {
-                                                              if (entry.id) {
-                                                                  Swal.fire({
-                                                                      title: 'Are you sure?',
-                                                                      icon: 'warning',
-                                                                      showCancelButton: true,
-                                                                      confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--yellow-color').trim(),
-                                                                      cancelButtonColor: '#d33',
-                                                                      confirmButtonText: 'Yes, delete it!',
-                                                                  }).then((result) => {
-                                                                      if (result.isConfirmed) {
-                                                                          Swal.fire('Deleted!', 'Your item has been deleted.', 'success');
-                                                                      }
-                                                                  });
-                                                              }
-                                                          }}
-                                                      >
-                                                          <Delete className="h-5 w-5 text-red-500" />
-                                                      </span>
-                                                  </div>
-                                              </td> */}
+                                                          <Check size={18} className="text-green-600" />
+                                                      </button>
+                                                  )}
+                                              </td>
                                           </tr>
                                       );
                                   })}
