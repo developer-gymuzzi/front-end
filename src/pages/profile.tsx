@@ -30,6 +30,7 @@ const Card = ({ children, className = "" }: any) => (
   <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 ${className}`}>{children}</div>
 )
 
+
 const CardHeader = ({ children, className = "" }: any) => (
   <div className={`px-6 py-4 border-b border-gray-100 ${className}`}>{children}</div>
 )
