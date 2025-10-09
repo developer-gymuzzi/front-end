@@ -99,6 +99,7 @@ export default function CompanyList() {
     };
 
     const handleClick = (id: string) => {
+        
         navigate(`/adminmessages/${id}`);
     };
     return (

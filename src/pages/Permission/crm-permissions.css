@@ -82,7 +82,6 @@ button:focus {
     animation: pulse 0.3s ease-in-out;
 }
 
-/* Custom checkbox styling */
 .custom-checkbox {
     display: inline-block;
     position: relative;
@@ -106,7 +105,6 @@ button:focus {
     border-color: #4299e1;
 }
 
-/* Permission table styling */
 .permission-table {
     border-collapse: separate;
     border-spacing: 0;
@@ -121,7 +119,7 @@ button:focus {
     background-color: #f7fafc;
 }
 
-/* Responsive adjustments */
+
 @media (max-width: 1024px) {
     .custom-select-wrapper {
         width: 150px;

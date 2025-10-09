@@ -112,7 +112,6 @@ export default function customerTrash() {
 
     return (
         <>
-    
                 <div className="w-full">
                     <div className="rounded-lg table-wrapper">
                         <div className="border-t-8 border-[#113354]"></div>
@@ -311,7 +310,7 @@ export default function customerTrash() {
                                                         value={selectedCustomer.phone}
                                                         disabled
 
-                                                        className="w-full border border-gray-300 rounded-md" // Increased padding and font size
+                                                        className="w-full border border-gray-300 rounded-md" 
                                                     />
                                                 </div>
                                                 <div className="input-field">
@@ -325,7 +324,7 @@ export default function customerTrash() {
                                                         value={selectedCustomer.email}
                                                         disabled
 
-                                                        className="w-full border border-gray-300 rounded-md" // Increased padding and font size
+                                                        className="w-full border border-gray-300 rounded-md" 
                                                     />
                                                 </div>
                                             </div>
@@ -342,7 +341,7 @@ export default function customerTrash() {
                                                         value={selectedCustomer.address_1}
                                                         disabled
 
-                                                        className="w-full border border-gray-300 rounded-md" // Increased padding and font size
+                                                        className="w-full border border-gray-300 rounded-md" 
                                                     />
                                                 </div>
                                                 <div className="input-field">
@@ -356,7 +355,7 @@ export default function customerTrash() {
                                                         value={selectedCustomer.address_2}
                                                         disabled
 
-                                                        className="w-full border border-gray-300 rounded-md" // Increased padding and font size
+                                                        className="w-full border border-gray-300 rounded-md" 
                                                     />
                                                 </div>
                                             </div>
@@ -373,7 +372,7 @@ export default function customerTrash() {
                                                         value={selectedCustomer.city}
                                                         disabled
 
-                                                        className="w-full border border-gray-300 rounded-md" // Increased padding and font size
+                                                        className="w-full border border-gray-300 rounded-md" 
                                                     />
                                                 </div>
                                                 <div className="input-field">
@@ -387,7 +386,7 @@ export default function customerTrash() {
                                                         value={selectedCustomer.state_province}
                                                         disabled
 
-                                                        className="w-full border border-gray-300 rounded-md" // Increased padding and font size
+                                                        className="w-full border border-gray-300 rounded-md" 
                                                     />
                                                 </div>
                                             </div>
@@ -404,7 +403,7 @@ export default function customerTrash() {
                                                         value={selectedCustomer.postal_code}
                                                         disabled
 
-                                                        className="w-full border border-gray-300 rounded-md" // Increased padding and font size
+                                                        className="w-full border border-gray-300 rounded-md" 
                                                     />
                                                 </div>
                                                 <div className="input-field">
@@ -418,7 +417,7 @@ export default function customerTrash() {
                                                         value={selectedCustomer.country}
                                                         disabled
 
-                                                        className="w-full border border-gray-300 rounded-md" // Increased padding and font size
+                                                        className="w-full border border-gray-300 rounded-md" 
                                                     />
                                                 </div>
                                             </div>

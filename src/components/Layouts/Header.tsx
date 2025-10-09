@@ -183,7 +183,7 @@ const Header = () => {
     return (
         <header className={`z-40 ${themeConfig.semidark && themeConfig.menu === 'horizontal' ? 'dark' : ''}`}>
             <div className="shadow-sm">
-                <div className="relative bg-white flex w-full items-center px-5 py-2.5 dark:bg-black">
+                <div className="relative bg-white flex w-full items-center px-5 py-2.5 ">
                     <div className="horizontal-logo flex lg:hidden justify-between items-center">
                         <Link to="/" className="main-logo flex items-center shrink-0">
                             <img className="w-[140px]" src="/assets/images/gym_logo.png" alt="logo" />

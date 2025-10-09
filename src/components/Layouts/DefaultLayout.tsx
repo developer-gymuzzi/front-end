@@ -88,14 +88,14 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
                     <Sidebar />
                     {/* END SIDEBAR */}
 
-                    <div className="main-content flex flex-col min-h-screen">
+                    <div className="main-content flex flex-col min-h-screen" >
                         {/* BEGIN TOP NAVBAR */}
                         <Header />
                         {/* END TOP NAVBAR */}
 
                         {/* BEGIN CONTENT AREA */}
-                        <Suspense>
-                            <div className={`${themeConfig.animation} p-6 animate__animated`}>{children}</div>
+                        <Suspense >
+                            <div className={`${themeConfig.animation} p-6 animate__animated`} >{children}</div>
                         </Suspense>
                         {/* END CONTENT AREA */}
 

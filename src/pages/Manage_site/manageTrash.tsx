@@ -27,7 +27,7 @@ export default function ManageTrash() {
     return (
         <>
             <div className="flex flex-wrap items-center justify-between gap-3" >
-                {/* Left Section: Title and Breadcrumbs */}
+
                 < div className="grid gap-3" >
                     <h1 className="text-2xl font-bold mb-6 text-gray-800">Manage Customer</h1>
                     {/* <h2 className="CRM-Page-Title">

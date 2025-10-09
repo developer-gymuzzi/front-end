@@ -7,12 +7,12 @@ import { Eye, Trash, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import Trash1 from "./Trash";
+import Trash1 from './Trash';
 import View from '../../../../public/assets/APSIcon/View';
 import Edit from '../../../../public/assets/APSIcon/Edit';
 import Delete from '../../../../public/assets/APSIcon/delect';
 import { Table, message } from 'antd';
-import Swal from "sweetalert2";
+import Swal from 'sweetalert2';
 import { useSelector } from 'react-redux';
 import { IRootState } from '../../../store';
 import Tableempty from '../../Tableempty';
@@ -29,14 +29,14 @@ interface FormData {
 const tabs = [
     {
         id: 'inventory',
-        label: 'Inventory'
+        label: 'Inventory',
     },
     {
         id: 'trash',
-        label: 'Trash'
-    }
+        label: 'Trash',
+    },
 ];
-
+                                                   
 export default function Inventory() {
     const [Userlist, getuserlist] = useState([]);
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -46,7 +46,6 @@ export default function Inventory() {
 
     const [activeTab, setActiveTab] = useState('inventory');
 
- 
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
     const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
     const token = Cookies.get('token') || '';
@@ -88,27 +87,22 @@ export default function Inventory() {
 
     const isFormDataChanged = () => {
         if (!editId || !originalFormData) return true;
-        return Object.keys(formData).some(key => 
-            formData[key as keyof FormData] !== originalFormData[key as keyof FormData]
-        );
+        return Object.keys(formData).some((key) => formData[key as keyof FormData] !== originalFormData[key as keyof FormData]);
     };
 
     const isFormValid = () => {
         const trimmedItemName = formData.Item_Name.trim();
         const trimmedItemCode = formData.Item_Code.trim();
-        
+
         // Don't allow just dots or spaces
         const isValidName = trimmedItemName !== '' && !/^[.\s]+$/.test(formData.Item_Name);
         const isValidCode = trimmedItemCode !== '' && !/^[.\s]+$/.test(formData.Item_Code);
-        
+
         if (!editId) {
-            // For new items, require both Item_Name and Item_Code
             return isValidName && isValidCode;
         } else {
-            // For editing, require changes and non-empty required fields if they were changed
             const hasChanges = isFormDataChanged();
-            const isValid = (!formData.Item_Name || isValidName) && 
-                          (!formData.Item_Code || isValidCode);
+            const isValid = (!formData.Item_Name || isValidName) && (!formData.Item_Code || isValidCode);
             return hasChanges && isValid;
         }
     };
@@ -201,9 +195,9 @@ export default function Inventory() {
             });
 
             if (data.status) {
-                message.success("Inventory updated successfully!");
+                message.success('Inventory updated successfully!');
                 setEditId(null);
-                onOpenChange()
+                onOpenChange();
                 getInventory();
             } else {
                 message.error('Failed to update inventory.');
@@ -216,13 +210,17 @@ export default function Inventory() {
 
     const deleteData = async (id: number) => {
         try {
-            const { data } = await axios.post(`${endpoint}?route=admin/Trash/Inventory`, { ID: id }, {
-                headers: {
-                    'x-api-key': apiKey,
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const { data } = await axios.post(
+                `${endpoint}?route=admin/Trash/Inventory`,
+                { ID: id },
+                {
+                    headers: {
+                        'x-api-key': apiKey,
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
             if (data.status == true) {
                 message.success('Inventory moved to trash successfully.');
@@ -287,26 +285,24 @@ export default function Inventory() {
         }
     };
     {
-        
-            useEffect(() => {
-                if (activeTab === "inventory") {
-                    setLoading(true);
-                    getInventory()
-                        .then(() => {
-                            setLoading(false);
-                        })
-                        .catch(() => {
-                            setLoading(false);
-                        });
-                }
-            }, [activeTab, currentPage, PageSize]);
+        useEffect(() => {
+            if (activeTab === 'inventory') {
+                setLoading(true);
+                getInventory()
+                    .then(() => {
+                        setLoading(false);
+                    })
+                    .catch(() => {
+                        setLoading(false);
+                    });
+            }
+        }, [activeTab, currentPage, PageSize]);
 
-     
-            useEffect(() => {
-                if (activeTab === "inventory") {
-                    getuser();
-                }
-            }, [activeTab]);
+        useEffect(() => {
+            if (activeTab === 'inventory') {
+                getuser();
+            }
+        }, [activeTab]);
     }
 
     const openDrawerForAddingInventory = () => {
@@ -325,7 +321,6 @@ export default function Inventory() {
         onOpen();
     };
 
-
     return (
         <>
             <div>
@@ -334,198 +329,168 @@ export default function Inventory() {
 
                     <div className="flex flex-wrap items-center justify-end gap-3">
                         {/* <Filter /> */}
-                       
-                            <Button className="Insert-Button" onClick={openDrawerForAddingInventory}>
-                                <Plus /> Inventory
-                            </Button>
-                  
+
+                        <Button className="Insert-Button" onClick={openDrawerForAddingInventory}>
+                            <Plus /> Inventory
+                        </Button>
                     </div>
                 </div>
                 <>
-                    <div className='Managepeople-Div  grid gap-3'>
+                    <div className="Managepeople-Div  grid gap-3">
                         <div className="border-b border-gray-200">
                             <nav className="-mb-px flex space-x-8">
                                 {tabs.map((tab) => (
                                     <button
                                         key={tab.id}
                                         onClick={() => handleTabChange(tab.id)}
-                                        className={`whitespace-nowrap border-b-2 py-2 px-1 text-md font-medium transition-colors ${activeTab === tab.id
-                                            ? 'border-[#F5A524] text-[#F5A524]'
-                                            : 'border-transparent text-black-500 hover:border-black-500 hover:text-black-700'
-                                            }`}
+                                        className={`whitespace-nowrap border-b-2 py-2 px-1 text-md font-medium transition-colors ${
+                                            activeTab === tab.id ? 'border-[#F5A524] text-[#F5A524]' : 'border-transparent text-black-500 hover:border-black-500 hover:text-black-700'
+                                        }`}
                                     >
                                         {tab.label}
                                     </button>
                                 ))}
                             </nav>
                         </div>
-                   
-                        
-                                    <div className="inventory-table mt-4 ">
-                                        <div className="table-wrapper">
-                                            <div className="border-t-8 border-[#113354]"></div>
-                                            <table className="table-data">
-                                                <thead>
-                                                    <tr className="border-b bg-gray-50">
-                                                        <th className="px-4 py-3 text-left font-medium text-gray-500">S.No</th>
-                                                        <th className="px-4 py-3 text-left font-medium text-gray-500">Item Name</th>
-                                                        <th className="px-4 py-3 text-left font-medium text-gray-500">Item Code</th>
-                                                        <th className="px-4 py-3 text-left font-medium text-gray-500">Price</th>
-                                                        <th className="px-4 py-3 text-left font-medium text-gray-500">Action</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {/* Skeleton Loader */}
-                                                    {loading ? (
-                                                        [...Array(5)].map((_, index) => (
-                                                            <tr key={index} className="border-b last:border-b-0">
-                                                                <td className="px-4 py-3">
-                                                                    <div className="w-12 rounded h-5 bg-gray-300 "></div>
-                                                                </td>
-                                                                <td className="px-4 py-3 text-gray-600">
-                                                                    <div className="w-24 rounded h-5 bg-gray-300 "></div>
-                                                                </td>
-                                                                <td className="px-4 py-3 text-gray-600">
-                                                                    <div className="w-16 rounded h-5 bg-gray-300 "></div>
-                                                                </td>
-                                                                <td className="px-4 py-3 text-gray-600">
-                                                                    <div className="w-12 rounded h-5 bg-gray-300 "></div>
-                                                                </td>
-                                                                <td className="px-4 py-3 text-gray-600">
-                                                                    <div className="flex gap-2 ">
-                                                                        <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                                                        <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                                                        <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        ))
-                                                    )
-                                                        : list.length === 0 ? (
-                                                            <Tableempty length={5} />
-                                                        )
-                                                            : (
 
-                                                                list.map((entry: any, index: number) => (
-                                                                    <tr key={index} className="border-b last:border-b-0 hover:shadow-md hover:font-semibold">
-                                                                        <td className="px-4 py-3">
-                                                                            {index + 1}
-                                                                        </td>
-                                                                        <td className="px-4 py-3 text-gray-600">{entry.item_name || '---'}</td>
-                                                                        <td className="px-4 py-3 text-gray-600">{entry.item_code || '---'}</td>
-                                                                        <td className="px-4 py-3 text-gray-600">{entry.cost || '---'}</td>
-                                                                        <td className="px-4 py-3 text-gray-600">
-                                                                            <div className="flex gap-2">
-                                                                                <span onClick={() => openEditDrawer1(entry)} className="cursor-pointer">
-                                                                                    <View className="h-5 w-5 text-gray-400" />
-                                                                                </span>
-                                                                            
-                                                                                    <span onClick={() => openEditDrawer(entry)} className="cursor-pointer" >
-                                                                                        <Edit className="h-5 w-5 text-gray-500" />
-                                                                                    </span>
-                                                                            
-                                                                               
-                                                                                    <span
-                                                                                    className="cursor-pointer"
-                                                                                        onClick={() => {
-                                                                                           
-                                                                                            if (entry.id) {
-                                                                                                Swal.fire({
-                                                                                                    title: 'Are you sure?',
-                                                                                                    icon: 'warning',
-                                                                                                    showCancelButton: true,
-                                                                                                    confirmButtonColor: getComputedStyle(
-                                                                                                        document.documentElement
-                                                                                                    )
-                                                                                                        .getPropertyValue('--yellow-color')
-                                                                                                        .trim(),
-                                                                                                    cancelButtonColor: '#d33',
-                                                                                                    confirmButtonText: 'Yes, delete it!',
-                                                                                                }).then((result) => {
-                                                                                                    if (result.isConfirmed) {
-                                                                                                        deleteData(entry.id);
-                                                                                                        Swal.fire(
-                                                                                                            'Deleted!',
-                                                                                                            'Your item has been deleted.',
-                                                                                                            'success'
-                                                                                                        );
-                                                                                                    }
-                                                                                                });
-                                                                                            }
-                                                                                        }}
-                                                                                    >
-                                                                                        <Delete className="h-5 w-5 text-red-500" />
-                                                                                    </span>
-                                                                            
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                ))
-                                                            )}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                        <div className="inventory-table mt-4 ">
+                            <div className="table-wrapper">
+                                <div className="border-t-8 border-[#113354]"></div>
+                                <table className="table-data">
+                                    <thead>
+                                        <tr className="border-b bg-gray-50">
+                                            <th className="px-4 py-3 text-left font-medium text-gray-500">S.No</th>
+                                            <th className="px-4 py-3 text-left font-medium text-gray-500">Item Name</th>
+                                            <th className="px-4 py-3 text-left font-medium text-gray-500">Item Code</th>
+                                            <th className="px-4 py-3 text-left font-medium text-gray-500">Price</th>
+                                            <th className="px-4 py-3 text-left font-medium text-gray-500">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {/* Skeleton Loader */}
+                                        {loading ? (
+                                            [...Array(5)].map((_, index) => (
+                                                <tr key={index} className="border-b last:border-b-0">
+                                                    <td className="px-4 py-3">
+                                                        <div className="w-12 rounded h-5 bg-gray-300 "></div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-600">
+                                                        <div className="w-24 rounded h-5 bg-gray-300 "></div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-600">
+                                                        <div className="w-16 rounded h-5 bg-gray-300 "></div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-600">
+                                                        <div className="w-12 rounded h-5 bg-gray-300 "></div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-600">
+                                                        <div className="flex gap-2 ">
+                                                            <div className="w-5 rounded h-5 bg-gray-300 "></div>
+                                                            <div className="w-5 rounded h-5 bg-gray-300 "></div>
+                                                            <div className="w-5 rounded h-5 bg-gray-300 "></div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : list.length === 0 ? (
+                                            <Tableempty length={5} />
+                                        ) : (
+                                            list.map((entry: any, index: number) => (
+                                                <tr key={index} className="border-b last:border-b-0 hover:shadow-md hover:font-semibold">
+                                                    <td className="px-4 py-3">{index + 1}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{entry.item_name || '---'}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{entry.item_code || '---'}</td>
+                                                    <td className="px-4 py-3 text-gray-600">{entry.cost || '---'}</td>
+                                                    <td className="px-4 py-3 text-gray-600">
+                                                        <div className="flex gap-2">
+                                                            <span onClick={() => openEditDrawer1(entry)} className="cursor-pointer">
+                                                                <View className="h-5 w-5 text-gray-400" />
+                                                            </span>
 
+                                                            <span onClick={() => openEditDrawer(entry)} className="cursor-pointer">
+                                                                <Edit className="h-5 w-5 text-gray-500" />
+                                                            </span>
 
-                                        <div className="pagination-container">
-                                            <div className="pagination-controls flex items-center gap-2">
-                                                <button
-                                                    className="pagination-button px-3 py-1 rounded-md border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    onClick={() => handlePageChange(currentPage - 1)}
-                                                    disabled={currentPage === 1} // Disable when on first page
-                                                >
-                                                    ‹ Prev
-                                                </button>
-
-                                                {/* Page Numbers */}
-                                                {[...Array(totalPages)].map((_, pageIndex) => {
-                                                    const page = pageIndex + 1;
-                                                    return (
-                                                        <button
-                                                            key={page}
-                                                            className={`h-8 w-8 flex items-center justify-center rounded-md text-sm 
-                                ${page === currentPage ? "bg-yellow-500 text-white" : "hover:bg-gray-100"}
-                            `}
-                                                            onClick={() => handlePageChange(page)}
-                                                        >
-                                                            {page}
-                                                        </button>
-                                                    );
-                                                })}
-
-                                                <button
-                                                    className="pagination-button px-3 py-1 rounded-md border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    onClick={() => handlePageChange(currentPage + 1)}
-                                                    disabled={currentPage === totalPages} // Disable when on last page
-                                                >
-                                                    Next ›
-                                                </button>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm text-gray-600">Items per page</span>
-                                                <select
-                                                    className="h-8 rounded-md border border-gray-300 bg-white p-1 text-sm text-gray-600"
-                                                    onChange={handlePageSizeChange}
-                                                >
-                                                    <option value="10">10</option>
-                                                    <option value="20">20</option>
-                                                    <option value="50">50</option>
-                                                </select>
-
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-
-                      
-
-                     
-                            <div className="trash">
-                                <Trash1 />
+                                                            <span
+                                                                className="cursor-pointer"
+                                                                onClick={() => {
+                                                                    if (entry.id) {
+                                                                        Swal.fire({
+                                                                            title: 'Are you sure?',
+                                                                            icon: 'warning',
+                                                                            showCancelButton: true,
+                                                                            confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--yellow-color').trim(),
+                                                                            cancelButtonColor: '#d33',
+                                                                            confirmButtonText: 'Yes, delete it!',
+                                                                        }).then((result) => {
+                                                                            if (result.isConfirmed) {
+                                                                                deleteData(entry.id);
+                                                                                Swal.fire('Deleted!', 'Your item has been deleted.', 'success');
+                                                                            }
+                                                                        });
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Delete className="h-5 w-5 text-red-500" />
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
 
+                            <div className="pagination-container">
+                                <div className="pagination-controls flex items-center gap-2">
+                                    <button
+                                        className="pagination-button px-3 py-1 rounded-md border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1} // Disable when on first page
+                                    >
+                                        ‹ Prev
+                                    </button>
+
+                                    {/* Page Numbers */}
+                                    {[...Array(totalPages)].map((_, pageIndex) => {
+                                        const page = pageIndex + 1;
+                                        return (
+                                            <button
+                                                key={page}
+                                                className={`h-8 w-8 flex items-center justify-center rounded-md text-sm 
+                                ${page === currentPage ? 'bg-yellow-500 text-white' : 'hover:bg-gray-100'}
+                            `}
+                                                onClick={() => handlePageChange(page)}
+                                            >
+                                                {page}
+                                            </button>
+                                        );
+                                    })}
+
+                                    <button
+                                        className="pagination-button px-3 py-1 rounded-md border text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages} // Disable when on last page
+                                    >
+                                        Next ›
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600">Items per page</span>
+                                    <select className="h-8 rounded-md border border-gray-300 bg-white p-1 text-sm text-gray-600" onChange={handlePageSizeChange}>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="trash">
+                            <Trash1 />
+                        </div>
                     </div>
 
                     <Drawer isOpen={isOpen} onOpenChange={onOpenChange} size="xl" className="h-screen" shouldBlockScroll={true}>
@@ -534,12 +499,12 @@ export default function Inventory() {
                                 <>
                                     <DrawerBody>
                                         <div className="grid gap-4">
-                                            <h3 className="Drawer-header">
-                                                {viewMode ? 'View Inventory' : editId ? 'Edit Inventory' : 'Add Inventory'}
-                                            </h3>
+                                            <h3 className="Drawer-header">{viewMode ? 'View Inventory' : editId ? 'Edit Inventory' : 'Add Inventory'}</h3>
                                             <div className="space-y-2 mt-1">
                                                 <div className="input-field">
-                                                    <label htmlFor="itemName" className="Form-label">Item Name<span className="text-red-500">{editId ? '' : '*'}</span></label>
+                                                    <label htmlFor="itemName" className="Form-label">
+                                                        Item Name<span className="text-red-500">{editId ? '' : '*'}</span>
+                                                    </label>
                                                     <input
                                                         id="itemName"
                                                         type="text"
@@ -550,14 +515,14 @@ export default function Inventory() {
                                                         placeholder="Item Name"
                                                         required={!editId}
                                                         className="w-full border border-gray-300 rounded-md"
-
                                                     />
-
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-5">
                                                     <div className="input-field">
-                                                        <label htmlFor="itemCode">Item Code<span className="text-red-500">{editId ? '' : '*'}</span></label>
+                                                        <label htmlFor="itemCode">
+                                                            Item Code<span className="text-red-500">{editId ? '' : '*'}</span>
+                                                        </label>
                                                         <input
                                                             id="itemCode"
                                                             type="text"
@@ -568,10 +533,7 @@ export default function Inventory() {
                                                             placeholder="Item Code"
                                                             required
                                                             className="w-full border border-gray-300 rounded-md"
-
-
                                                         />
-
                                                     </div>
                                                     <div className="input-field">
                                                         <label htmlFor="category">Category</label>
@@ -616,7 +578,6 @@ export default function Inventory() {
                                                             required
                                                             className="w-full mt-1 border border-gray-300 rounded-md"
                                                         />
-
                                                     </div>
                                                     <div className="input-field">
                                                         <label htmlFor="costPrice">Cost Price</label>
@@ -642,12 +603,12 @@ export default function Inventory() {
                                                         value={formData.Assignee}
                                                         disabled={viewMode}
                                                         onChange={handleChange}
-                                                        className='w-full border border-gray-300 rounded-md'
+                                                        className="w-full border border-gray-300 rounded-md"
                                                     >
                                                         <option value="">Select Assignee</option>
                                                         {Userlist.map((user: any) => (
                                                             <option key={user.ID} value={user.ID}>
-                                                                {user.first_name}  {user.last_name}
+                                                                {user.first_name} {user.last_name}
                                                             </option>
                                                         ))}
                                                     </select>
@@ -667,7 +628,9 @@ export default function Inventory() {
                                     </DrawerBody>
 
                                     <DrawerFooter className="flex justify-start gap-1 mt-3">
-                                        <button className="Close-btn" onClick={onClose}>Close</button>
+                                        <button className="Close-btn" onClick={onClose}>
+                                            Close
+                                        </button>
                                         {!viewMode && (
                                             <button
                                                 className="submit-btn"
@@ -682,20 +645,16 @@ export default function Inventory() {
                                                 }}
                                                 disabled={isLoading || !isFormValid()}
                                             >
-                                                {isLoading ? "Processing..." : editId ? "Update" : "Submit"}
+                                                {isLoading ? 'Processing...' : editId ? 'Update' : 'Submit'}
                                             </button>
                                         )}
-
                                     </DrawerFooter>
-
                                 </>
                             )}
                         </DrawerContent>
                     </Drawer>
                 </>
-
             </div>
-
         </>
     );
 }

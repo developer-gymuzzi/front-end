@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+ import React, { useMemo } from "react"
 import { useState, useEffect, useRef } from "react"
 import { ChevronDown, ChevronRight, Clock, Save } from "lucide-react"
 import "./customer-table.css"
@@ -312,9 +312,6 @@ export default function CustomerTimeTable() {
   //   dispatch(fetchAllCustomers())
   //   dispatch(fetchGaurd())
   // }, [dispatch])
-
-  console.log(gaurds)
-
   const getDisplayValue = (key: any, value: any) => {
     if (key === "customer_id") {
       const customer = allcustomers.find((c: { id: string; customer_name: string }) => c.id == value)
@@ -374,12 +371,13 @@ export default function CustomerTimeTable() {
     }
   };
 
-
   const removeFilter = (key: string) => {
     const updatedFilters = { ...appliedFilters, [key]: "" }
     setFilters(updatedFilters)
     setAppliedFilters(updatedFilters)
   }
+ 
+  
 
   const generateDays = (start: Date, end: Date) => {
     const days = []

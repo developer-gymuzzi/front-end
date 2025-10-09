@@ -31,7 +31,7 @@ export default function Managepepople() {
     return (
         <>
             <div className="flex flex-wrap items-center justify-between gap-3 p-4" >
-                {/* Left Section: Title and Breadcrumbs */}
+              
                 < div className="grid gap-3" >
                     <h1 className="text-2xl font-bold mb-6 text-gray-800">Manage Sites</h1>
                     {/* <h2 className="CRM-Page-Title">

@@ -56,6 +56,7 @@ export default function AddSite() {
         { value: "SK", label: "Saskatchewan" },
 
     ];
+
     interface FormDataType {
         ID: any;
         site_name: string;
@@ -74,6 +75,8 @@ export default function AddSite() {
         country: string;
     }
 
+
+                         
     const [initialFormData, setInitialFormData] = useState<FormDataType>({
         ID: site?.ID || null,
         site_name: site?.site_name || "",
@@ -116,7 +119,6 @@ export default function AddSite() {
     };
 
     const hasFormChanged = () => {
-        // Check if required fields are filled with valid content (not just spaces or dots)
         const requiredFieldsFilled = 
             validateField(formData.site_name) && 
             formData.site_status && 
@@ -244,7 +246,7 @@ export default function AddSite() {
 
                         <div className="relative flex w-full p-3 flex-auto flex-col place-content-inherit align-items-inherit h-auto break-words text-left overflow-y-auto subpixel-antialiased">
                             <div className="grid grid-cols-4 gap-5">
-                                {/* Site Name */}
+                          
                                 <div>
                                     <label htmlFor="site_name">
                                         Site name
@@ -263,7 +265,6 @@ export default function AddSite() {
                                     </div>
                                 </div>
 
-                                {/* Site Status */}
                                 <div>
                                     <label htmlFor="site_status">
                                         Site Status
@@ -283,7 +284,6 @@ export default function AddSite() {
                                     </select>
                                 </div>
 
-                                {/* Customer Name */}
                                 <div>
                                     <label htmlFor="customer_name">
                                         Customer Name
@@ -305,7 +305,6 @@ export default function AddSite() {
                                     </select>
                                 </div>
 
-                                {/* Service Color */}
                                 <div>
                                     <label htmlFor="site_color">Service color</label>
                                     <div>
@@ -344,7 +343,6 @@ export default function AddSite() {
                                             )}
                                         </button>
 
-                                        {/* Color picker dropdown */}
                                         {ColorOpen && (
                                             <>
                                                 <div

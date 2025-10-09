@@ -23,7 +23,7 @@ const initialState = {
         approved: 0,
         rejected: 0,
     },
-    AdminReqList:[],
+    AdminReqList: [],
     GymOwnergymCounts: {
         pending: 0,
         approved: 0,

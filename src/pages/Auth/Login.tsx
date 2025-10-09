@@ -83,7 +83,7 @@ const LoginBoxed = () => {
 
         setIsLoading(true);
         try {
-            const { data } = await axios.post(`${endpoint}/v1/auth/authlogin`, body, {
+            const { data } = await axios.post(`${endpoint}/v1/auth/authlogin/admin`, body, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -100,33 +100,31 @@ const LoginBoxed = () => {
             }
         } catch (error) {
             console.error('Error during login:', error);
-            toast.error('Something went wrong. Please try again.'); 
+            toast.error('Something went wrong. Please try again.');
         } finally {
             setIsLoading(false);
         }
     }
 
-      React.useEffect(() => {
-    const checkAuth = async () => {
-      const token = Cookies.get("token");
-      if (!token) return; 
+    React.useEffect(() => {
+        const checkAuth = async () => {
+            const token = Cookies.get('token');
+            if (!token) return;
 
-      const user = await verifyToken();
-      if (user) {
-        // Redirect based on role
-        if (user.role === "admin") {
-          navigate("/companylist", { replace: true });
-        } else if (user.role === "gym_owner") {
-          navigate("/gym_ownerGym", { replace: true });
-        } else {
-          navigate("/", { replace: true });
-        }
-      }
-      // else token invalid: stay on login page
-    };
-
-    checkAuth();
-  }, [navigate]);
+            const user = await verifyToken();
+            if (user) {
+                if (user.role === 'admin') {
+                    navigate('/companylist', { replace: true });
+                } else if (user.role === 'gym_owner') {
+                    navigate('/gym_ownerGym', { replace: true });
+                } else {
+                    navigate('/', { replace: true });
+                }
+            }
+        
+        };
+        checkAuth();
+    }, [navigate]);
 
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-[url(/assets/images/gym_bg.png)] bg-cover bg-center bg-no-repeat px-4 py-6 dark:bg-[#060818] sm:px-8 overflow-hidden">

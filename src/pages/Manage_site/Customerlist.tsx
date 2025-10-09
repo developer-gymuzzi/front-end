@@ -131,7 +131,7 @@ export default function App() {
         } catch (error) {
             console.error("Error submitting form:", error);
         } finally {
-            setIsSubmitting(false); // Re-enable button
+            setIsSubmitting(false);
         }
     };
 
@@ -161,7 +161,6 @@ export default function App() {
     };
 
 
-    // Handle View Click
     const handleView = (entry: any) => {
         openModal(entry, true);
     };
@@ -195,10 +194,7 @@ export default function App() {
 
     return (
         <>
-
-
                 <div className="w-full">
-
                     <div className="rounded-lg table-wrapper">
                         <div className="border-t-8 border-[#113354]"></div>
                         <table className="data-table">

@@ -9,7 +9,6 @@ export default function AdminWallet() {
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <div className="grid gap-6">
-        {/* Wallet Overview */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="bg-gradient-to-br from-teal-50 to-emerald-50 border border-emerald-100 rounded-lg shadow-sm">
             <div className="p-4 pb-2">
@@ -95,7 +94,6 @@ export default function AdminWallet() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="w-full">
           <div className="flex border rounded-md overflow-hidden">
             <button
@@ -112,7 +110,6 @@ export default function AdminWallet() {
             </button>
           </div>
 
-          {/* Withdraw Tab Content */}
           {activeTab === "withdraw" && (
             <div className="border rounded-lg mt-4 shadow-sm">
               <div className="p-4 border-b">
@@ -209,7 +206,6 @@ export default function AdminWallet() {
             </div>
           )}
 
-          {/* History Tab Content */}
           {activeTab === "history" && (
             <div className="border rounded-lg mt-4 shadow-sm">
               <div className="p-4 border-b">

@@ -58,7 +58,7 @@ const Animation = memo(() => {
             },
             particles: {
                 color: {
-                    value: "#ffffff",
+                    value: "#fffffff1",
                 },
                 links: {
                     color: "#ffffff",

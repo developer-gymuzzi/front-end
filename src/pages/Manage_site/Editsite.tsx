@@ -214,7 +214,7 @@ export default function AddSite() {
 
                         <div className="relative flex w-full p-3 flex-auto flex-col place-content-inherit align-items-inherit h-auto break-words text-left overflow-y-auto subpixel-antialiased">
                             <div className="grid grid-cols-4 gap-5">
-                                {/* Site Name */}
+                      
                                 <div>
                                     <label htmlFor="site_name">
                                         Site name
@@ -232,7 +232,7 @@ export default function AddSite() {
                                     </div>
                                 </div>
 
-                                {/* Site Status */}
+                         
                                 <div>
                                     <label htmlFor="site_status">
                                         Site Status
@@ -250,7 +250,7 @@ export default function AddSite() {
                                     </select>
                                 </div>
 
-                                {/* Customer Name */}
+                    
                                 <div>
                                     <label htmlFor="customer_name">
                                         Customer Name
@@ -271,7 +271,7 @@ export default function AddSite() {
                                     </select>
                                 </div>
 
-                                {/* Service Color */}
+         
                                 <div>
                                     <label htmlFor="site_color">Service color</label>
                                     <div className="">
@@ -309,7 +309,7 @@ export default function AddSite() {
                                             )}
                                         </button>
 
-                                        {/* Color picker dropdown */}
+                                  
                                         {ColorOpen && (
                                             <>
 
@@ -319,7 +319,7 @@ export default function AddSite() {
                                                     aria-hidden="true"
                                                 />
 
-                                                {/* Color picker container */}
+                                        
                                                 <div className="z-50 mt-1 p-3 bg-white border rounded-md shadow-lg fixed">
                                                     <div className="grid grid-cols-10 gap-1">
                                                         {colorPalette.map((row, rowIndex) => (
