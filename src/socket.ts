@@ -9,6 +9,7 @@ const socket = io(endpoint, {
   transports: ["websocket"],
 })
 
+ 
 export const connectSocket = () => {
   // ✅ get token from cookies each time before connect
   const token = document.cookie
