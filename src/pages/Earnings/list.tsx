@@ -210,25 +210,25 @@ const EarningsDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600">Gym Owner Earnings (Filtered)</p>
+                    <p className="text-sm text-gray-600">Gym Owner Earnings</p>
                     <p className="text-2xl font-bold">₹{stats.filteredGymEarnings}</p>
                     <p className="text-xs text-gray-500">Overall: ₹{stats.overallGymEarnings}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600">Admin Commission (Filtered)</p>
+                    <p className="text-sm text-gray-600">Admin Commission</p>
                     <p className="text-2xl font-bold">₹{stats.filteredAdminEarnings}</p>
                     <p className="text-xs text-gray-500">Overall: ₹{stats.overallAdminEarnings}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600">Filtered Transactions</p>
+                    <p className="text-sm text-gray-600">Total Transactions</p>
                     <p className="text-2xl font-bold">{stats.totalTransactions}</p>
                     <p className="text-xs text-gray-500">Overall: {transactions.length}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600">Avg Commission (Filtered)</p>
+                    <p className="text-sm text-gray-600">Avg Commission</p>
                     <p className="text-2xl font-bold">{stats.avgCommission.toFixed(1)}%</p>
                 </div>
 
