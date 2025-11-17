@@ -1,101 +1,66 @@
 import React, { useEffect, useState } from 'react'
-import { Popover, PopoverTrigger, PopoverContent, Button } from "@nextui-org/react";
+import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/react";
 import { Filter } from 'lucide-react';
 
-export default function FilterComponent({ onSearch, filterValues }: any) {
+export default function FilterComponent({ onSearch }: any) {
+
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
-
-    const [localFilters, setLocalFilters] = useState<{ name: string; email: string; role: string }>(filterValues);
+    const [gymName, setGymName] = useState("");
 
     const handlePopoverChange = (open: boolean) => {
         setIsPopoverOpen(open);
     };
 
-
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setLocalFilters((prev: { name: string; email: string; role: string }) => ({ ...prev, [name]: value }));
-    };
-
     const handleSearch = () => {
-        onSearch(localFilters);
+        onSearch(gymName); 
         setIsPopoverOpen(false);
     };
+
     return (
-        <Popover isOpen={isPopoverOpen} onOpenChange={handlePopoverChange}>
+        <Popover isOpen={isPopoverOpen} onOpenChange={handlePopoverChange} >
             <PopoverTrigger>
                 <button className="Filter-button gap-2">
                     <Filter className='w-[20px]' /> Filters
                 </button>
             </PopoverTrigger>
 
-            <PopoverContent className="items-stretch w-[500px]">
+            <PopoverContent className="items-stretch w-[500px] z-[9999]">
                 <div className="px-4 py-3">
-                    {/* Filter Label */}
+
                     <div className="mb-3 text-xl flex gap-2">
                         Filters
                         <Filter className='w-[20px]' />
                     </div>
 
-                    {/* Name Input */}
                     <div className="input-field mb-3">
-                        <label htmlFor="name" className="block text-gray-700">
-                            Name
-                        </label>
+                        <label className="block text-gray-700">Gym Name</label>
                         <input
-                            name="name"
                             type="text"
-                            value={localFilters.name}
-                            onChange={handleInputChange}
-                            className="w-full border border-gray-300 rounded-md"
+                            value={gymName}
+                            onChange={(e) => setGymName(e.target.value)}
+                            placeholder="Enter gym name..."
+                            className="w-full border border-gray-300 rounded-md p-2"
                         />
                     </div>
 
-                    {/* Email Input */}
-                    <div className="input-field mb-3">
-                        <label htmlFor="email" className="block font-medium text-gray-700">
-                            Email
-                        </label>
-                        <input
-                            name="email"
-                            type="text"
-                            value={localFilters.email}
-                            onChange={handleInputChange}
-                            className="w-full border border-gray-300 rounded-md"
-                        />
-                    </div>
-
-                    {/* Role Select */}
-                    <div className="input-field mb-3">
-                        <label htmlFor="role" className="block font-medium text-gray-700">
-                            Role
-                        </label>
-                        <select
-                            id="role"
-                            name="role"
-                            value={localFilters.role}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full mt-1 border border-gray-300 rounded-md"
-                        >
-                            <option value="">Select Creator</option>
-                            <option value="gym_owner">Gym Owner</option>
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-
-                    {/* Footer Buttons */}
                     <div className="flex gap-2 mt-3">
-                        <button className="reset-btn" onClick={() => setIsPopoverOpen(false)}>
+                        <button
+                            className="reset-btn"
+                            onClick={() => {
+                                setGymName("");
+                                onSearch("");  // Reset filter
+                                setIsPopoverOpen(false);
+                            }}
+                        >
                             Cancel
                         </button>
+
                         <button className="Search-btn" onClick={handleSearch}>
-                            <span>Search</span>
+                            Search
                         </button>
                     </div>
+
                 </div>
             </PopoverContent>
         </Popover>

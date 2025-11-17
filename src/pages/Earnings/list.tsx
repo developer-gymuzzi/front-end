@@ -1,273 +1,399 @@
-import { useEffect, useState } from 'react';
-import { Pagination } from '@nextui-org/react';
-import { Drawer, DrawerContent, DrawerBody, DrawerFooter, Button, useDisclosure, Spinner } from '@nextui-org/react';
-import { RxCross2 } from 'react-icons/rx';
+import React, { useState, useMemo, useEffect } from 'react';
+import { DollarSign, TrendingUp, Users, Calendar, Search } from 'lucide-react';
+import socket, { connectSocket } from '../../socket';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { message } from 'antd';
 import Filter from './Filters';
-import { useDispatch } from 'react-redux';
-import { AppDispatch, IRootState } from '../../store';
-import { useSelector } from 'react-redux';
-import { fetchUsers } from '../../store/customerConfigSlice';
 
-export default function ComapnyList() {
-    const [viewMode, setViewMode] = useState<boolean>(false);
-    const { users } = useSelector((state: IRootState) => state.customerConfig) as { users: { id: string; name: string; email: string; role: string; wallet: string }[] };
-    const loading = useSelector((state: IRootState) => state.customerConfig.loading);
+// ===================== INTERFACES =====================
+interface User {
+    _id: string;
+    name: string;
+    email: string;
+}
 
-    const dispatch: AppDispatch = useDispatch();
+interface Gym {
+    _id: string;
+    name: string;
+}
 
-    const [filters, setFilters] = useState({ name: '', email: '', role: '' });
-    const [appliedFilters, setAppliedFilters] = useState({ name: '', email: '', role: '' });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(5);
-    const [totalPages, setTotalPages] = useState(1);
+interface PaymentTxn {
+    _id: string;
+    amount: number;
+    description: string;
+    createdAt: string;
+    from: User;
+    to: User;
+    gym: Gym;
+}
 
-    const totalAmount = users.reduce((sum, user) => sum + Number(user.wallet ?? 0), 0);
+interface CommissionTxn {
+    _id: string;
+    amount: number;
+    description: string;
+    commissionPercentage: number;
+    createdAt: string;
+    to: User;
+}
 
+interface TransactionGroup {
+    payment: PaymentTxn;
+    commission?: CommissionTxn;
+    paymentAmount: number;
+    adminCommission: number;
+    gymOwnerReceives: number;
+}
+
+interface Stats {
+    totalGymEarnings: number;
+    totalAdminEarnings: number;
+    totalTransactions: number;
+    avgCommission: number;
+}
+
+type FilterType = 'all' | 'gym' | 'admin';
+
+// =======================================================
+
+const EarningsDashboard = () => {
+
+    const [transactions, setTransactions] = useState<TransactionGroup[]>([]);
+    const [filter, setFilter] = useState<FilterType>('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedTransaction, setSelectedTransaction] = useState<TransactionGroup | null>(null);
+    const [notificationCount, setNotificationCount] = useState(0);
+    const [gymFilter, setGymFilter] = useState(''); 
+
+    // ===================== LOAD API =====================
+    const loadData = async (gymName: string = '') => {
+        try {
+            const token = Cookies.get('token');
+
+            const URL = gymName
+                ? `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/list/earnings/listing?gym=${gymName}`
+                : `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/list/earnings/listing`;
+
+            const { data } = await axios.get(URL, {
+                headers: { token }
+            });
+
+            if (data.success) {
+                setTransactions(data.grouped);
+            } else {
+                message.error(data.message);
+            }
+
+        } catch (err) {
+            console.error("ERR LOADING DATA", err);
+            message.error('Failed to load earnings.');
+        }
+    };
+
+    // ===================== SOCKET SETUP =====================
     useEffect(() => {
-        dispatch(fetchUsers({ page: currentPage, limit: pageSize, ...appliedFilters }));
-    }, [dispatch, currentPage, pageSize, appliedFilters]);
+        connectSocket();
+        loadData(); 
 
-    const handleNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
+        // ===== REALTIME RECEIVER FIXED =====
+        socket.on('transaction:new', (raw: any) => {
+            console.log("🔥 REAL-TIME RECEIVED:", raw);
+
+            if (!raw || !raw.payment) {
+                console.warn("⚠ Invalid real-time data received", raw);
+                return;
+            }
+
+            // 🔥 Convert backend raw → FULL grouped format
+            const newGroup: TransactionGroup = {
+                payment: raw.payment,
+                commission: raw.commission || undefined,
+                paymentAmount: raw.payment.amount,
+                adminCommission: raw.commission?.amount || 0,
+                gymOwnerReceives: raw.payment.amount - (raw.commission?.amount || 0)
+            };
+
+            setTransactions(prev => [newGroup, ...prev]);
+        });
+
+        socket.on('notification:count', ({ unreadCount }) => {
+            setNotificationCount(unreadCount);
+        });
+
+        socket.on('notification:new', data => {
+            message.info('🔔 ' + data.message);
+        });
+
+        return () => {
+            socket.off('transaction:new');
+            socket.off('notification:new');
+            socket.off('notification:count');
+        };
+    }, []);
+
+    // ===================== STATS =====================
+    const stats = useMemo<Stats>(() => ({
+        totalGymEarnings: transactions.reduce((sum, g) => sum + g.gymOwnerReceives, 0),
+        totalAdminEarnings: transactions.reduce((sum, g) => sum + g.adminCommission, 0),
+        totalTransactions: transactions.length,
+        avgCommission:
+            transactions.length > 0
+                ? transactions.reduce((s, g) => s + (g.commission?.commissionPercentage || 0), 0) / transactions.length
+                : 0
+    }), [transactions]);
+
+    // ===================== FILTER & SEARCH =====================
+    const filteredGroups = useMemo(() => {
+        let list = [...transactions];
+
+        if (filter === 'gym') list = list.filter(g => g.payment);
+        if (filter === 'admin') list = list.filter(g => g.commission);
+
+        if (searchTerm) {
+            const t = searchTerm.toLowerCase();
+            list = list.filter(g =>
+                g.payment.from.name.toLowerCase().includes(t) ||
+                g.payment.to.name.toLowerCase().includes(t) ||
+                g.payment.gym.name.toLowerCase().includes(t)
+            );
         }
+
+        return list;
+    }, [transactions, filter, searchTerm]);
+
+    // ===================== DATE FORMAT =====================
+    const formatDate = (date: string) => {
+        return new Date(date).toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
-    const handlePreviousPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    };
-
-    const handlePageClick = (page: any) => {
-        if (page !== currentPage) {
-            setCurrentPage(page);
-        }
-    };
-
-    const handlePageSizeChange = (e: any) => {
-        setPageSize(Number(e.target.value));
-        setCurrentPage(1);
-    };
-
-    const handleSearch = (newFilters: any) => {
-        setFilters(newFilters);
-        setAppliedFilters(newFilters);
-        setCurrentPage(1);
-    };
-
-    const removeFilter = (key: string) => {
-        const updated = { ...appliedFilters, [key]: '' };
-        setFilters(updated);
-        setAppliedFilters(updated);
-        setCurrentPage(1);
-    };
-
-    const clearAllFilters = () => {
-        const cleared = { name: '', email: '', role: '' };
-        setFilters(cleared);
-        setAppliedFilters(cleared);
-        setCurrentPage(1);
-    };
-
-    const formatRoleLabel = (val: string) => {
-        if (val === 'gym_owner') return 'Gym Owner';
-        if (val === 'admin') return 'Admin';
-        if (val === 'user') return 'User';
-        return val.charAt(0).toUpperCase() + val.slice(1);
-    };
-
+    // ===================== UI =====================
     return (
-        <div>
-            <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-                <div className="grid gap-1">
-                    <h2 className="CRM-Page-Title">Earning</h2>
-                    <p className="CRM-Page-Structure">
-                        Dashboard / <span className="CRM-Page-Name">Earning</span>
-                    </p>
-                    {Object.entries(appliedFilters).some(([_, val]) => val) && (
-                        <div className="flex flex-wrap gap-3 items-center mt-3">
-                            {Object.entries(appliedFilters)
-                                .filter(([_, val]) => val)
-                                .map(([key, value]) => (
-                                    <Button key={key} className="yellow-color" onClick={() => removeFilter(key)}>
-                                        {formatRoleLabel(value)} <RxCross2 />
-                                    </Button>
-                                ))}
-                            <h5 className="text-yellow cursor-pointer" onClick={clearAllFilters}>
-                                Clear all filters
-                            </h5>
-                        </div>
-                    )}
-                </div>
+        <div className="grid gap-1">
 
-                <div className="flex flex-wrap items-center justify-end gap-3">
-                    {/* <Button className="Insert-Button" onClick={company}>
-                        <Plus /> Add Customers
-                    </Button> */}
+            {/* TOP HEADER */}
+            <div className="flex justify-between items-center">
+                <h2 className="CRM-Page-Title">Earnings Dashboard</h2>
 
-                    <Filter onSearch={handleSearch} filterValues={filters} key={JSON.stringify(filters)} />
+                <div className="flex items-center gap-3">
+                    <Filter 
+                        onSearch={(gymName: string) => {
+                            setGymFilter(gymName);
+                            loadData(gymName);
+                        }}
+                    />
                 </div>
             </div>
 
-            <div className="inventory-table table-containers">
-                <div className="rounded-lg table-wrapper">
-                    <div className="border-t-8 border-[#113354]"></div>
-                    <table className="data-table">
-                        <thead>
-                            <tr className="border-b bg-gray-50">
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">S.No</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Gym Name</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Gym Owner</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">User</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Amount</th>
-                                {/* <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Action</th> */}
+            <p className="CRM-Page-Structure mb-6">
+                Dashboard / <span className="CRM-Page-Name">Earnings</span>
+            </p>
+
+            {/* STATS CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white rounded-lg shadow p-6">
+                    <p className="text-sm text-gray-600">Gym Owner Earnings</p>
+                    <p className="text-2xl font-bold">₹{stats.totalGymEarnings}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                    <p className="text-sm text-gray-600">Admin Commission</p>
+                    <p className="text-2xl font-bold">₹{stats.totalAdminEarnings}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                    <p className="text-sm text-gray-600">Total Transactions</p>
+                    <p className="text-2xl font-bold">{stats.totalTransactions}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                    <p className="text-sm text-gray-600">Avg Commission</p>
+                    <p className="text-2xl font-bold">{stats.avgCommission.toFixed(1)}%</p>
+                </div>
+            </div>
+
+            {/* TABLE */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                            <tr>
+                                <th className="px-6 py-3">Date</th>
+                                <th className="px-6 py-3">User</th>
+                                <th className="px-6 py-3">Gym Owner</th>
+                                <th className="px-6 py-3">Gym</th>
+                                <th className="px-6 py-3">Payment</th>
+                                <th className="px-6 py-3">Commission</th>
+                                <th className="px-6 py-3">Net To Owner</th>
+                                <th className="px-6 py-3">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {loading
-                                ? [...Array(5)].map((_, index) => (
-                                      <tr key={index} className="border-b last:border-b-0">
-                                          <td className="px-4 py-3">
-                                              <div className="w-12 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="w-24 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="w-16 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="w-12 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="w-12 rounded h-5 bg-gray-300 "></div>
-                                          </td>
-                                          <td className="px-4 py-3 text-gray-600">
-                                              <div className="flex gap-2">
-                                                  <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                                  <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                                  <div className="w-5 rounded h-5 bg-gray-300 "></div>
-                                              </div>
-                                          </td>
-                                      </tr>
-                                  ))
-                                : users.map((entry, index) => {
-                                      const rowIndex = (currentPage - 1) * pageSize + (index + 1);
 
-                                      return (
-                                          <tr key={entry.id} className="border-b last:border-b-0 hover:shadow-md hover:font-semibold">
-                                              <td className="px-4 py-3">{rowIndex}</td>
-                                              <td className="px-4 py-3 text-gray-600">{entry.name || '---'} </td>
-                                              <td className="px-4 py-3 text-gray-600">{entry.email || '---'}</td>
-                                              <td>
-                                                  <span
-                                                      className={`inline-block px-2 py-1 text-xs rounded-full font-semibold ${
-                                                          entry.role === 'admin'
-                                                              ? 'bg-blue-100 text-blue-700'
-                                                              : entry.role === 'user'
-                                                              ? 'bg-purple-100 text-purple-700'
-                                                              : entry.role === 'gym_owner'
-                                                              ? 'bg-yellow-100 text-yellow-800'
-                                                              : 'bg-gray-100 text-gray-600'
-                                                      }`}
-                                                  >
-                                                      {entry.role === 'gym_owner' ? 'Gym Owner' : entry.role.charAt(0).toUpperCase() + entry.role.slice(1)}
-                                                  </span>
-                                              </td>
+                        <tbody className="divide-y">
+                            {filteredGroups.map((group, index) => (
+                                <tr key={index} className="hover:bg-gray-50">
 
-                                              <td>
-                                                  <span className="inline-block px-2 py-1 text-xs rounded-full font-semibold bg-green-100 text-green-700">₹ {entry.wallet ?? '0'}</span>
-                                              </td>
+                                    <td className="px-6 py-4">{formatDate(group.payment.createdAt)}</td>
 
-                                              {/* <td className="px-4 py-3 text-gray-600">
-                                                  <div className="flex gap-2">
-                                                      <span
-                                                          className="cursor-pointer"
-                                                          onClick={() => {
-                                                              setCompany(entry);
-                                                              setViewModalOpen(true);
-                                                          }}
-                                                      >
-                                                          <View className="h-5 w-5 text-gray-400" />
-                                                      </span>
-                                                      <span className="cursor-pointer">
-                                                          <Edit className="h-5 w-5 text-gray-500" />
-                                                      </span>
-                                                      <span
-                                                          className="cursor-pointer"
-                                                          onClick={() => {
-                                                              if (entry.id) {
-                                                                  Swal.fire({
-                                                                      title: 'Are you sure?',
-                                                                      icon: 'warning',
-                                                                      showCancelButton: true,
-                                                                      confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--yellow-color').trim(),
-                                                                      cancelButtonColor: '#d33',
-                                                                      confirmButtonText: 'Yes, delete it!',
-                                                                  }).then((result) => {
-                                                                      if (result.isConfirmed) {
-                                                                          Swal.fire('Deleted!', 'Your item has been deleted.', 'success');
-                                                                      }
-                                                                  });
-                                                              }
-                                                          }}
-                                                      >
-                                                          <Delete className="h-5 w-5 text-red-500" />
-                                                      </span>
-                                                  </div>
-                                              </td> */}
-                                          </tr>
-                                      );
-                                  })}
+                                    <td className="px-6 py-4">
+                                        {group.payment.from.name}
+                                        <div className="text-gray-500 text-xs">{group.payment.from.email}</div>
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        {group.payment.to.name}
+                                        <div className="text-gray-500 text-xs">{group.payment.to.email}</div>
+                                    </td>
+
+                                    <td className="px-6 py-4">{group.payment.gym.name}</td>
+
+                                    <td className="px-6 py-4 text-blue-600">
+                                        ₹{group.paymentAmount}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-green-600">
+                                        ₹{group.adminCommission}
+                                    </td>
+
+                                    <td className="px-6 py-4 text-purple-600 font-bold">
+                                        ₹{group.gymOwnerReceives}
+                                    </td>
+
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => setSelectedTransaction(group)}
+                                            className="text-blue-600 hover:underline"
+                                        >
+                                            View Details
+                                        </button>
+                                    </td>
+
+                                </tr>
+                            ))}
                         </tbody>
-                        <tfoot>
-                            <tr className="border-t font-semibold">
-                                <td className="px-4 py-3 text-left" colSpan={4}>
-                                    Total Amount
-                                </td>
-                                <td className="px-4 py-3 text-green-700 bg-green-50">₹ {totalAmount}</td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
 
-                <div className="pagination-container">
-                    <div className="pagination-controls">
-                        <button onClick={handlePreviousPage} className={`pagination-button ${currentPage <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={currentPage <= 1}>
-                            ‹ Prev
-                        </button>
-                        {[...Array(totalPages)].map((_, index) => (
-                            <button
-                                key={index + 1}
-                                onClick={() => handlePageClick(index + 1)}
-                                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm 
-                                    ${index + 1 === currentPage ? 'bg-yellow text-white' : 'hover:bg-gray-100 border border-gray-300 text-gray-600'}
-                                    ${index + 1 === currentPage ? 'cursor-not-allowed' : ''}`}
-                                disabled={index + 1 === currentPage}
-                            >
-                                {index + 1}
-                            </button>
-                        ))}
-                        <button
-                            onClick={handleNextPage}
-                            className={`pagination-button ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={currentPage >= totalPages || totalPages === 0}
-                        >
-                            Next ›
-                        </button>
+                {filteredGroups.length === 0 && (
+                    <div className="text-center py-10 text-gray-500">
+                        No transactions found
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Items per page</span>
-                        <select className="h-8 rounded-md border border-gray-300 bg-white p-1 text-sm text-gray-600" value={pageSize} onChange={handlePageSizeChange}>
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                        </select>
+                )}
+            </div>
+
+            {/* ===================== MODAL ===================== */}
+            {selectedTransaction && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+
+                        <div className="p-6 flex justify-between items-start border-b">
+                            <h2 className="text-2xl font-bold">Transaction Details</h2>
+                            <button
+                                onClick={() => setSelectedTransaction(null)}
+                                className="text-gray-500 text-xl"
+                            >
+                                ✖
+                            </button>
+                        </div>
+
+                        {/* Payment Card */}
+                        <div className="p-6 bg-blue-50">
+                            <h3 className="text-lg font-bold text-blue-900 mb-4">Gym Owner Payment</h3>
+
+                            <div className="grid grid-cols-2 gap-4">
+
+                                <div>
+                                    <p className="text-sm text-gray-600">Payment ID</p>
+                                    <p className="font-semibold">{selectedTransaction.payment._id}</p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-600">Amount</p>
+                                    <p className="font-bold text-blue-700">₹{selectedTransaction.paymentAmount}</p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-600">User (From)</p>
+                                    <p className="font-semibold">{selectedTransaction.payment.from.name}</p>
+                                    <p className="text-xs text-gray-500">{selectedTransaction.payment.from.email}</p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-600">Gym Owner (To)</p>
+                                    <p className="font-semibold">{selectedTransaction.payment.to.name}</p>
+                                    <p className="text-xs text-gray-500">{selectedTransaction.payment.to.email}</p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-600">Gym</p>
+                                    <p className="font-semibold">{selectedTransaction.payment.gym.name}</p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-600">Date</p>
+                                    <p className="font-semibold">{formatDate(selectedTransaction.payment.createdAt)}</p>
+                                </div>
+
+                                <div className="col-span-2">
+                                    <p className="text-sm text-gray-600">Description</p>
+                                    <p className="font-medium">{selectedTransaction.payment.description}</p>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {/* Commission Card */}
+                        {selectedTransaction.commission && (
+                            <div className="p-6 bg-green-50 border-t">
+                                <h3 className="text-lg font-bold text-green-900 mb-4">Admin Commission</h3>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-sm text-gray-600">Commission ID</p>
+                                        <p className="font-semibold">{selectedTransaction.commission._id}</p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm text-gray-600">Amount</p>
+                                        <p className="font-bold text-green-700">₹{selectedTransaction.adminCommission}</p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm text-gray-600">Commission Rate</p>
+                                        <p className="font-semibold">{selectedTransaction.commission.commissionPercentage}%</p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm text-gray-600">To (Admin)</p>
+                                        <p className="font-semibold">{selectedTransaction.commission.to.name}</p>
+                                        <p className="text-xs text-gray-500">{selectedTransaction.commission.to.email}</p>
+                                    </div>
+
+                                    <div className="col-span-2">
+                                        <p className="text-sm text-gray-600">Description</p>
+                                        <p className="font-medium">{selectedTransaction.commission.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="p-6 flex justify-end">
+                            <button
+                                onClick={() => setSelectedTransaction(null)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                            >
+                                Close
+                            </button>
+                        </div>
+
                     </div>
                 </div>
-            </div>
+            )}
+
         </div>
     );
-}
+};
+
+export default EarningsDashboard;
