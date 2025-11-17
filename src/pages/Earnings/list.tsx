@@ -46,8 +46,12 @@ interface TransactionGroup {
 }
 
 interface Stats {
-    totalGymEarnings: number;
-    totalAdminEarnings: number;
+    overallGymEarnings: number;
+    overallAdminEarnings: number;
+
+    filteredGymEarnings: number;
+    filteredAdminEarnings: number;
+
     totalTransactions: number;
     avgCommission: number;
 }
@@ -95,7 +99,6 @@ const EarningsDashboard = () => {
         connectSocket();
         loadData(); 
 
-        // ===== REALTIME RECEIVER FIXED =====
         socket.on('transaction:new', (raw: any) => {
             console.log("🔥 REAL-TIME RECEIVED:", raw);
 
@@ -104,7 +107,6 @@ const EarningsDashboard = () => {
                 return;
             }
 
-            // 🔥 Convert backend raw → FULL grouped format
             const newGroup: TransactionGroup = {
                 payment: raw.payment,
                 commission: raw.commission || undefined,
@@ -131,17 +133,6 @@ const EarningsDashboard = () => {
         };
     }, []);
 
-    // ===================== STATS =====================
-    const stats = useMemo<Stats>(() => ({
-        totalGymEarnings: transactions.reduce((sum, g) => sum + g.gymOwnerReceives, 0),
-        totalAdminEarnings: transactions.reduce((sum, g) => sum + g.adminCommission, 0),
-        totalTransactions: transactions.length,
-        avgCommission:
-            transactions.length > 0
-                ? transactions.reduce((s, g) => s + (g.commission?.commissionPercentage || 0), 0) / transactions.length
-                : 0
-    }), [transactions]);
-
     // ===================== FILTER & SEARCH =====================
     const filteredGroups = useMemo(() => {
         let list = [...transactions];
@@ -160,6 +151,27 @@ const EarningsDashboard = () => {
 
         return list;
     }, [transactions, filter, searchTerm]);
+
+    // ===================== STATS (UPDATED) =====================
+    const stats = useMemo<Stats>(() => {
+        const overallGym = transactions.reduce((s, t) => s + t.gymOwnerReceives, 0);
+        const overallAdmin = transactions.reduce((s, t) => s + t.adminCommission, 0);
+
+        const filteredGym = filteredGroups.reduce((s, t) => s + t.gymOwnerReceives, 0);
+        const filteredAdmin = filteredGroups.reduce((s, t) => s + t.adminCommission, 0);
+
+        return {
+            overallGymEarnings: overallGym,
+            overallAdminEarnings: overallAdmin,
+            filteredGymEarnings: filteredGym,
+            filteredAdminEarnings: filteredAdmin,
+            totalTransactions: filteredGroups.length,
+            avgCommission:
+                filteredGroups.length > 0
+                    ? filteredGroups.reduce((s, t) => s + (t.commission?.commissionPercentage || 0), 0) / filteredGroups.length
+                    : 0
+        };
+    }, [transactions, filteredGroups]);
 
     // ===================== DATE FORMAT =====================
     const formatDate = (date: string) => {
@@ -194,24 +206,32 @@ const EarningsDashboard = () => {
                 Dashboard / <span className="CRM-Page-Name">Earnings</span>
             </p>
 
-            {/* STATS CARDS */}
+            {/* STATS CARDS (UPDATED) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600">Gym Owner Earnings</p>
-                    <p className="text-2xl font-bold">₹{stats.totalGymEarnings}</p>
+                    <p className="text-sm text-gray-600">Gym Owner Earnings (Filtered)</p>
+                    <p className="text-2xl font-bold">₹{stats.filteredGymEarnings}</p>
+                    <p className="text-xs text-gray-500">Overall: ₹{stats.overallGymEarnings}</p>
                 </div>
+
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600">Admin Commission</p>
-                    <p className="text-2xl font-bold">₹{stats.totalAdminEarnings}</p>
+                    <p className="text-sm text-gray-600">Admin Commission (Filtered)</p>
+                    <p className="text-2xl font-bold">₹{stats.filteredAdminEarnings}</p>
+                    <p className="text-xs text-gray-500">Overall: ₹{stats.overallAdminEarnings}</p>
                 </div>
+
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600">Total Transactions</p>
+                    <p className="text-sm text-gray-600">Filtered Transactions</p>
                     <p className="text-2xl font-bold">{stats.totalTransactions}</p>
+                    <p className="text-xs text-gray-500">Overall: {transactions.length}</p>
                 </div>
+
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600">Avg Commission</p>
+                    <p className="text-sm text-gray-600">Avg Commission (Filtered)</p>
                     <p className="text-2xl font-bold">{stats.avgCommission.toFixed(1)}%</p>
                 </div>
+
             </div>
 
             {/* TABLE */}
