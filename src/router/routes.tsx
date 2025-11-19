@@ -20,7 +20,7 @@ const AddCompany = lazy(() => import('../pages/usersRoles/Companyadd'));
 const Customertimetable = lazy(() => import('../pages/Timeprocessing/customer-time-table'));
 const Geolocation = lazy(() => import('../pages/Location/googlemap'));
 const Gym = lazy(() => import('../pages/Gym/ManageGym'));
-const GYmPage = lazy(() => import('../pages/Gym/Viewgym'));
+const GYmPage = lazy(() => import('../pages/Gym//Viewgym'));
 const Earning = lazy(() => import('../pages/Earnings/list'));
 const GymOwnerGym = lazy(() => import('../pages/Gym/gym_ownerManage'));
 const GymView = lazy(() => import('../pages/Gym/GymownerViewgym'));

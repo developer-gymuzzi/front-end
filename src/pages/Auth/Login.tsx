@@ -156,7 +156,7 @@ const LoginBoxed = () => {
                                 </div>
                             </div>
                             <h1 className="text-2xl font-extrabold uppercase !leading-snug text-white md:text-3xl">
-                                GymUiz <span className="text-red-600">LOGIN</span>
+                                Gymuzzi <span className="text-red-600">LOGIN</span>
                             </h1>
                             <p className="text-sm font-bold leading-normal text-gray-300">Enter your credentials to start your workout journey</p>
                         </div>

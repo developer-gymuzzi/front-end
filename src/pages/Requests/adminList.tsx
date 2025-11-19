@@ -15,7 +15,7 @@ export default function PaymentRequestList() {
     const endpoint = import.meta.env.VITE_API_LIVEHOST;
     const token = Cookies.get('token') || '';
 
-    // Filters → name + status
+    // Filters
     const [filters, setFilters] = useState({ name: '', status: '' });
     const [appliedFilters, setAppliedFilters] = useState({ name: '', status: '' });
 
@@ -27,7 +27,9 @@ export default function PaymentRequestList() {
     // Modal selected item
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-    // FETCH PAYMENT REQUESTS
+    /* ---------------------------------------------
+     * FETCH PAYMENT REQUESTS
+     * --------------------------------------------- */
     const fetchPaymentRequests = async () => {
         try {
             setLoading(true);
@@ -47,18 +49,17 @@ export default function PaymentRequestList() {
             });
 
             const data = response?.data;
+
             if (data && data.success === 1) {
                 setRequests(Array.isArray(data.data) ? data.data : []);
-                setTotalPages(data?.pagination?.totalPages ? Number(data.pagination.totalPages) : 1);
+                setTotalPages(data?.pagination?.totalPages || 1);
             } else {
                 setRequests([]);
                 setTotalPages(1);
-                console.warn('Unexpected response from paymentrequestlisting:', data);
             }
         } catch (err) {
             console.error('Fetch error: ', err);
             setRequests([]);
-            setTotalPages(1);
         } finally {
             setLoading(false);
         }
@@ -66,13 +67,17 @@ export default function PaymentRequestList() {
 
     useEffect(() => {
         fetchPaymentRequests();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, pageSize, appliedFilters]);
 
-    // APPROVE or REJECT request
+    /* ---------------------------------------------
+     * UPDATE STATUS (APPROVE / REJECT)
+     * --------------------------------------------- */
     const updateStatus = async (id: string, type: 'approve' | 'reject') => {
         try {
-            const api = type === 'approve' ? `${endpoint}/v1/admin/approve/approvePaymentRequest/${id}` : `${endpoint}/v1/admin/approve/rejectPaymentRequest/${id}`;
+            const api =
+                type === 'approve'
+                    ? `${endpoint}/v1/admin/approve/approvePaymentRequest/${id}`
+                    : `${endpoint}/v1/admin/approve/rejectPaymentRequest/${id}`;
 
             const confirmMsg = type === 'approve' ? 'Approve this request?' : 'Reject this request?';
             const successMsg = type === 'approve' ? 'Request Approved!' : 'Request Rejected!';
@@ -93,25 +98,24 @@ export default function PaymentRequestList() {
             const response = await axios.post(api, {}, { headers: { token } });
             const data = response?.data;
 
-            if (data && data.success === 1) {
+            if (data?.success === 1) {
                 await Swal.fire('Success', successMsg, 'success');
-                // refresh list
                 fetchPaymentRequests();
-                // close modal if the selected item was the same and status changed
-                if (selectedItem?._id === id) {
-                    setSelectedItem(null);
-                }
+
+                if (selectedItem?._id === id) setSelectedItem(null);
             } else {
-                Swal.fire('Error', data?.message || 'Failed to update!', 'error');
+                Swal.fire('Error', data.message || 'Failed to update!', 'error');
             }
         } catch (error) {
-            console.error('Update status error:', error);
             Swal.fire('Error', 'Something went wrong', 'error');
         } finally {
             setActionLoading(null);
         }
     };
 
+    /* --------------------------------------------------
+     * FILTER HANDLERS
+     * -------------------------------------------------- */
     const handleSearch = (newFilters: any) => {
         setFilters(newFilters);
         setAppliedFilters(newFilters);
@@ -132,9 +136,13 @@ export default function PaymentRequestList() {
         setCurrentPage(1);
     };
 
+    /* --------------------------------------------------
+     * UI RENDER
+     * -------------------------------------------------- */
     return (
         <div>
-            {/* ---------- HEADER ---------- */}
+
+            {/* HEADER */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="grid gap-1">
                     <h2 className="CRM-Page-Title">Payment Requests</h2>
@@ -142,6 +150,7 @@ export default function PaymentRequestList() {
                         Dashboard / <span className="CRM-Page-Name">Payment Requests</span>
                     </p>
 
+                    {/* Active Filters */}
                     {Object.values(appliedFilters).some((val) => val) && (
                         <div className="flex flex-wrap gap-3 items-center mt-3">
                             {Object.entries(appliedFilters)
@@ -162,7 +171,7 @@ export default function PaymentRequestList() {
                 <Filter onSearch={handleSearch} filterValues={filters} />
             </div>
 
-            {/* ---------- TABLE ---------- */}
+            {/* TABLE */}
             <div className="inventory-table table-containers">
                 <div className="rounded-lg table-wrapper">
                     <div className="border-t-8 border-[#113354]" />
@@ -170,14 +179,15 @@ export default function PaymentRequestList() {
                     <table className="data-table">
                         <thead>
                             <tr className="border-b bg-gray-50">
-                                <th className="px-4 py-3">S.No</th>
-                                <th className="px-4 py-3">User</th>
-                                <th className="px-4 py-3">Email</th>
-                                <th className="px-4 py-3">Phone</th>
-                                <th className="px-4 py-3">Amount</th>
-                                <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3">Date</th>
-                                <th className="px-4 py-3">Action</th>
+                                <th>S.No</th>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Primary Account</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
 
@@ -185,25 +195,40 @@ export default function PaymentRequestList() {
                             {loading
                                 ? [...Array(5)].map((_, i) => (
                                       <tr key={i} className="border-b">
-                                          {[...Array(8)].map((_, j) => (
-                                              <td key={j} className="px-4 py-3">
-                                                  <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
+                                          {[...Array(9)].map((_, j) => (
+                                              <td key={j}>
+                                                  <div className="h-5 bg-gray-200 rounded animate-pulse" />
                                               </td>
                                           ))}
                                       </tr>
                                   ))
-                                : requests.map((item: any, index: number) => {
+                                : requests.map((item, index) => {
                                       const serial = (currentPage - 1) * pageSize + index + 1;
+
+                                      const primaryAcc = item.userBankAccounts?.find((a: any) => a.primaryAccount);
 
                                       return (
                                           <tr key={item._id} className="border-b hover:bg-gray-50">
-                                              <td className="px-4 py-3">{serial}</td>
-                                              <td className="px-4 py-3">{item.user?.name || '---'}</td>
-                                              <td className="px-4 py-3">{item.user?.email || '---'}</td>
-                                              <td className="px-4 py-3">{item.user?.phone || '---'}</td>
-                                              <td className="px-4 py-3 font-semibold">${item.amount}</td>
+                                              <td>{serial}</td>
+                                              <td>{item.user?.name || '---'}</td>
+                                              <td>{item.user?.email || '---'}</td>
+                                              <td>{item.user?.phone || '---'}</td>
 
-                                              <td className="px-4 py-3">
+                                              {/* PRIMARY ACCOUNT */}
+                                              <td>
+                                                  {primaryAcc ? (
+                                                      <span className="text-sm font-semibold text-gray-700">
+                                                          {primaryAcc.bankName} <br />
+                                                          <span className="text-xs text-gray-500">{primaryAcc.accountNo}</span>
+                                                      </span>
+                                                  ) : (
+                                                      '---'
+                                                  )}
+                                              </td>
+
+                                              <td className="font-semibold">${item.amount}</td>
+
+                                              <td>
                                                   <span
                                                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                                           item.status === 'Pending'
@@ -217,47 +242,33 @@ export default function PaymentRequestList() {
                                                   </span>
                                               </td>
 
-                                              <td className="px-4 py-3">{new Date(item.createdAt).toLocaleDateString()}</td>
+                                              <td>{new Date(item.createdAt).toLocaleDateString()}</td>
 
-                                              {/* ---------- ACTION COLUMN ---------- */}
-                                              <td className="px-4 py-3">
-                                                  <div className="flex gap-2 items-center">
-                                                      {/* VIEW BUTTON (Always Visible) */}
+                                              <td>
+                                                  <div className="flex gap-2">
+                                                      {/* VIEW BUTTON */}
                                                       <button
                                                           className="w-8 h-8 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center"
                                                           onClick={() => setSelectedItem(item)}
-                                                          title="View Details"
                                                       >
                                                           👁
                                                       </button>
 
-                                                      {/* SHOW APPROVE/REJECT ONLY IF PENDING */}
+                                                      {/* ONLY IF PENDING */}
                                                       {item.status === 'Pending' && (
                                                           <>
                                                               <button
                                                                   className="w-8 h-8 bg-green-100 hover:bg-green-200 rounded-full flex items-center justify-center"
                                                                   onClick={() => updateStatus(item._id, 'approve')}
-                                                                  title="Approve"
-                                                                  disabled={actionLoading === item._id}
                                                               >
-                                                                  {actionLoading === item._id ? (
-                                                                      <div className="h-4 w-4 border-2 border-green-500 rounded-full animate-spin" />
-                                                                  ) : (
-                                                                      <Check size={18} className="text-green-600" />
-                                                                  )}
+                                                                  <Check size={18} className="text-green-600" />
                                                               </button>
 
                                                               <button
                                                                   className="w-8 h-8 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center"
                                                                   onClick={() => updateStatus(item._id, 'reject')}
-                                                                  title="Reject"
-                                                                  disabled={actionLoading === item._id}
                                                               >
-                                                                  {actionLoading === item._id ? (
-                                                                      <div className="h-4 w-4 border-2 border-red-500 rounded-full animate-spin" />
-                                                                  ) : (
-                                                                      <X size={18} className="text-red-600" />
-                                                                  )}
+                                                                  <X size={18} className="text-red-600" />
                                                               </button>
                                                           </>
                                                       )}
@@ -270,12 +281,12 @@ export default function PaymentRequestList() {
                     </table>
                 </div>
 
-                {/* ---------- PAGINATION ---------- */}
+                {/* PAGINATION */}
                 <div className="pagination-container">
                     <div className="pagination-controls">
                         <button
                             onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-                            className={`pagination-button ${currentPage <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className="pagination-button"
                             disabled={currentPage <= 1}
                         >
                             ‹ Prev
@@ -285,7 +296,7 @@ export default function PaymentRequestList() {
                             <button
                                 key={i}
                                 onClick={() => setCurrentPage(i + 1)}
-                                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm ${currentPage === i + 1 ? 'bg-yellow text-white' : 'hover:bg-gray-100 border border-gray-300'}`}
+                                className={`pagination-number ${currentPage === i + 1 ? 'active' : ''}`}
                             >
                                 {i + 1}
                             </button>
@@ -293,7 +304,7 @@ export default function PaymentRequestList() {
 
                         <button
                             onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-                            className={`pagination-button ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className="pagination-button"
                             disabled={currentPage >= totalPages}
                         >
                             Next ›
@@ -303,7 +314,7 @@ export default function PaymentRequestList() {
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">Items per page</span>
                         <select
-                            className="h-8 rounded-md border border-gray-300 bg-white p-1 text-sm text-gray-600"
+                            className="pagination-select"
                             value={pageSize}
                             onChange={(e) => {
                                 setPageSize(Number(e.target.value));
@@ -319,102 +330,139 @@ export default function PaymentRequestList() {
                 </div>
             </div>
 
-            {selectedItem && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[999] fade-in">
-                    <div className="bg-white w-[520px] md:w-[650px] rounded-xl shadow-2xl border border-gray-200 animate-slide-up">
-                        {/* Modal Header */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-[#113354] rounded-t-xl">
-                            <h2 className="text-lg font-semibold text-white">Payment Request Details</h2>
-                            <button onClick={() => setSelectedItem(null)} className="text-white hover:text-gray-200 transition">
-                                ✕
-                            </button>
-                        </div>
+{/* --------------------------------------------------
+ * DETAILS MODAL WITH THEME-BASED ATTRACTIVE DESIGN
+ * -------------------------------------------------- */}
+{selectedItem && (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[999]">
+        <div className="bg-white w-[90%] md:w-[650px] max-h-[95vh] overflow-y-auto rounded-2xl shadow-2xl border border-gray-200 animate-fadeIn">
 
-                        {/* Modal Body */}
-                        <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* User Info */}
-                            <div>
-                                <h3 className="text-sm font-semibold text-[#113354] mb-1">User Details</h3>
-                                <div className="bg-gray-50 rounded-lg p-3 shadow-sm border border-gray-200">
-                                    <p className="text-sm font-medium">{selectedItem.user?.name || 'N/A'}</p>
-                                    <p className="text-xs text-gray-500">{selectedItem.user?.role || 'User'}</p>
-                                    <p className="text-xs text-gray-500 mt-1">Registered: {new Date(selectedItem.user?.createdAt).toLocaleDateString()}</p>
-                                </div>
-                            </div>
+            {/* HEADER */}
+            <div className="flex items-center justify-between px-6 py-4 bg-[#113354] text-white rounded-t-2xl shadow-md">
+                <h2 className="text-[20px] font-semibold tracking-wide">Payment Request Details</h2>
+                <button
+                    onClick={() => setSelectedItem(null)}
+                    className="text-white hover:bg-white/20 rounded-full p-1 transition"
+                >
+                    ✕
+                </button>
+            </div>
 
-                            {/* Contact */}
-                            <div>
-                                <h3 className="text-sm font-semibold text-[#113354] mb-1">Contact Info</h3>
-                                <div className="bg-gray-50 rounded-lg p-3 shadow-sm border border-gray-200">
-                                    <p className="text-sm">
-                                        <strong>Email:</strong> {selectedItem.user?.email || 'N/A'}
-                                    </p>
-                                    <p className="text-sm">
-                                        <strong>Phone:</strong> {selectedItem.user?.phone || 'N/A'}
-                                    </p>
-                                </div>
-                            </div>
+            {/* BODY */}
+            <div className="p-6 space-y-7">
 
-                            {/* Payment Info */}
-                            <div className="md:col-span-2">
-                                <h3 className="text-sm font-semibold text-[#113354] mb-1">Payment Details</h3>
-                                <div className="bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200 grid grid-cols-2 gap-4">
-                                    <p className="text-sm">
-                                        <strong>Amount:</strong> ${selectedItem.amount}
-                                    </p>
-                                    <p className="text-sm">
-                                        <strong>Status:</strong> {selectedItem.status}
-                                    </p>
-                                    <p className="text-sm col-span-2">
-                                        <strong>Requested on:</strong> {new Date(selectedItem.createdAt).toLocaleString()}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Wallet */}
-                            <div className="md:col-span-2">
-                                <h3 className="text-sm font-semibold text-[#113354] mb-1">Wallet Details</h3>
-                                <div className="bg-gray-50 rounded-lg p-3 shadow-sm border border-gray-200">
-                                    <p className="text-sm">
-                                        <strong>User Wallet:</strong> {selectedItem.user?.wallet ?? 'N/A'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Modal Footer */}
-                        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
-                            {selectedItem.status === 'Pending' && (
-                                <>
-                                    <button
-                                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-sm"
-                                        onClick={() => {
-                                            updateStatus(selectedItem._id, 'reject');
-                                            setSelectedItem(null);
-                                        }}
-                                    >
-                                        Reject
-                                    </button>
-
-                                    <button
-                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm"
-                                        onClick={() => {
-                                            updateStatus(selectedItem._id, 'approve');
-                                            setSelectedItem(null);
-                                        }}
-                                    >
-                                        Approve
-                                    </button>
-                                </>
-                            )}
-
-                            <button className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg shadow-sm" onClick={() => setSelectedItem(null)}>
-                                Close
-                            </button>
-                        </div>
+                {/* USER DETAILS */}
+                <div>
+                    <h3 className="text-[#113354] font-semibold text-sm mb-2">User Details</h3>
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <p className="font-medium text-gray-800">{selectedItem.user?.name}</p>
+                        <p className="text-xs text-gray-500 mt-1">{selectedItem.user?.role}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Registered: {new Date(selectedItem.user?.createdAt).toLocaleDateString()}
+                        </p>
                     </div>
                 </div>
-            )}
+
+                {/* CONTACT DETAILS */}
+                <div>
+                    <h3 className="text-[#113354] font-semibold text-sm mb-2">Contact Info</h3>
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm space-y-1">
+                        <p className="text-sm"><strong>Email:</strong> {selectedItem.user?.email}</p>
+                        <p className="text-sm"><strong>Phone:</strong> {selectedItem.user?.phone}</p>
+                    </div>
+                </div>
+
+                {/* PAYMENT DETAILS */}
+                <div>
+                    <h3 className="text-[#113354] font-semibold text-sm mb-2">Payment Info</h3>
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-2 gap-4">
+                        <p className="text-sm"><strong>Amount:</strong> ₹{selectedItem.amount}</p>
+                        <p className="text-sm"><strong>Status:</strong> {selectedItem.status}</p>
+                        <p className="text-sm col-span-2">
+                            <strong>Requested on:</strong> {new Date(selectedItem.createdAt).toLocaleString()}
+                        </p>
+                    </div>
+                </div>
+
+                {/* WALLET */}
+                <div>
+                    <h3 className="text-[#113354] font-semibold text-sm mb-2">Wallet Details</h3>
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <p className="text-sm"><strong>User Wallet:</strong> ₹{selectedItem.user?.wallet}</p>
+                    </div>
+                </div>
+
+                {/* BANK ACCOUNTS */}
+                <div>
+                    <h3 className="text-[#113354] font-semibold text-sm mb-3">Bank Accounts</h3>
+
+                    <div className="space-y-4">
+                        {selectedItem.userBankAccounts?.map((acc: any) => (
+                            <div
+                                key={acc._id}
+                                className="p-4 bg-gray-50 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition"
+                            >
+                                <div className="flex justify-between items-center">
+                                    <h4 className="font-semibold text-gray-800">
+                                        {acc.bankName} - <span className="text-gray-600">{acc.accountType}</span>
+                                    </h4>
+
+                                    {acc.primaryAccount && (
+                                        <span className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full shadow-sm">
+                                            PRIMARY
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                    <p><strong>Account Holder:</strong> {acc.name}</p>
+                                    <p><strong>Account No:</strong> {acc.accountNo}</p>
+                                    <p><strong>IFSC:</strong> {acc.ifscCode}</p>
+                                    <p><strong>Branch:</strong> {acc.branchName}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* FOOTER */}
+            <div className="flex justify-end gap-3 px-6 py-4 bg-gray-100 rounded-b-2xl border-t">
+                {selectedItem.status === 'Pending' && (
+                    <>
+                        <button
+                            className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow transition"
+                            onClick={() => {
+                                updateStatus(selectedItem._id, 'reject');
+                                setSelectedItem(null);
+                            }}
+                        >
+                            Reject
+                        </button>
+
+                        <button
+                            className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow transition"
+                            onClick={() => {
+                                updateStatus(selectedItem._id, 'approve');
+                                setSelectedItem(null);
+                            }}
+                        >
+                            Approve
+                        </button>
+                    </>
+                )}
+
+                <button
+                    className="px-5 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg shadow transition"
+                    onClick={() => setSelectedItem(null)}
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
         </div>
     );
 }
