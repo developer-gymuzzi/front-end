@@ -51,6 +51,7 @@
         "react-phone-input-2": "^2.15.1",
         "react-popper": "^2.3.0",
         "react-qr-code": "^2.0.15",
+        "react-qrcode-logo": "^4.0.0",
         "react-redux": "^8.0.5",
         "react-router-dom": "^6.4.2",
         "react-scripts": "5.0.1",

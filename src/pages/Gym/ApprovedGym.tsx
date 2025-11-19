@@ -3,12 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, IRootState } from '../../store';
 import { fetchGym } from '../../store/customerConfigSlice';
 import axios from 'axios';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import Swal from 'sweetalert2';
 import { Eye, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import QRCode from 'react-qr-code'; 
-import { Modal } from 'antd'; 
+import { QRCode } from 'react-qrcode-logo';
 import Cookies from 'js-cookie';
 
 const ApprovedGym = ({ filters }: { filters: any }) => {
@@ -21,8 +20,8 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
-    const [isModalVisible, setIsModalVisible] = useState(false); 
-    const [selectedQrPayload, setSelectedQrPayload] = useState<string>(''); 
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedQrPayload, setSelectedQrPayload] = useState<string>('');
 
     useEffect(() => {
         dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters, status: 'approved' }));
@@ -39,13 +38,13 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
 
     const approval = async (gymId: string, approvalStatus: 'approved' | 'rejected') => {
         try {
-              const token = Cookies.get('token')
+            const token = Cookies.get('token');
             const { data } = await axios.post(
                 `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/approve/approveRequest`,
                 { gymId, approvalStatus },
                 {
                     headers: {
-                        token:token,
+                        token: token,
                         'Content-Type': 'application/json',
                     },
                 }
@@ -65,12 +64,12 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
     const navigate = useNavigate();
 
     const showQrModal = (qrPayload: string) => {
-        setSelectedQrPayload(qrPayload); 
-        setIsModalVisible(true); 
+        setSelectedQrPayload(qrPayload);
+        setIsModalVisible(true);
     };
 
     const handleModalClose = () => {
-        setIsModalVisible(false); 
+        setIsModalVisible(false);
     };
 
     const downloadQRCode = () => {
@@ -88,7 +87,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
         link.download = 'gym_qr_code.svg';
         link.click();
 
-        URL.revokeObjectURL(url); 
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -111,6 +110,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                             <th className="px-4 py-3 text-left font-medium text-gray-500">Action</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {loading
                             ? [...Array(7)].map((_, idx) => (
@@ -125,24 +125,50 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                             : gym.map((entry, index) => (
                                   <tr key={entry._id} className="border-b hover:shadow-md">
                                       <td className="px-4 py-3">{(currentPage - 1) * pageSize + index + 1}</td>
+
                                       <td className="px-4 py-3">
                                           <img src={entry.gymphotos?.[0]} alt="Gym" className="h-12 w-12 rounded-md object-cover" />
                                       </td>
+
                                       <td className="px-4 py-3 text-gray-700">{entry.name || '---'}</td>
                                       <td className="px-4 py-3 text-gray-700">{entry.email || '---'}</td>
                                       <td className="px-4 py-3 text-gray-700">{entry.phone || '---'}</td>
                                       <td className="px-4 py-3 text-gray-700">{entry.pan || '---'}</td>
                                       <td className="px-4 py-3 text-gray-700">{entry.license_no || '---'}</td>
+
                                       <td className="px-4 py-3 text-gray-700">
                                           {entry.qr_payload ? (
                                               <button onClick={() => showQrModal(entry.qr_payload)}>
-                                                  <QRCode value={entry.qr_payload} size={80} />
+                                                  <QRCode
+                                                      id="qr-code-svg"
+                                                      value={entry.qr_payload}
+                                                      size={90}
+                                                      bgColor="#000000"
+                                                      fgColor="#DBF900"
+                                                      qrStyle="squares"
+                                                      logoImage="/assets/images/gymuzzi.jpg"
+                                                      logoWidth={70}
+                                                      logoHeight={70}
+                                                      logoOpacity={1}
+                                                      eyeRadius={[
+                                                          { outer: 0, inner: 0 },
+                                                          { outer: 0, inner: 0 },
+                                                          { outer: 0, inner: 0 },
+                                                      ]}
+                                                      eyeColor={[
+                                                          { outer: '#DBF900', inner: '#000000' },
+                                                          { outer: '#DBF900', inner: '#000000' },
+                                                          { outer: '#DBF900', inner: '#000000' },
+                                                      ]}
+                                                  />
                                               </button>
                                           ) : (
                                               '---'
                                           )}
                                       </td>
+
                                       <td className="px-4 py-3 text-gray-700">{entry.address || '---'}</td>
+
                                       <td className="px-4 py-3 text-gray-700">
                                           {entry.updatedAt
                                               ? new Date(entry.updatedAt).toLocaleString('en-IN', {
@@ -195,10 +221,41 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                 </table>
             </div>
 
-            <Modal title="QR Code" visible={isModalVisible} onCancel={handleModalClose} footer={null} width={300}>
-                <div className="flex justify-center items-center">
-                    <QRCode id="qr-code-svg" value={selectedQrPayload} size={200} />
+            {/* -------------------- QR MODAL -------------------- */}
+            <Modal title="Gym QR Code" open={isModalVisible} onCancel={handleModalClose} footer={null} width={360}>
+                <div className="flex justify-center items-center p-4">
+                    <div
+                        style={{
+                            padding: '18px',
+                            background: '#000000',
+                            borderRadius: '14px',
+                        }}
+                    >
+                        <QRCode
+                            id="qr-code-svg"
+                            value={selectedQrPayload}
+                            size={260}
+                            bgColor="#000000"
+                            fgColor="#DBF900"
+                            qrStyle="squares"
+                            logoImage="/assets/images/gymuzzi.jpg"
+                            logoWidth={70}
+                            logoHeight={70}
+                            logoOpacity={1}
+                            eyeRadius={[
+                                { outer: 0, inner: 0 },
+                                { outer: 0, inner: 0 },
+                                { outer: 0, inner: 0 },
+                            ]}
+                            eyeColor={[
+                                { outer: '#DBF900', inner: '#000000' },
+                                { outer: '#DBF900', inner: '#000000' },
+                                { outer: '#DBF900', inner: '#000000' },
+                            ]}
+                        />
+                    </div>
                 </div>
+
                 <div className="flex justify-end">
                     <button onClick={downloadQRCode} className="mt-4 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-all">
                         Download QR Code
@@ -211,15 +268,18 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                     <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1} className="pagination-button">
                         ‹ Prev
                     </button>
+
                     {Array.from({ length: pagination.totalPages || 1 }, (_, i) => (
                         <button key={i + 1} onClick={() => handlePageChange(i + 1)} className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-yellow text-white' : 'bg-gray-100'}`}>
                             {i + 1}
                         </button>
                     ))}
+
                     <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= (pagination.totalPages || 1)} className="pagination-button">
                         Next ›
                     </button>
                 </div>
+
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Items per page</span>
                     <select className="h-8 rounded-md border border-gray-300 bg-white p-1 text-sm" value={pageSize} onChange={handlePageSizeChange}>

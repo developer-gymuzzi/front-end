@@ -1,19 +1,41 @@
 import { useEffect, useState } from 'react';
-import { Pagination } from '@nextui-org/react';
-import { Drawer, DrawerContent, DrawerBody, DrawerFooter, Button, useDisclosure, Spinner } from '@nextui-org/react';
 import { RxCross2 } from 'react-icons/rx';
 import Filter from './Filters';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, IRootState } from '../../store';
-import { useSelector } from 'react-redux';
 import { fetchUsers } from '../../store/customerConfigSlice';
+import UserDetailsModal from './UserDetailsModal';
+import { Button } from 'antd';
 
-export default function ComapnyList() {
-    const [viewMode, setViewMode] = useState<boolean>(false);
-    const { users } = useSelector((state: IRootState) => state.customerConfig) as { users: { id: string; name: string; email: string; role: string; wallet: string }[] };
-    const loading = useSelector((state: IRootState) => state.customerConfig.loading);
+interface User {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    wallet: number | string;
+    phone: string;
+    dob: string;
+    gender: string | null;
+    phoneVerified: boolean;
+    emailVerified: boolean;
+    avatar?: string;
+    approved?: boolean;
+    verificationCode?: string;
+    verificationCodeExpiry?: string;
+    profileImage?: string;
+    trainerCertification?: string[];
+    trainerExperience?: string[];
+    lastLogin?: string | null;
+    isDeleted?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+    currentToken?: string;
+    [key: string]: any;
+}
 
+export default function CompanyList() {
     const dispatch: AppDispatch = useDispatch();
+    const { users = [], loading = false, pagination } = useSelector((state: IRootState) => state.customerConfig);
 
     const [filters, setFilters] = useState({ name: '', email: '', role: '' });
     const [appliedFilters, setAppliedFilters] = useState({ name: '', email: '', role: '' });
@@ -21,28 +43,21 @@ export default function ComapnyList() {
     const [pageSize, setPageSize] = useState(5);
     const [totalPages, setTotalPages] = useState(1);
 
+    const [isModal, setIsModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
     useEffect(() => {
         dispatch(fetchUsers({ page: currentPage, limit: pageSize, ...appliedFilters }));
     }, [dispatch, currentPage, pageSize, appliedFilters]);
 
-    const handleNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-        }
-    };
+    // Update total pages safely
+    useEffect(() => {
+        if (pagination && pagination.totalPages) setTotalPages(pagination.totalPages);
+    }, [pagination]);
 
-    const handlePreviousPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    };
-
-    const handlePageClick = (page: any) => {
-        if (page !== currentPage) {
-            setCurrentPage(page);
-        }
-    };
-
+    const handleNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
+    const handlePreviousPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
+    const handlePageClick = (page: number) => page !== currentPage && setCurrentPage(page);
     const handlePageSizeChange = (e: any) => {
         setPageSize(Number(e.target.value));
         setCurrentPage(1);
@@ -75,8 +90,15 @@ export default function ComapnyList() {
         return val.charAt(0).toUpperCase() + val.slice(1);
     };
 
+    // Function to handle view details
+    const handleViewDetails = (user: User) => {
+        setSelectedUser(user);
+        setIsModal(true);
+    };
+
     return (
         <div>
+            {/* Filters */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="grid gap-1">
                     <h2 className="CRM-Page-Title">People</h2>
@@ -98,13 +120,8 @@ export default function ComapnyList() {
                         </div>
                     )}
                 </div>
-
                 <div className="flex flex-wrap items-center justify-end gap-3">
-                    {/* <Button className="Insert-Button" onClick={company}>
-                        <Plus /> Add Customers
-                    </Button> */}
-
-                    <Filter onSearch={handleSearch} filterValues={filters} key={JSON.stringify(filters)} />
+                    <Filter onSearch={handleSearch} filterValues={filters} />
                 </div>
             </div>
 
@@ -117,9 +134,10 @@ export default function ComapnyList() {
                                 <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">S.No</th>
                                 <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Name</th>
                                 <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Email</th>
+                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Phone</th>
                                 <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Role</th>
-                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Wallet</th>
-                                {/* <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Action</th> */}
+
+                                <th className="px-4 py-3 text-left font-medium text-gray-500 sortable-header">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -150,14 +168,14 @@ export default function ComapnyList() {
                                           </td>
                                       </tr>
                                   ))
-                                : users.map((entry, index) => {
+                                : users.map((entry: User, index) => {
                                       const rowIndex = (currentPage - 1) * pageSize + (index + 1);
-
                                       return (
-                                          <tr key={entry.id} className="border-b last:border-b-0 hover:shadow-md hover:font-semibold">
+                                          <tr key={entry._id} className="border-b last:border-b-0 hover:shadow-md hover:font-semibold">
                                               <td className="px-4 py-3">{rowIndex}</td>
                                               <td className="px-4 py-3 text-gray-600">{entry.name || '---'} </td>
                                               <td className="px-4 py-3 text-gray-600">{entry.email || '---'}</td>
+                                              <td className="px-4 py-3 text-gray-600">{entry.phone || '---'}</td>
                                               <td>
                                                   <span
                                                       className={`inline-block px-2 py-1 text-xs rounded-full font-semibold ${
@@ -174,47 +192,11 @@ export default function ComapnyList() {
                                                   </span>
                                               </td>
 
-                                              <td>
-                                                  <span className="inline-block px-2 py-1 text-xs rounded-full font-semibold bg-green-100 text-green-700">₹ {entry.wallet ?? '0'}</span>
+                                              <td className="px-4 py-3">
+                                                  <button onClick={() => handleViewDetails(entry)} className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors">
+                                                      View Details
+                                                  </button>
                                               </td>
-
-                                              {/* <td className="px-4 py-3 text-gray-600">
-                                                  <div className="flex gap-2">
-                                                      <span
-                                                          className="cursor-pointer"
-                                                          onClick={() => {
-                                                              setCompany(entry);
-                                                              setViewModalOpen(true);
-                                                          }}
-                                                      >
-                                                          <View className="h-5 w-5 text-gray-400" />
-                                                      </span>
-                                                      <span className="cursor-pointer">
-                                                          <Edit className="h-5 w-5 text-gray-500" />
-                                                      </span>
-                                                      <span
-                                                          className="cursor-pointer"
-                                                          onClick={() => {
-                                                              if (entry.id) {
-                                                                  Swal.fire({
-                                                                      title: 'Are you sure?',
-                                                                      icon: 'warning',
-                                                                      showCancelButton: true,
-                                                                      confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--yellow-color').trim(),
-                                                                      cancelButtonColor: '#d33',
-                                                                      confirmButtonText: 'Yes, delete it!',
-                                                                  }).then((result) => {
-                                                                      if (result.isConfirmed) {
-                                                                          Swal.fire('Deleted!', 'Your item has been deleted.', 'success');
-                                                                      }
-                                                                  });
-                                                              }
-                                                          }}
-                                                      >
-                                                          <Delete className="h-5 w-5 text-red-500" />
-                                                      </span>
-                                                  </div>
-                                              </td> */}
                                           </tr>
                                       );
                                   })}
@@ -231,9 +213,9 @@ export default function ComapnyList() {
                             <button
                                 key={index + 1}
                                 onClick={() => handlePageClick(index + 1)}
-                                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm 
-                                    ${index + 1 === currentPage ? 'bg-yellow text-white' : 'hover:bg-gray-100 border border-gray-300 text-gray-600'}
-                                    ${index + 1 === currentPage ? 'cursor-not-allowed' : ''}`}
+                                className={`flex h-8 w-8 items-center justify-center rounded-md text-sm
+                  ${index + 1 === currentPage ? 'bg-yellow text-white' : 'hover:bg-gray-100 border border-gray-300 text-gray-600'}
+                  ${index + 1 === currentPage ? 'cursor-not-allowed' : ''}`}
                                 disabled={index + 1 === currentPage}
                             >
                                 {index + 1}
@@ -258,6 +240,8 @@ export default function ComapnyList() {
                     </div>
                 </div>
             </div>
+
+            <UserDetailsModal isOpen={isModal} onClose={() => setIsModal(false)} user={selectedUser} />
         </div>
     );
 }
