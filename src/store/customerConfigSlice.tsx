@@ -110,7 +110,6 @@ export const fetchGym = createAsyncThunk(
             limit?: number;
             name?: string;
             email?: string;
-            role?: string;
             pan?: string;
             license_no?: string;
             address?: string;
@@ -120,7 +119,7 @@ export const fetchGym = createAsyncThunk(
         { rejectWithValue }
     ) => {
         try {
-            const { page = 1, limit = 10, name = '', email = '', role = '', pan = '', license_no = '', address = '', phone = '', status = '' } = args;
+            const { page = 1, limit = 10, name = '', email = '', pan = '', license_no = '', address = '', phone = '', status = '' } = args;
 
             const { data } = await axios.get(`${endpoint}/v1/admin/list/listingGym`, {
                 params: {
@@ -128,7 +127,6 @@ export const fetchGym = createAsyncThunk(
                     limit,
                     name,
                     email,
-                    role,
                     pan,
                     license_no,
                     address,
@@ -139,10 +137,11 @@ export const fetchGym = createAsyncThunk(
                     'Content-Type': 'application/json',
                 },
             });
+
             if (data.success) {
                 return {
                     gyms: data.data,
-                    pagination: data.pagination,
+                    pagination: data.pagination ?? { totalPages: 1, currentPage: 1 },
                     counts: data.counts,
                 };
             } else {

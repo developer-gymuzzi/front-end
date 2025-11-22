@@ -1,264 +1,316 @@
-import { useState, useEffect, useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { Send } from "lucide-react"
-import { Button } from "antd"
-import { toast } from "react-toastify"
-import socket, { connectSocket } from "../../socket"
+import { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
+import { Send } from "lucide-react";
+import { Button, Spin } from "antd";
+import { toast } from "react-toastify";
+import socket, { connectSocket } from "../../socket";
+
+type ChatMessage = {
+  id: string;
+  text: string | null;
+  image: string | null;
+  sender: "me" | "other";
+  senderRole: "admin" | "user" | "gym_owner";
+  time: string;
+  loading?: boolean;
+};
 
 type ApiMessage = {
-  _id?: string
-  sender: string
-  message: string
-  senderRole: "user" | "admin" | "gym_owner"
-  sentAt: string
-  ticketId?: string
-}
-
-type TicketData = {
-  _id: string
-  createdBy: string
-  subject: string
-  description: string
-  status: string
-  messages: ApiMessage[]
-}
-
-type Message = {
-  id: string
-  text: string
-  sender: "me" | "other"
-  time: string
-  senderRole: "user" | "admin" | "gym_owner"
-}
+  _id: string;
+  message: string | null;
+  mediaUrl: string | null;
+  senderRole: "admin" | "user" | "gym_owner";
+  sentAt: string;
+};
 
 export default function ChatScreen() {
-  const [message, setMessage] = useState("")
-  const [messages, setMessages] = useState<Message[]>([])
-  const [ticketInfo, setTicketInfo] = useState<{ subject: string; status: string } | null>(null)
-  const [isConnected, setIsConnected] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
-  const { id: routeId } = useParams<{ id?: string }>()
-  const navigate = useNavigate()
-  const ticketId = routeId ?? ""
+  const [message, setMessage] = useState<string>("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [ticketInfo, setTicketInfo] =
+    useState<{ subject: string; status: string } | null>(null);
 
-  const endpoint = import.meta.env.VITE_API_LIVEHOST
+  // NEW: image + text support
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [pendingImagePublicId, setPendingImagePublicId] =
+    useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const { id } = useParams();
+  const ticketId = id || "";
+
+  const endpoint = import.meta.env.VITE_API_LIVEHOST;
   const token =
-    typeof window !== "undefined"
-      ? document.cookie.split("; ").find((r) => r.startsWith("token="))?.split("=")[1]
-      : ""
-  const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null
-  const userRole = localStorage.getItem("userRole") || "admin"
+    document.cookie.split("; ").find((r) => r.startsWith("token="))?.split("=")[1] ||
+    "";
 
-  // --- Map API → UI
-  const mapApiMessages = (apiMessages: ApiMessage[]): Message[] =>
-    apiMessages.map((msg) => ({
-      id: msg._id || Math.random().toString(),
-      text: msg.message,
-      sender: userRole === msg.senderRole ? "me" : "other",
-      time: new Date(msg.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      senderRole: msg.senderRole,
-    }))
+  const userRole =
+    (localStorage.getItem("userRole") as "admin" | "user" | "gym_owner") || "admin";
+  const userId = localStorage.getItem("userId") || "";
 
-  // --- Fetch ticket history (only once)
-  const fetchTicket = async () => {
-    if (!ticketId) return
-    try {
-      const fetchUrl =
-        userRole === "admin"
-          ? `${endpoint}/v1/admin/list/listpar/${ticketId}`
-          : `${endpoint}/v1/user/ticket/${ticketId}`
-
-      const res = await fetch(fetchUrl, { headers: { token: token || "" } })
-      const data: TicketData = await res.json()
-
-      if (data?.messages) {
-        setMessages(mapApiMessages(data.messages))
-        setTicketInfo({ subject: data.subject, status: data.status })
-      } else {
-        toast.error("Failed to load ticket messages")
-      }
-    } catch (err) {
-      toast.error("Error fetching ticket messages")
-      console.error(err)
-    }
-  }
-
-  // --- Socket connect
+  // ---------------- FETCH TICKET ----------------
   useEffect(() => {
-    connectSocket()
+    if (!ticketId) return;
+
+    const fetchTicket = async () => {
+      try {
+        const url =
+          userRole === "admin"
+            ? `${endpoint}/v1/admin/list/${ticketId}`
+            : `${endpoint}/v1/user/ticket/${ticketId}`;
+
+        const res = await fetch(url, { headers: { token } });
+        const json = await res.json();
+
+        if (!json.success) {
+          toast.error("Failed to load ticket");
+          return;
+        }
+
+        const ticket = json.data;
+
+        setTicketInfo({
+          subject: ticket.subject,
+          status: ticket.status,
+        });
+
+        const mapped: ChatMessage[] = ticket.messages.map((msg: ApiMessage) => ({
+          id: msg._id,
+          text: msg.message,
+          image: msg.mediaUrl,
+          sender: msg.senderRole === userRole ? "me" : "other",
+          senderRole: msg.senderRole,
+          time: new Date(msg.sentAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        }));
+
+        setMessages(mapped);
+      } catch (err) {
+        toast.error("Server error while fetching ticket");
+      }
+    };
+
+    fetchTicket();
+  }, [ticketId]);
+
+  // ---------------- SOCKET CONNECTION ----------------
+  useEffect(() => {
+    connectSocket();
 
     socket.on("connect", () => {
-      setIsConnected(true)
-      console.log("✅ Socket connected:", socket.id)
+      if (userRole === "admin") socket.emit("join-admin");
+      else socket.emit("join-user", userId);
+    });
 
-      if (userRole === "admin") socket.emit("join-admin")
-      else if (userRole === "gym_owner") socket.emit("join-gym", userId)
-      else socket.emit("join-user", userId)
-    })
+    socket.on("ticket_message", (msg: any) => {
+      if (!msg.ticketId || msg.ticketId !== ticketId) return;
 
-    socket.on("disconnect", () => {
-      setIsConnected(false)
-      console.warn("⚠️ Socket disconnected")
-    })
+      setMessages((prev) => {
+        // Remove optimistic duplicate
+        const filtered = prev.filter(
+          (m) =>
+            !(
+              m.sender === "me" &&
+              m.text === msg.message &&
+              m.image === msg.mediaUrl
+            )
+        );
+
+        const incoming: ChatMessage = {
+          id: msg._id ?? Math.random().toString(),
+          text: msg.message,
+          image: msg.mediaUrl,
+          sender: msg.senderRole === userRole ? "me" : "other",
+          senderRole: msg.senderRole,
+          time: new Date(msg.sentAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+
+        return [...filtered, incoming];
+      });
+    });
 
     return () => {
-      socket.off("connect")
-      socket.off("disconnect")
-    }
-  }, [userRole, userId])
+      socket.off("connect");
+      socket.off("ticket_message");
+    };
+  }, [ticketId]);
 
-  // --- Listen for real-time incoming messages
-useEffect(() => {
-  if (!socket) return
-
-  const handleNewMessage = (data: ApiMessage) => {
-    if (!data.ticketId || data.ticketId !== ticketId) return
-    console.log("💬 New message:", data)
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: data._id || Math.random().toString(),
-        text: data.message,
-        sender: userRole === data.senderRole ? "me" : "other",
-        time: new Date(data.sentAt).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        senderRole: data.senderRole,
-      },
-    ])
-  }
-
-  socket.on("ticket_message", handleNewMessage)
-
-  // ✅ TS-safe cleanup — explicitly returns void
-  return () => {
-    socket.off("ticket_message", handleNewMessage)
-  }
-}, [ticketId, userRole])
-
-
-  // --- Load messages
+  // ---------------- SCROLL BOTTOM ----------------
   useEffect(() => {
-    fetchTicket()
-  }, [ticketId])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  // --- Auto-scroll
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+  // ---------------- SEND MESSAGE (TEXT / IMAGE / BOTH) ----------------
+  const sendMessage = () => {
+    if (!message.trim() && !pendingImage) return;
 
-  // --- Send message via SOCKET
-  const handleSendMessage = () => {
-    if (!message.trim() || !ticketId) return
+    // FIXED TYPE LOGIC
+    let finalType: "text" | "image" | "both" = "text";
+    if (pendingImage && message.trim()) finalType = "both";
+    else if (pendingImage) finalType = "image";
 
-    const newMsg = {
+    const payload = {
       ticketId,
-      message,
+      message: message || null,
+      mediaUrl: pendingImage || null,
+      mediaPublicId: pendingImagePublicId || null,
+      type: finalType, // IMPORTANT FIX
       senderRole: userRole,
-      sentAt: new Date().toISOString(),
+    };
+
+    // Optimistic message
+    const optimisticMessage: ChatMessage = {
+      id: Math.random().toString(),
+      text: message || null,
+      image: pendingImage || null,
+      sender: "me",
+      senderRole: userRole,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+    socket.emit("send_ticket_message", payload);
+
+    // Reset
+    setMessage("");
+    setPendingImage(null);
+    setPendingImagePublicId(null);
+  };
+
+  // ---------------- IMAGE UPLOAD ----------------
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch(`${endpoint}/v1/gymOwner/ticket/upload`, {
+        method: "POST",
+        headers: { token },
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+      if (!uploadData.success) {
+        toast.error("Image upload failed");
+        return;
+      }
+
+      // Do NOT reset message
+      setPendingImage(uploadData.imageUrl);
+      setPendingImagePublicId(uploadData.publicId);
+
+      // Allow selecting same file again
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch {
+      toast.error("Image upload error");
     }
+  };
 
-    // Optimistic UI update
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Math.random().toString(),
-        text: message,
-        sender: "me",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        senderRole: userRole as "user" | "admin" | "gym_owner",
-      },
-    ])
-    setMessage("")
-
-    // Emit to backend
-    if (socket.connected) {
-      socket.emit("send_ticket_message", newMsg) // 🔥 tell server to broadcast
-    } else {
-      toast.error("Socket not connected. Please wait...")
-    }
-  }
-
-  // --- Handle missing ticket ID
-  if (!ticketId) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-center">
-          <p className="text-red-500 font-semibold mb-2">⚠️ Missing or invalid Ticket ID</p>
-          <Button type="primary" onClick={() => navigate("/tickets")}>
-            Go Back
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  // --- UI
   return (
-    <div className="flex flex-col h-screen bg-muted/30">
-      <div className="flex-shrink-0 bg-card border-b px-6 py-4">
-        <h2 className="text-lg font-semibold">{ticketInfo?.subject || "Support Ticket"}</h2>
-        <p className="text-xs text-muted-foreground">
-          {isConnected ? "🟢 Connected" : "🔴 Connecting..."} • Status:{" "}
-          {ticketInfo?.status || "N/A"}
-        </p>
+    <div className="flex flex-col h-screen bg-gray-100">
+
+      {/* HEADER */}
+      <div className="p-4 bg-white border-b">
+        <h2 className="text-lg font-semibold">{ticketInfo?.subject}</h2>
+        <p className="text-sm text-gray-500">Status: {ticketInfo?.status}</p>
       </div>
 
-      <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">No messages yet</p>
-          </div>
-        ) : (
-          messages.map((msg) => (
+      {/* CHAT */}
+      <div className="flex-grow p-4 overflow-y-auto space-y-4">
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex ${
+              msg.sender === "me" ? "justify-end" : "justify-start"
+            }`}
+          >
             <div
-              key={msg.id}
-              className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
+              className={`p-3 rounded-xl max-w-xs ${
+                msg.sender === "me" ? "bg-blue-500 text-white" : "bg-white border"
+              }`}
             >
-              <div
-                className={`max-w-xs px-4 py-2 rounded-2xl ${
-                  msg.sender === "me"
-                    ? "bg-blue-500 text-white rounded-br-md"
-                    : "bg-gray-100 text-gray-800 border rounded-bl-md"
-                }`}
-              >
-                <p className="text-xs font-medium mb-1 opacity-70">
-                  {msg.sender === "me"
-                    ? "You"
-                    : msg.senderRole === "admin"
-                    ? "Admin"
-                    : msg.senderRole === "gym_owner"
-                    ? "Gym Owner"
-                    : "User"}
-                </p>
-                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                <p className="text-[10px] mt-1 opacity-60">{msg.time}</p>
-              </div>
+              <p className="text-xs opacity-70">
+                {msg.sender === "me" ? "You" : msg.senderRole.toUpperCase()}
+              </p>
+
+              {/* IMAGE */}
+              {msg.image && (
+                <>
+                  <img src={msg.image} className="rounded-md mt-2 max-w-[180px]" />
+                </>
+              )}
+
+              {/* TEXT */}
+              {msg.text && <p className="mt-1 whitespace-pre-wrap">{msg.text}</p>}
+
+              <p className="text-[10px] opacity-50 mt-1">{msg.time}</p>
             </div>
-          ))
-        )}
+          </div>
+        ))}
+
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex-shrink-0 bg-card border-t px-6 py-4 flex items-end gap-4">
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
-          rows={1}
-          className="flex-grow px-4 py-3 bg-gray-100 border rounded-2xl resize-none focus:ring-2 focus:ring-blue-400"
-          style={{ maxHeight: 120 }}
-        />
-        <Button
-          onClick={handleSendMessage}
-          disabled={!message.trim()}
-          shape="circle"
-          icon={<Send />}
-          type="primary"
-        />
+      {/* INPUT AREA */}
+      <div className="p-4 bg-white border-t flex flex-col gap-3">
+
+        {/* IMAGE PREVIEW */}
+        {pendingImage && (
+          <div className="flex gap-3 items-center">
+            <img src={pendingImage} className="max-w-[120px] rounded-md border" />
+            <button
+              className="text-red-500 text-xs underline"
+              onClick={() => {
+                setPendingImage(null);
+                setPendingImagePublicId(null);
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <label htmlFor="chatImage" className="cursor-pointer text-xl">📎</label>
+
+          <input
+            id="chatImage"
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
+
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={1}
+            placeholder="Type a message..."
+            className="flex-grow p-3 border rounded-xl resize-none"
+          />
+
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<Send />}
+            disabled={!message.trim() && !pendingImage}
+            onClick={sendMessage}
+          />
+        </div>
       </div>
     </div>
-  )
+  );
 }

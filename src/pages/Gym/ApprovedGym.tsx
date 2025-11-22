@@ -135,7 +135,6 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                                       <td className="px-4 py-3 text-gray-700">{entry.phone || '---'}</td>
                                       <td className="px-4 py-3 text-gray-700">{entry.pan || '---'}</td>
                                       <td className="px-4 py-3 text-gray-700">{entry.license_no || '---'}</td>
-
                                       <td className="px-4 py-3 text-gray-700">
                                           {entry.qr_payload ? (
                                               <button onClick={() => showQrModal(entry.qr_payload)}>

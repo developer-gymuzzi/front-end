@@ -74,10 +74,7 @@ export default function PaymentRequestList() {
      * --------------------------------------------- */
     const updateStatus = async (id: string, type: 'approve' | 'reject') => {
         try {
-            const api =
-                type === 'approve'
-                    ? `${endpoint}/v1/admin/approve/approvePaymentRequest/${id}`
-                    : `${endpoint}/v1/admin/approve/rejectPaymentRequest/${id}`;
+            const api = type === 'approve' ? `${endpoint}/v1/admin/approve/approvePaymentRequest/${id}` : `${endpoint}/v1/admin/approve/rejectPaymentRequest/${id}`;
 
             const confirmMsg = type === 'approve' ? 'Approve this request?' : 'Reject this request?';
             const successMsg = type === 'approve' ? 'Request Approved!' : 'Request Rejected!';
@@ -141,7 +138,6 @@ export default function PaymentRequestList() {
      * -------------------------------------------------- */
     return (
         <div>
-
             {/* HEADER */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="grid gap-1">
@@ -247,10 +243,7 @@ export default function PaymentRequestList() {
                                               <td>
                                                   <div className="flex gap-2">
                                                       {/* VIEW BUTTON */}
-                                                      <button
-                                                          className="w-8 h-8 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center"
-                                                          onClick={() => setSelectedItem(item)}
-                                                      >
+                                                      <button className="w-8 h-8 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center" onClick={() => setSelectedItem(item)}>
                                                           👁
                                                       </button>
 
@@ -284,29 +277,17 @@ export default function PaymentRequestList() {
                 {/* PAGINATION */}
                 <div className="pagination-container">
                     <div className="pagination-controls">
-                        <button
-                            onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-                            className="pagination-button"
-                            disabled={currentPage <= 1}
-                        >
+                        <button onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)} className="pagination-button" disabled={currentPage <= 1}>
                             ‹ Prev
                         </button>
 
                         {[...Array(totalPages)].map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setCurrentPage(i + 1)}
-                                className={`pagination-number ${currentPage === i + 1 ? 'active' : ''}`}
-                            >
+                            <button key={i} onClick={() => setCurrentPage(i + 1)} className={`pagination-number ${currentPage === i + 1 ? 'active' : ''}`}>
                                 {i + 1}
                             </button>
                         ))}
 
-                        <button
-                            onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-                            className="pagination-button"
-                            disabled={currentPage >= totalPages}
-                        >
+                        <button onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)} className="pagination-button" disabled={currentPage >= totalPages}>
                             Next ›
                         </button>
                     </div>
@@ -330,139 +311,139 @@ export default function PaymentRequestList() {
                 </div>
             </div>
 
-{/* --------------------------------------------------
- * DETAILS MODAL WITH THEME-BASED ATTRACTIVE DESIGN
- * -------------------------------------------------- */}
-{selectedItem && (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[999]">
-        <div className="bg-white w-[90%] md:w-[650px] max-h-[95vh] overflow-y-auto rounded-2xl shadow-2xl border border-gray-200 animate-fadeIn">
+            {/* --------------------------------------------------
+             * DETAILS MODAL WITH THEME-BASED ATTRACTIVE DESIGN
+             * -------------------------------------------------- */}
+            {selectedItem && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[999]">
+                    <div className="bg-white w-[90%] md:w-[650px] max-h-[95vh] overflow-y-auto rounded-2xl shadow-2xl border border-gray-200 animate-fadeIn">
+                        {/* HEADER */}
+                        <div className="flex items-center justify-between px-6 py-4 bg-[#113354] text-white rounded-t-2xl shadow-md">
+                            <h2 className="text-[20px] font-semibold tracking-wide">Payment Request Details</h2>
+                            <button onClick={() => setSelectedItem(null)} className="text-white hover:bg-white/20 rounded-full p-1 transition">
+                                ✕
+                            </button>
+                        </div>
 
-            {/* HEADER */}
-            <div className="flex items-center justify-between px-6 py-4 bg-[#113354] text-white rounded-t-2xl shadow-md">
-                <h2 className="text-[20px] font-semibold tracking-wide">Payment Request Details</h2>
-                <button
-                    onClick={() => setSelectedItem(null)}
-                    className="text-white hover:bg-white/20 rounded-full p-1 transition"
-                >
-                    ✕
-                </button>
-            </div>
-
-            {/* BODY */}
-            <div className="p-6 space-y-7">
-
-                {/* USER DETAILS */}
-                <div>
-                    <h3 className="text-[#113354] font-semibold text-sm mb-2">User Details</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="font-medium text-gray-800">{selectedItem.user?.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">{selectedItem.user?.role}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Registered: {new Date(selectedItem.user?.createdAt).toLocaleDateString()}
-                        </p>
-                    </div>
-                </div>
-
-                {/* CONTACT DETAILS */}
-                <div>
-                    <h3 className="text-[#113354] font-semibold text-sm mb-2">Contact Info</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm space-y-1">
-                        <p className="text-sm"><strong>Email:</strong> {selectedItem.user?.email}</p>
-                        <p className="text-sm"><strong>Phone:</strong> {selectedItem.user?.phone}</p>
-                    </div>
-                </div>
-
-                {/* PAYMENT DETAILS */}
-                <div>
-                    <h3 className="text-[#113354] font-semibold text-sm mb-2">Payment Info</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-2 gap-4">
-                        <p className="text-sm"><strong>Amount:</strong> ₹{selectedItem.amount}</p>
-                        <p className="text-sm"><strong>Status:</strong> {selectedItem.status}</p>
-                        <p className="text-sm col-span-2">
-                            <strong>Requested on:</strong> {new Date(selectedItem.createdAt).toLocaleString()}
-                        </p>
-                    </div>
-                </div>
-
-                {/* WALLET */}
-                <div>
-                    <h3 className="text-[#113354] font-semibold text-sm mb-2">Wallet Details</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <p className="text-sm"><strong>User Wallet:</strong> ₹{selectedItem.user?.wallet}</p>
-                    </div>
-                </div>
-
-                {/* BANK ACCOUNTS */}
-                <div>
-                    <h3 className="text-[#113354] font-semibold text-sm mb-3">Bank Accounts</h3>
-
-                    <div className="space-y-4">
-                        {selectedItem.userBankAccounts?.map((acc: any) => (
-                            <div
-                                key={acc._id}
-                                className="p-4 bg-gray-50 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition"
-                            >
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-semibold text-gray-800">
-                                        {acc.bankName} - <span className="text-gray-600">{acc.accountType}</span>
-                                    </h4>
-
-                                    {acc.primaryAccount && (
-                                        <span className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full shadow-sm">
-                                            PRIMARY
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                                    <p><strong>Account Holder:</strong> {acc.name}</p>
-                                    <p><strong>Account No:</strong> {acc.accountNo}</p>
-                                    <p><strong>IFSC:</strong> {acc.ifscCode}</p>
-                                    <p><strong>Branch:</strong> {acc.branchName}</p>
+                        {/* BODY */}
+                        <div className="p-6 space-y-7">
+                            {/* USER DETAILS */}
+                            <div>
+                                <h3 className="text-[#113354] font-semibold text-sm mb-2">User Details</h3>
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+                                    <p className="font-medium text-gray-800">{selectedItem.user?.name}</p>
+                                    <p className="text-xs text-gray-500 mt-1">{selectedItem.user?.role}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Registered: {new Date(selectedItem.user?.createdAt).toLocaleDateString()}</p>
                                 </div>
                             </div>
-                        ))}
+
+                            {/* CONTACT DETAILS */}
+                            <div>
+                                <h3 className="text-[#113354] font-semibold text-sm mb-2">Contact Info</h3>
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm space-y-1">
+                                    <p className="text-sm">
+                                        <strong>Email:</strong> {selectedItem.user?.email}
+                                    </p>
+                                    <p className="text-sm">
+                                        <strong>Phone:</strong> {selectedItem.user?.phone}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* PAYMENT DETAILS */}
+                            <div>
+                                <h3 className="text-[#113354] font-semibold text-sm mb-2">Payment Info</h3>
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm grid grid-cols-2 gap-4">
+                                    <p className="text-sm">
+                                        <strong>Amount:</strong> ₹{selectedItem.amount}
+                                    </p>
+                                    <p className="text-sm">
+                                        <strong>Status:</strong> {selectedItem.status}
+                                    </p>
+                                    <p className="text-sm col-span-2">
+                                        <strong>Requested on:</strong> {new Date(selectedItem.createdAt).toLocaleString()}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* WALLET */}
+                            <div>
+                                <h3 className="text-[#113354] font-semibold text-sm mb-2">Wallet Details</h3>
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+                                    <p className="text-sm">
+                                        <strong>User Wallet:</strong> ₹{selectedItem.user?.wallet}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* BANK ACCOUNTS */}
+                            <div>
+                                <h3 className="text-[#113354] font-semibold text-sm mb-3">Bank Accounts</h3>
+
+                                <div className="space-y-4">
+                                    {selectedItem.userBankAccounts?.map((acc: any) => (
+                                        <div key={acc._id} className="p-4 bg-gray-50 rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition">
+                                            <div className="flex justify-between items-center">
+                                                <h4 className="font-semibold text-gray-800">
+                                                    {acc.bankName} - <span className="text-gray-600">{acc.accountType}</span>
+                                                </h4>
+
+                                                {acc.primaryAccount && <span className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full shadow-sm">PRIMARY</span>}
+                                            </div>
+
+                                            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                                <p>
+                                                    <strong>Account Holder:</strong> {acc.name}
+                                                </p>
+                                                <p>
+                                                    <strong>Account No:</strong> {acc.accountNo}
+                                                </p>
+                                                <p>
+                                                    <strong>IFSC:</strong> {acc.ifscCode}
+                                                </p>
+                                                <p>
+                                                    <strong>Branch:</strong> {acc.branchName}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* FOOTER */}
+                        <div className="flex justify-end gap-3 px-6 py-4 bg-gray-100 rounded-b-2xl border-t">
+                            {selectedItem.status === 'Pending' && (
+                                <>
+                                    <button
+                                        className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow transition"
+                                        onClick={() => {
+                                            updateStatus(selectedItem._id, 'reject');
+                                            setSelectedItem(null);
+                                        }}
+                                    >
+                                        Reject
+                                    </button>
+
+                                    <button
+                                        className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow transition"
+                                        onClick={() => {
+                                            updateStatus(selectedItem._id, 'approve');
+                                            setSelectedItem(null);
+                                        }}
+                                    >
+                                        Approve
+                                    </button>
+                                </>
+                            )}
+
+                            <button className="px-5 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg shadow transition" onClick={() => setSelectedItem(null)}>
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            {/* FOOTER */}
-            <div className="flex justify-end gap-3 px-6 py-4 bg-gray-100 rounded-b-2xl border-t">
-                {selectedItem.status === 'Pending' && (
-                    <>
-                        <button
-                            className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow transition"
-                            onClick={() => {
-                                updateStatus(selectedItem._id, 'reject');
-                                setSelectedItem(null);
-                            }}
-                        >
-                            Reject
-                        </button>
-
-                        <button
-                            className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow transition"
-                            onClick={() => {
-                                updateStatus(selectedItem._id, 'approve');
-                                setSelectedItem(null);
-                            }}
-                        >
-                            Approve
-                        </button>
-                    </>
-                )}
-
-                <button
-                    className="px-5 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg shadow transition"
-                    onClick={() => setSelectedItem(null)}
-                >
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-)}
-
+            )}
         </div>
     );
 }
