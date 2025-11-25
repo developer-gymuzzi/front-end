@@ -8,6 +8,8 @@ import UserDetailsModal from './UserDetailsModal';
 import { Button, message } from 'antd';
 import axios from "axios";
 import Cookies from "js-cookie";
+import Swal from "sweetalert2";
+
 import { Eye, Ban, Check } from 'lucide-react';
 
 // ================= USER INTERFACE =================
@@ -101,48 +103,75 @@ export default function CompanyList() {
     };
 
     // ==================== BLOCK USER ====================
-    const handleBlock = async (userId: string) => {
-        try {
-            const token = Cookies.get("token");
+const handleBlock = async (userId: string) => {
+    Swal.fire({
+        title: "Block this user?",
+        text: "User will be restricted from logging into the app.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--yellow-color').trim(),
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, block",
+        cancelButtonText: "Cancel",
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const token = Cookies.get("token");
 
-            const res = await axios.patch(
-                `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/approve/blockUser/${userId}`,
-                {},
-                { headers: { token } }
-            );
+                const res = await axios.patch(
+                    `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/approve/blockUser/${userId}`,
+                    {},
+                    { headers: { token } }
+                );
 
-            if (res.data.success) {
-                message.success("User blocked successfully");
-                dispatch(fetchUsers({ page: currentPage, limit: pageSize, ...appliedFilters }));
-            } else {
-                message.error(res.data.message);
+                if (res.data.success) {
+                    Swal.fire("Blocked!", "The user has been blocked.", "success");
+                    dispatch(fetchUsers({ page: currentPage, limit: pageSize, ...appliedFilters }));
+                } else {
+                    Swal.fire("Error", res.data.message, "error");
+                }
+            } catch (error: any) {
+                Swal.fire("Error", error.response?.data?.message || "Failed to block user", "error");
             }
-        } catch (error: any) {
-            message.error(error.response?.data?.message || "Failed to block user");
         }
-    };
+    });
+};
+
 
     // ==================== UNBLOCK USER ====================
-    const handleUnblock = async (userId: string) => {
-        try {
-            const token = Cookies.get("token");
+const handleUnblock = async (userId: string) => {
+    Swal.fire({
+        title: "Unblock this user?",
+        text: "The user will regain full access.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--yellow-color').trim(),
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, unblock",
+        cancelButtonText: "Cancel",
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const token = Cookies.get("token");
 
-            const res = await axios.patch(
-                `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/approve/unblockUser/${userId}`,
-                {},
-                { headers: { token } }
-            );
+                const res = await axios.patch(
+                    `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/approve/unblockUser/${userId}`,
+                    {},
+                    { headers: { token } }
+                );
 
-            if (res.data.success) {
-                message.success("User unblocked successfully");
-                dispatch(fetchUsers({ page: currentPage, limit: pageSize, ...appliedFilters }));
-            } else {
-                message.error(res.data.message);
+                if (res.data.success) {
+                    Swal.fire("Unblocked!", "The user has been unblocked.", "success");
+                    dispatch(fetchUsers({ page: currentPage, limit: pageSize, ...appliedFilters }));
+                } else {
+                    Swal.fire("Error", res.data.message, "error");
+                }
+            } catch (error: any) {
+                Swal.fire("Error", error.response?.data?.message || "Failed to unblock user", "error");
             }
-        } catch (error: any) {
-            message.error(error.response?.data?.message || "Failed to unblock user");
         }
-    };
+    });
+};
 
     // View Details
     const handleViewDetails = (user: User) => {
@@ -196,7 +225,7 @@ export default function CompanyList() {
                                 <th className="px-4 py-3">Email</th>
                                 <th className="px-4 py-3">Phone</th>
                                 <th className="px-4 py-3">Role</th>
-                                <th className="px-4 py-3 text-center">Action</th>
+                                <th className="px-4 py-3 text-center" style={{ width: "150px" }}>Action</th>
                             </tr>
                         </thead>
 
@@ -244,6 +273,7 @@ export default function CompanyList() {
                                                           : entry.role.charAt(0).toUpperCase() + entry.role.slice(1)}
                                                   </span>
 
+                                                  {/* 🔥 BLOCKED BADGE */}
                                                   {entry.isBlocked && (
                                                       <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">
                                                           Blocked
@@ -251,16 +281,18 @@ export default function CompanyList() {
                                                   )}
                                               </td>
 
-                                              <td className="px-2 py-2">
+                                              <td className="px-2 py-2" style={{ width: "150px" }}>
                                                   <div className="flex items-center gap-2">
-                                                      {/* View */}
+
+                                                      {/* VIEW */}
                                                       <button
                                                           onClick={() => handleViewDetails(entry)}
-                                                          className="p-2 rounded-md text-blue-500 hover:bg-blue-100">
+                                                          className="p-2 rounded-md text-blue-500 hover:bg-blue-100"
+                                                      >
                                                           <Eye size={18} />
                                                       </button>
 
-                                                      {/* BLOCK USER */}
+                                                      {/* BLOCK */}
                                                       <button
                                                           onClick={() => handleBlock(entry._id)}
                                                           disabled={entry.isBlocked}
@@ -273,7 +305,7 @@ export default function CompanyList() {
                                                           <Ban size={18} />
                                                       </button>
 
-                                                      {/* UNBLOCK USER */}
+                                                      {/* UNBLOCK */}
                                                       <button
                                                           onClick={() => handleUnblock(entry._id)}
                                                           disabled={!entry.isBlocked}
@@ -285,6 +317,7 @@ export default function CompanyList() {
                                                       >
                                                           <Check size={18} />
                                                       </button>
+
                                                   </div>
                                               </td>
                                           </tr>
