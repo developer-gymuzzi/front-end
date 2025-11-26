@@ -62,7 +62,6 @@ interface PaginationInfo {
 // =======================================================
 
 const EarningsDashboard = () => {
-
     const [transactions, setTransactions] = useState<TransactionGroup[]>([]);
     const [filter, setFilter] = useState<'all' | 'gym' | 'admin'>('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -70,7 +69,7 @@ const EarningsDashboard = () => {
     const [apiStats, setApiStats] = useState<ApiStats>({
         totalGymEarnings: 0,
         totalAdminEarnings: 0,
-        totalTransactions: 0
+        totalTransactions: 0,
     });
 
     const [pagination, setPagination] = useState<PaginationInfo>({
@@ -79,7 +78,7 @@ const EarningsDashboard = () => {
         limit: 10,
         totalRecords: 0,
         hasNextPage: false,
-        hasPrevPage: false
+        hasPrevPage: false,
     });
 
     const [gymFilter, setGymFilter] = useState('');
@@ -102,9 +101,8 @@ const EarningsDashboard = () => {
             } else {
                 message.error(data.message);
             }
-
         } catch (err) {
-            console.error("ERR LOADING DATA", err);
+            console.error('ERR LOADING DATA', err);
             message.error('Failed to load earnings.');
         }
     };
@@ -123,35 +121,31 @@ const EarningsDashboard = () => {
     const filteredGroups = useMemo(() => {
         let list = [...transactions];
 
-        if (filter === 'admin') list = list.filter(g => g.commission);
-        if (filter === 'gym') list = list.filter(g => g.payment);
+        if (filter === 'admin') list = list.filter((g) => g.commission);
+        if (filter === 'gym') list = list.filter((g) => g.payment);
 
         if (searchTerm) {
             const t = searchTerm.toLowerCase();
-            list = list.filter(g =>
-                g.payment.from.name.toLowerCase().includes(t) ||
-                g.payment.to.name.toLowerCase().includes(t) ||
-                g.payment.gym.name.toLowerCase().includes(t)
-            );
+            list = list.filter((g) => g.payment.from.name.toLowerCase().includes(t) || g.payment.to.name.toLowerCase().includes(t) || g.payment.gym.name.toLowerCase().includes(t));
         }
 
         return list;
     }, [transactions, filter, searchTerm]);
 
     // ===================== UPDATED STATS (Uses API Stats) =====================
-    const stats = useMemo(() => ({
-        overallGymEarnings: apiStats.totalGymEarnings,
-        overallAdminEarnings: apiStats.totalAdminEarnings,
-        totalTransactions: apiStats.totalTransactions,
+    const stats = useMemo(
+        () => ({
+            overallGymEarnings: apiStats.totalGymEarnings,
+            overallAdminEarnings: apiStats.totalAdminEarnings,
+            totalTransactions: apiStats.totalTransactions,
 
-        filteredGymEarnings: filteredGroups.reduce((s, t) => s + t.gymOwnerReceives, 0),
-        filteredAdminEarnings: filteredGroups.reduce((s, t) => s + t.adminCommission, 0),
+            filteredGymEarnings: filteredGroups.reduce((s, t) => s + t.gymOwnerReceives, 0),
+            filteredAdminEarnings: filteredGroups.reduce((s, t) => s + t.adminCommission, 0),
 
-        avgCommission:
-            filteredGroups.length > 0
-                ? filteredGroups.reduce((s, t) => s + (t.commission?.commissionPercentage || 0), 0) / filteredGroups.length
-                : 0
-    }), [apiStats, filteredGroups]);
+            avgCommission: filteredGroups.length > 0 ? filteredGroups.reduce((s, t) => s + (t.commission?.commissionPercentage || 0), 0) / filteredGroups.length : 0,
+        }),
+        [apiStats, filteredGroups]
+    );
 
     const formatDate = (date: string) => {
         return new Date(date).toLocaleString('en-IN', {
@@ -159,14 +153,13 @@ const EarningsDashboard = () => {
             month: 'short',
             year: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
         });
     };
 
     // ===================== UI =====================
     return (
         <div className="grid gap-1">
-
             {/* HEADER */}
             <div className="flex justify-between items-center">
                 <h2 className="CRM-Page-Title">Earnings Dashboard</h2>
@@ -185,17 +178,16 @@ const EarningsDashboard = () => {
 
             {/* STATS */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                
                 <div className="bg-white rounded-lg shadow p-6">
                     <p className="text-sm text-gray-600">Gym Owner Earnings</p>
-                    <p className="text-2xl font-bold">₹{stats.filteredGymEarnings}</p>
-                    <p className="text-xs text-gray-500">Overall: ₹{stats.overallGymEarnings}</p>
+                    <p className="text-2xl font-bold">₹{Number(stats.filteredGymEarnings).toFixed(3)}</p>
+                    <p className="text-xs text-gray-500">Overall: ₹{Number(stats.overallGymEarnings).toFixed(3)}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow p-6">
                     <p className="text-sm text-gray-600">Admin Commission</p>
-                    <p className="text-2xl font-bold">₹{stats.filteredAdminEarnings}</p>
-                    <p className="text-xs text-gray-500">Overall: ₹{stats.overallAdminEarnings}</p>
+                    <p className="text-2xl font-bold">₹{Number(stats.filteredAdminEarnings).toFixed(3)}</p>
+                    <p className="text-xs text-gray-500">Overall: ₹{Number(stats.overallAdminEarnings).toFixed(3)}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow p-6">
@@ -208,7 +200,6 @@ const EarningsDashboard = () => {
                     <p className="text-sm text-gray-600">Avg Commission</p>
                     <p className="text-2xl font-bold">{stats.avgCommission.toFixed(1)}%</p>
                 </div>
-
             </div>
 
             {/* TABLE */}
@@ -255,9 +246,7 @@ const EarningsDashboard = () => {
                     </table>
                 </div>
 
-                {filteredGroups.length === 0 && (
-                    <div className="text-center py-10 text-gray-500">No transactions found</div>
-                )}
+                {filteredGroups.length === 0 && <div className="text-center py-10 text-gray-500">No transactions found</div>}
             </div>
 
             {/* PAGINATION (OPTION A) */}
@@ -270,7 +259,9 @@ const EarningsDashboard = () => {
                     Prev
                 </button>
 
-                <p className="text-gray-700">Page {pagination.currentPage} of {pagination.totalPages}</p>
+                <p className="text-gray-700">
+                    Page {pagination.currentPage} of {pagination.totalPages}
+                </p>
 
                 <button
                     disabled={!pagination.hasNextPage}
@@ -285,10 +276,11 @@ const EarningsDashboard = () => {
             {selectedTransaction && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg max-w-2xl w-full max-height-screen overflow-y-auto">
-
                         <div className="p-6 flex justify-between items-start border-b">
                             <h2 className="text-2xl font-bold">Transaction Details</h2>
-                            <button onClick={() => setSelectedTransaction(null)} className="text-gray-500 text-xl">✖</button>
+                            <button onClick={() => setSelectedTransaction(null)} className="text-gray-500 text-xl">
+                                ✖
+                            </button>
                         </div>
 
                         {/* PAYMENT CARD */}
@@ -375,11 +367,9 @@ const EarningsDashboard = () => {
                                 Close
                             </button>
                         </div>
-
                     </div>
                 </div>
             )}
-
         </div>
     );
 };

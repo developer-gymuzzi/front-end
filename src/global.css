@@ -1,6 +1,6 @@
 :root {
     --blue-color: #071D3F;
-    --yellow-color: #E2AD17;
+    --yellow-color: #DBF900;
     --lightgray-color: #EEE;
     --skyblue-color: #87CEEB;
     --font-family: "Poppins";
@@ -124,7 +124,7 @@ header {
 }
 
 .CRM-Page-Name {
-    Color: #E2AD17;
+    Color: #DBF900;
 }
 
 .Filter-button {
@@ -238,8 +238,8 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
     border: none;
-    outline: 1px solid #e2ad17;
-    box-shadow: 0px 1px 5px 1px #e2ad1773;
+    outline: 1px solid #DBF900;
+    box-shadow: 0px 1px 5px 1px #DBF90073;
 }
 
 
@@ -250,7 +250,7 @@ textarea {
 }
 
 :where(.css-dev-only-do-not-override-nqoqt9).ant-select-outlined:not(.ant-select-disabled):not(.ant-select-customize-input):not(.ant-pagination-size-changer):hover .ant-select-selector {
-    border-color: #e2ad17;
+    border-color: #DBF900;
 }
 
 .ant-select-selection-search-input {
@@ -261,8 +261,8 @@ textarea {
 
 /* Override Ant Design Select focus styles */
 .ant-select-focused .ant-select-selector {
-    border-color: #e2ad17 !important;
-    box-shadow: 0 0 2px #e2ad1773 !important;
+    border-color: #DBF900 !important;
+    box-shadow: 0 0 2px #DBF90073 !important;
     outline: none !important;
 }
 
@@ -276,8 +276,8 @@ textarea {
 
 .Bs-company-f .react-tel-input .form-control:focus-visible {
     border: none;
-    outline: 1px solid #e2ad17;
-    box-shadow: 0px 1px 5px 1px #e2ad1773;
+    outline: 1px solid #DBF900;
+    box-shadow: 0px 1px 5px 1px #DBF90073;
 
 }
 
@@ -288,8 +288,8 @@ textarea {
 
 .Bs-company-f .react-tel-input .flag-dropdown:focus-visible {
     border: none;
-    outline: 1px solid #e2ad17;
-    box-shadow: 0px 1px 5px 1px #e2ad1773;
+    outline: 1px solid #DBF900;
+    box-shadow: 0px 1px 5px 1px #DBF90073;
 }
 
 .Form-lable {
@@ -322,7 +322,7 @@ input::placeholder {
 
 .sidebar .nav-item>button.active>div>span,
 .sidebar .nav-item>a.active>div>span {
-    color: #FFF;
+    color: #000000;
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
@@ -331,7 +331,7 @@ input::placeholder {
 
 .sidebar .nav-item>button.active,
 .sidebar .nav-item>a.active {
-    background-color: #E2AD17;
+    background-color: #DBF900;
     border-radius: 25px;
 
 }

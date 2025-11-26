@@ -18,7 +18,7 @@ const PendingGym = ({ filters }: { filters: any }) => {
     };
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(5);
+    const [pageSize, setPageSize] = useState(10);
     const navigate = useNavigate()
 
   useEffect(() => {
@@ -187,7 +187,7 @@ const PendingGym = ({ filters }: { filters: any }) => {
                         Next ›
                     </button>
                 </div>
-                <div className="flex items-center gap-2">
+                {/* <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Items per page</span>
                     <select className="h-8 rounded-md border border-gray-300 bg-white p-1 text-sm" value={pageSize} onChange={handlePageSizeChange}>
                         {[5, 10, 20, 50].map((size) => (
@@ -196,7 +196,7 @@ const PendingGym = ({ filters }: { filters: any }) => {
                             </option>
                         ))}
                     </select>
-                </div>
+                </div> */}
             </div>
         </div>
     );
