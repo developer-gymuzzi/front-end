@@ -12,7 +12,7 @@ import Cookies from 'js-cookie';
 const PendingGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
     const { gym, loading, pagination } = useSelector((state: IRootState) => state.customerConfig) as {
-        gym: { _id: string; gymphotos?: string[]; name?: string; email?: string; phone?: string; pan?: string; license_no?: string; address?: string }[];
+        gym: { _id: string; gymphotos?: string[]; name?: string; email?: string; phone?: string; pan?: string; license_no?: string; address?: string; createdAt?: string }[];
         loading: boolean;
         pagination: { totalPages: number };
     };
@@ -74,6 +74,7 @@ const PendingGym = ({ filters }: { filters: any }) => {
                             <th className="px-4 py-3 text-left font-medium text-gray-500">PAN</th>
                             <th className="px-4 py-3 text-left font-medium text-gray-500">License No</th>
                             <th className="px-4 py-3 text-left font-medium text-gray-500">Address</th>
+                            <th className="px-4 py-3 text-left font-medium text-gray-500">Created At</th>
                             <th className="px-4 py-3 text-left font-medium text-gray-500">Actions</th>
                         </tr>
                     </thead>
@@ -81,7 +82,7 @@ const PendingGym = ({ filters }: { filters: any }) => {
                         {loading
                             ? [...Array(6)].map((_, idx) => (
                                   <tr key={idx} className="border-b">
-                                      {[...Array(9)].map((_, i) => (
+                                      {[...Array(10)].map((_, i) => (
                                           <td key={i} className="px-4 py-3">
                                               <div className="h-5 bg-gray-200 rounded w-full" />
                                           </td>
@@ -100,6 +101,18 @@ const PendingGym = ({ filters }: { filters: any }) => {
                                       <td className="px-4 py-3 text-gray-700">{entry.pan || '---'}</td>
                                       <td className="px-4 py-3 text-gray-700">{entry.license_no || '---'}</td>
                                       <td className="px-4 py-3 text-gray-700">{entry.address || '---'}</td>
+                                                                            <td className="px-4 py-3 text-gray-700">
+                                          {entry.createdAt
+                                              ? new Date(entry.createdAt).toLocaleString('en-IN', {
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                    hour: 'numeric',
+                                                    minute: '2-digit',
+                                                    hour12: true,
+                                                })
+                                              : '---'}
+                                      </td>
                                       <td className="px-4 py-3">
                                           <div className="flex items-center gap-2">
                                                   <button
