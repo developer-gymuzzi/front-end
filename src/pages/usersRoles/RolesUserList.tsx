@@ -341,7 +341,7 @@ const handleUnblock = async (userId: string) => {
                                 disabled={idx + 1 === currentPage}
                                 className={`flex h-8 w-8 items-center justify-center rounded-md ${
                                     idx + 1 === currentPage
-                                        ? "bg-yellow text-white"
+                                        ? "bg-yellow text-black"
                                         : "hover:bg-gray-100 border border-gray-300"
                                 }`}
                             >

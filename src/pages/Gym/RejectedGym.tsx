@@ -155,7 +155,7 @@ const RejectedGym = ({ filters }: { filters: any }) => {
                         ‹ Prev
                     </button>
                     {Array.from({ length: pagination.totalPages || 1 }, (_, i) => (
-                        <button key={i + 1} onClick={() => handlePageChange(i + 1)} className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-yellow text-white' : 'bg-gray-100'}`}>
+                        <button key={i + 1} onClick={() => handlePageChange(i + 1)} className={`px-3 py-1 rounded ${currentPage === i + 1 ? 'bg-yellow text-black' : 'bg-gray-100'}`}>
                             {i + 1}
                         </button>
                     ))}

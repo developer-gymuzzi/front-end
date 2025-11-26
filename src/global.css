@@ -124,7 +124,7 @@ header {
 }
 
 .CRM-Page-Name {
-    Color: #DBF900;
+    Color: #E2AD17;
 }
 
 .Filter-button {
@@ -231,7 +231,7 @@ input[type="checkbox"]:enabled:checked {
     border-radius: 10px;
     opacity: 0px;
     background-color: var(--yellow-color);
-    color: #FFF;
+    color: #000000;
 }
 
 input:focus-visible,
