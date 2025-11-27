@@ -5,7 +5,6 @@ import Cookies from 'js-cookie';
 import { message } from 'antd';
 import Filter from './Filters';
 
-// ===================== INTERFACES =====================
 interface User {
     _id: string;
     name: string;
@@ -59,12 +58,14 @@ interface PaginationInfo {
     hasPrevPage: boolean;
 }
 
-// =======================================================
-
 const EarningsDashboard = () => {
     const [transactions, setTransactions] = useState<TransactionGroup[]>([]);
-    const [filter, setFilter] = useState<'all' | 'gym' | 'admin'>('all');
+    const [filter] = useState<'all' | 'gym' | 'admin'>('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [filters, setFilters] = useState<any>({});
+    const [activeFilters, setActiveFilters] = useState<any>({});
+    const [resetFiltersKey, setResetFiltersKey] = useState(0);
+
     const [selectedTransaction, setSelectedTransaction] = useState<TransactionGroup | null>(null);
     const [apiStats, setApiStats] = useState<ApiStats>({
         totalGymEarnings: 0,
@@ -81,16 +82,21 @@ const EarningsDashboard = () => {
         hasPrevPage: false,
     });
 
-    const [gymFilter, setGymFilter] = useState('');
-
-    // ===================== LOAD API =====================
-    const loadData = async (page = 1, gym: string = gymFilter) => {
+    // ===================== LOAD DATA =====================
+    const loadData = async (page = 1, newFilters = filters) => {
         try {
             const token = Cookies.get('token');
-
             let url = `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/list/earnings/listing?page=${page}`;
 
-            if (gym) url += `&gym=${gym}`;
+            if (newFilters.gym) url += `&gym=${newFilters.gym}`;
+            if (newFilters.owner) url += `&owner=${newFilters.owner}`;
+            if (newFilters.user) url += `&user=${newFilters.user}`;
+            if (newFilters.transactionId) url += `&transactionId=${newFilters.transactionId}`;
+
+            if (newFilters.dateType === 'today') url += `&date=today`;
+            if (newFilters.dateType === 'yesterday') url += `&date=yesterday`;
+            if (newFilters.dateType === 'single') url += `&date=${newFilters.date}`;
+            if (newFilters.dateType === 'range') url += `&startDate=${newFilters.startDate}&endDate=${newFilters.endDate}`;
 
             const { data } = await axios.get(url, { headers: { token } });
 
@@ -98,31 +104,39 @@ const EarningsDashboard = () => {
                 setTransactions(data.grouped);
                 setApiStats(data.stats);
                 setPagination(data.pagination);
-            } else {
-                message.error(data.message);
             }
         } catch (err) {
-            console.error('ERR LOADING DATA', err);
-            message.error('Failed to load earnings.');
+            console.log(err);
+            message.error('Failed to load earnings');
         }
     };
 
-    // ===================== SOCKET SETUP =====================
+    // ===================== SOCKET =====================
     useEffect(() => {
         connectSocket();
         loadData(1);
+
+        socket.on('transaction:new', (data: any) => {
+            const newTxn: TransactionGroup = {
+                payment: data.payment,
+                commission: data.commission || null,
+                paymentAmount: data.payment.amount,
+                adminCommission: data.commission?.amount || 0,
+                gymOwnerReceives: data.payment.amount - (data.commission?.amount || 0),
+            };
+
+            setTransactions((prev) => [newTxn, ...prev]);
+            message.success(`New payment of ₹${newTxn.paymentAmount} received`);
+        });
 
         return () => {
             socket.off('transaction:new');
         };
     }, []);
 
-    // ===================== FILTER & SEARCH =====================
+    // ===================== SEARCH FILTER =====================
     const filteredGroups = useMemo(() => {
         let list = [...transactions];
-
-        if (filter === 'admin') list = list.filter((g) => g.commission);
-        if (filter === 'gym') list = list.filter((g) => g.payment);
 
         if (searchTerm) {
             const t = searchTerm.toLowerCase();
@@ -130,11 +144,11 @@ const EarningsDashboard = () => {
         }
 
         return list;
-    }, [transactions, filter, searchTerm]);
+    }, [transactions, searchTerm]);
 
-    // ===================== UPDATED STATS (Uses API Stats) =====================
-    const stats = useMemo(
-        () => ({
+    // ===================== STATISTICS =====================
+    const stats = useMemo(() => {
+        return {
             overallGymEarnings: apiStats.totalGymEarnings,
             overallAdminEarnings: apiStats.totalAdminEarnings,
             totalTransactions: apiStats.totalTransactions,
@@ -143,9 +157,8 @@ const EarningsDashboard = () => {
             filteredAdminEarnings: filteredGroups.reduce((s, t) => s + t.adminCommission, 0),
 
             avgCommission: filteredGroups.length > 0 ? filteredGroups.reduce((s, t) => s + (t.commission?.commissionPercentage || 0), 0) / filteredGroups.length : 0,
-        }),
-        [apiStats, filteredGroups]
-    );
+        };
+    }, [apiStats, filteredGroups]);
 
     const formatDate = (date: string) => {
         return new Date(date).toLocaleString('en-IN', {
@@ -157,7 +170,6 @@ const EarningsDashboard = () => {
         });
     };
 
-    // ===================== UI =====================
     return (
         <div className="grid gap-1">
             {/* HEADER */}
@@ -165,9 +177,16 @@ const EarningsDashboard = () => {
                 <h2 className="CRM-Page-Title">Earnings Dashboard</h2>
 
                 <Filter
-                    onSearch={(gym: string) => {
-                        setGymFilter(gym);
-                        loadData(1, gym);
+                    activeFilters={activeFilters}
+                    onApplyFilters={(filters) => {
+                        setActiveFilters(filters);
+                        loadData(1, filters);
+                    }}
+                    onRemoveFilter={(key) => {
+                        const updated = { ...activeFilters };
+                        delete updated[key];
+                        setActiveFilters(updated);
+                        loadData(1, updated);
                     }}
                 />
             </div>
@@ -176,18 +195,18 @@ const EarningsDashboard = () => {
                 Dashboard / <span className="CRM-Page-Name">Earnings</span>
             </p>
 
-            {/* STATS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* ===================== STATS ===================== */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
                 <div className="bg-white rounded-lg shadow p-6">
                     <p className="text-sm text-gray-600">Gym Owner Earnings</p>
-                    <p className="text-2xl font-bold">₹{Number(stats.filteredGymEarnings).toFixed(3)}</p>
-                    <p className="text-xs text-gray-500">Overall: ₹{Number(stats.overallGymEarnings).toFixed(3)}</p>
+                    <p className="text-2xl font-bold">₹{stats.filteredGymEarnings.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">Overall: ₹{stats.overallGymEarnings.toFixed(2)}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow p-6">
                     <p className="text-sm text-gray-600">Admin Commission</p>
-                    <p className="text-2xl font-bold">₹{Number(stats.filteredAdminEarnings).toFixed(3)}</p>
-                    <p className="text-xs text-gray-500">Overall: ₹{Number(stats.overallAdminEarnings).toFixed(3)}</p>
+                    <p className="text-2xl font-bold">₹{stats.filteredAdminEarnings.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">Overall: ₹{stats.overallAdminEarnings.toFixed(2)}</p>
                 </div>
 
                 <div className="bg-white rounded-lg shadow p-6">
@@ -202,7 +221,106 @@ const EarningsDashboard = () => {
                 </div>
             </div>
 
-            {/* TABLE */}
+            {/* ===================== ACTIVE FILTER TAGS ===================== */}
+            {/* ===================== ACTIVE FILTER TAGS ===================== */}
+            {Object.values(activeFilters).some((val) => val) && (
+                <div className="flex flex-wrap gap-3 items-center mb-4">
+                    {Object.entries(activeFilters).map(([key, value]) => {
+                        if (!value) return null;
+                        if (key === 'dateType' && value === 'none') return null;
+
+                        // Label Mapping
+                        const labelMap: any = {
+                            gym: 'Gym',
+                            owner: 'Gym Owner',
+                            user: 'User',
+                            transactionId: 'Transaction ID',
+
+                            dateType: 'Date Filter',
+                            date: 'Date',
+                            startDate: 'Start Date',
+                            endDate: 'End Date',
+
+                            today: 'Today',
+                            yesterday: 'Yesterday',
+                            single: 'Single Date',
+                            range: 'Date Range',
+                        };
+
+                        const label = labelMap[key] || key;
+
+                        // Value Formatter
+                        const formattedValue =
+                            key === 'dateType'
+                                ? value === 'today'
+                                    ? 'Today'
+                                    : value === 'yesterday'
+                                    ? 'Yesterday'
+                                    : value === 'single'
+                                    ? activeFilters.date
+                                    : value === 'range'
+                                    ? `${activeFilters.startDate} → ${activeFilters.endDate}`
+                                    : value
+                                : String(value);
+
+                        return (
+                            <div key={key} className="flex items-center bg-gray-200 px-4 py-1 rounded-full text-sm">
+                                <span>
+                                    {label}: {formattedValue}
+                                </span>
+
+                                <button
+                                    className="ml-2 text-red-600"
+                                    onClick={() => {
+                                        const updated = { ...activeFilters };
+
+                                        // handle removal of date fields
+                                        if (key === 'date') {
+                                            delete updated.date;
+                                            delete updated.dateType;
+                                        }
+
+                                        if (key === 'startDate' || key === 'endDate') {
+                                            delete updated.startDate;
+                                            delete updated.endDate;
+                                            delete updated.dateType;
+                                        }
+
+                                        if (key === 'dateType') {
+                                            delete updated.dateType;
+                                            delete updated.date;
+                                            delete updated.startDate;
+                                            delete updated.endDate;
+                                        }
+
+                                        // normal removal
+                                        delete updated[key];
+
+                                        setActiveFilters(updated);
+                                        loadData(1, updated);
+                                    }}
+                                >
+                                    ✖
+                                </button>
+                            </div>
+                        );
+                    })}
+
+                    {/* CLEAR ALL */}
+                    <h5
+                        className="text-red-600 cursor-pointer ml-2"
+                        onClick={() => {
+                            setActiveFilters({});
+                            setResetFiltersKey((prev) => prev + 1);
+                            loadData(1, {});
+                        }}
+                    >
+                        Clear all filters
+                    </h5>
+                </div>
+            )}
+
+            {/* ===================== TABLE ===================== */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -223,18 +341,24 @@ const EarningsDashboard = () => {
                             {filteredGroups.map((group, index) => (
                                 <tr key={index} className="hover:bg-gray-50">
                                     <td className="px-6 py-4">{formatDate(group.payment.createdAt)}</td>
+
                                     <td className="px-6 py-4">
                                         {group.payment.from.name}
                                         <div className="text-gray-500 text-xs">{group.payment.from.email}</div>
                                     </td>
+
                                     <td className="px-6 py-4">
                                         {group.payment.to.name}
                                         <div className="text-gray-500 text-xs">{group.payment.to.email}</div>
                                     </td>
+
                                     <td className="px-6 py-4">{group.payment.gym.name}</td>
+
                                     <td className="px-6 py-4 text-blue-600">₹{group.paymentAmount}</td>
                                     <td className="px-6 py-4 text-green-600">₹{group.adminCommission}</td>
+
                                     <td className="px-6 py-4 text-purple-600 font-bold">₹{group.gymOwnerReceives}</td>
+
                                     <td className="px-6 py-4">
                                         <button onClick={() => setSelectedTransaction(group)} className="text-blue-600 hover:underline">
                                             View Details
@@ -249,7 +373,7 @@ const EarningsDashboard = () => {
                 {filteredGroups.length === 0 && <div className="text-center py-10 text-gray-500">No transactions found</div>}
             </div>
 
-            {/* PAGINATION (OPTION A) */}
+            {/* ===================== PAGINATION ===================== */}
             <div className="flex justify-between items-center mt-6">
                 <button
                     disabled={!pagination.hasPrevPage}
@@ -272,10 +396,10 @@ const EarningsDashboard = () => {
                 </button>
             </div>
 
-            {/* MODAL */}
+            {/* ===================== MODAL ===================== */}
             {selectedTransaction && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-2xl w-full max-height-screen overflow-y-auto">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
                         <div className="p-6 flex justify-between items-start border-b">
                             <h2 className="text-2xl font-bold">Transaction Details</h2>
                             <button onClick={() => setSelectedTransaction(null)} className="text-gray-500 text-xl">
