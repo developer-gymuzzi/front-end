@@ -302,13 +302,19 @@ export default function ChatScreen() {
             className="flex-grow p-3 border rounded-xl resize-none"
           />
 
-          <Button
-            type="primary"
-            shape="circle"
-            icon={<Send />}
-            disabled={!message.trim() && !pendingImage}
-            onClick={sendMessage}
-          />
+<Button
+  type="primary"
+  shape="circle"
+  icon={<Send />}
+  disabled={!message.trim() && !pendingImage}
+  onClick={sendMessage}
+  style={{
+    backgroundColor: "#DBF900",
+    borderColor: "#DBF900",
+    color: "black"
+  }}
+/>
+
         </div>
       </div>
     </div>
