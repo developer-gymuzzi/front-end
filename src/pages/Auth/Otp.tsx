@@ -34,7 +34,6 @@ export default function OtpVerification() {
         }
     }, [timer]);
 
-    // Format time as MM:SS
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -42,25 +41,23 @@ export default function OtpVerification() {
     };
 
     const handleChange = (index: number, value: string) => {
-        // Only allow numbers
-        if (value && !/^\d+$/.test(value)) return; 
+        if (value && !/^\d+$/.test(value)) return;
 
         const newOtp = [...otp];
         newOtp[index] = value;
-
         setOtp(newOtp);
 
-        // Auto-focus next input
         if (value && index < 5) {
-            // change from 3 to 5
             inputRefs.current[index + 1]?.focus();
         }
     };
 
     const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-
         if (e.key === 'Backspace' && !otp[index] && index > 0) {
             inputRefs.current[index - 1]?.focus();
+        }
+        if (e.key === "Enter") {
+            e.preventDefault();
         }
     };
 
@@ -71,29 +68,25 @@ export default function OtpVerification() {
         if (/^\d{6}$/.test(pastedData)) {
             const digits = pastedData.split('');
             setOtp(digits);
-            inputRefs.current[5]?.focus(); 
+            inputRefs.current[5]?.focus();
         }
     };
 
     const resendOtp = async () => {
         setIsLoading(true);
         try {
-            // Implement your resend OTP logic here
-            // const response = await axios.post(...)
-
-            // Reset timer
             setTimer(120);
             setError('');
         } catch (error) {
-            console.error('Error resending OTP:', error);
             setError('Failed to resend OTP. Please try again.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const verifyOtp = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const verifyOtp = async (e: any) => {
+        e?.preventDefault?.();
+
         const otpValue = otp.join('');
 
         if (otpValue.length !== 6 || !/^\d{6}$/.test(otpValue)) {
@@ -119,8 +112,9 @@ export default function OtpVerification() {
                 message.success('OTP verified successfully!');
 
                 Cookies.set('token', response.data.token, { expires: 7 });
-                 localStorage.setItem('userRole', response.data.user.role);
-                 localStorage.setItem('userId', response.data.user.userId)
+                localStorage.setItem('userRole', response.data.user.role);
+                localStorage.setItem('userId', response.data.user.userId);
+
                 const { role } = response.data.user;
 
                 if (role === 'admin') {
@@ -134,8 +128,7 @@ export default function OtpVerification() {
                 setError(response.data.message || 'Verification failed');
                 message.error(response.data.message || 'Invalid OTP');
             }
-        } catch (error: any) {
-            console.error('OTP verification error:', error);
+        } catch (error) {
             setError('Verification failed. Please try again.');
             message.error('Something went wrong. Try again.');
         } finally {
@@ -143,9 +136,18 @@ export default function OtpVerification() {
         }
     };
 
+    // ⭐ AUTO VERIFY WHEN OTP STATE REACHES 6 DIGITS
+    useEffect(() => {
+        const otpValue = otp.join('');
+        if (otpValue.length === 6 && /^\d{6}$/.test(otpValue)) {
+            verifyOtp(new Event("submit") as any);
+        }
+    }, [otp]);
+
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-[url(/assets/images/gym_bg.png)] bg-cover bg-center bg-no-repeat px-4 py-6 dark:bg-[#060818] sm:px-8 overflow-hidden">
             <Animation />
+
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
@@ -153,7 +155,6 @@ export default function OtpVerification() {
             )}
 
             <div className="relative w-full max-w-[480px] h-auto mx-2 sm:mx-4 rounded-xl overflow-hidden shadow-lg">
-                {/* Background with gym pattern */}
                 <div className="absolute inset-0 bg-black opacity-50 z-0"></div>
                 <div
                     className="absolute inset-0 z-0 bg-gradient-to-br from-[#1a2a36] to-[#0d1c28]"
@@ -179,7 +180,7 @@ export default function OtpVerification() {
                             <p className="text-sm font-bold leading-normal text-gray-300">Enter the 6-digit code sent to your email</p>
                         </div>
 
-                        <form className="space-y-5 text-white" onSubmit={verifyOtp}>
+                        <form className="space-y-5 text-white" onSubmit={(e) => e.preventDefault()}>
                             {error && <p className="text-red-500 text-sm mt-2 text-center bg-black/50 p-2 rounded-md">{error}</p>}
 
                             <div className="mb-6">
