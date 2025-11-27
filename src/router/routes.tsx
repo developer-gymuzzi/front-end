@@ -29,6 +29,7 @@ const AdminTicket = lazy(() => import('../pages/ticket/list'));
 const AdminMessage = lazy(() => import('../pages/ticket/messages'));
 const Request = lazy(() => import('../pages/Requests/list'));
 const AdminRequest = lazy(() => import('../pages/Requests/adminList'));
+const AllNotificationsPage = lazy(() => import('../pages/AllNotificationsPage'));
 
 const routes = [
     {
@@ -68,6 +69,15 @@ const routes = [
         element: (
             <ProtectedRoute allowedRoles={['admin']}>
                 <AdminRequest />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
+    },
+    {
+        path: '/notifications',
+        element: (
+            <ProtectedRoute allowedRoles={['admin']}>
+                <AllNotificationsPage />
             </ProtectedRoute>
         ),
         layout: 'default',

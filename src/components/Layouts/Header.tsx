@@ -150,31 +150,57 @@ const Header = () => {
     };
 
     // Notification dropdown menu
-    const renderNotificationMenu = () => (
+const renderNotificationMenu = () => {
+    const topFive = notifications.slice(0, 5); // ⭐ only first 5
+
+    return (
         <Menu className="max-w-sm w-[320px] p-0">
-            {notifications.length === 0 ? (
+            {topFive.length === 0 ? (
                 <Menu.Item disabled className="px-4 py-2 text-center text-gray-500">
                     No new notifications
                 </Menu.Item>
             ) : (
-                <div className={`${notifications.length > 3 ? 'max-h-72 overflow-y-auto' : ''} custom-scrollbar`}>
-                    {notifications.map((noti) => (
-                        <Menu.Item key={noti._id} className="whitespace-normal px-4 py-2 hover:bg-gray-50" onClick={() => handleSingleNotificationClick(noti._id)}>
-                            <div className="flex flex-col gap-1">
-                                <span className="font-medium text-gray-800">{noti.message}</span>
-                                <ul className="text-sm text-gray-600 list-disc list-inside">
-                                    {noti.data?.changes?.map((change: string, idx: number) => (
-                                        <li key={idx}>{change}</li>
-                                    ))}
-                                </ul>
-                                <span className="text-xs text-gray-400">{moment(noti.createdAt).fromNow()}</span>
-                            </div>
-                        </Menu.Item>
-                    ))}
-                </div>
+                <>
+                    <div className={`${topFive.length > 3 ? 'max-h-72 overflow-y-auto' : ''} custom-scrollbar`}>
+                        {topFive.map((noti: any) => (
+                            <Menu.Item
+                                key={noti._id}
+                                className="whitespace-normal px-4 py-2 hover:bg-gray-50"
+                                onClick={() => handleSingleNotificationClick(noti._id)}
+                            >
+                                <div className="flex flex-col gap-1">
+                                    <span className="font-medium text-gray-800">{noti.message}</span>
+
+                                    {Array.isArray(noti?.data?.changes) && (
+                                        <ul className="text-sm text-gray-600 list-disc list-inside">
+                                            {noti.data.changes.map((change: string, idx: number) => (
+                                                <li key={idx}>{change}</li>
+                                            ))}
+                                        </ul>
+                                    )}
+
+                                    <span className="text-xs text-gray-400">
+                                        {moment(noti.createdAt).fromNow()}
+                                    </span>
+                                </div>
+                            </Menu.Item>
+                        ))}
+                    </div>
+
+                    {/* ⭐ VIEW ALL NOTIFICATIONS BUTTON */}
+                    <Menu.Item
+                        key="view-all"
+                        className="px-4 py-2 text-center font-semibold text-blue-600 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => navigate('/notifications')}
+                    >
+                        View All Notifications
+                    </Menu.Item>
+                </>
             )}
         </Menu>
     );
+};
+
 
     const handleNavigation = () => {
         navigate('/profile');
