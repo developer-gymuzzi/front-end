@@ -56,7 +56,7 @@ export default function OtpVerification() {
         if (e.key === 'Backspace' && !otp[index] && index > 0) {
             inputRefs.current[index - 1]?.focus();
         }
-        if (e.key === "Enter") {
+        if (e.key === 'Enter') {
             e.preventDefault();
         }
     };
@@ -140,7 +140,7 @@ export default function OtpVerification() {
     useEffect(() => {
         const otpValue = otp.join('');
         if (otpValue.length === 6 && /^\d{6}$/.test(otpValue)) {
-            verifyOtp(new Event("submit") as any);
+            verifyOtp(new Event('submit') as any);
         }
     }, [otp]);
 
@@ -170,12 +170,12 @@ export default function OtpVerification() {
                     <div className="mx-auto w-full max-w-[380px] sm:max-w-[420px]">
                         <div className="mb-8 text-center">
                             <div className="flex justify-center mb-4">
-                                <div className="bg-red-600 p-3 rounded-full">
-                                    <Dumbbell size={32} className="text-white" />
+                                <div className="p-2 rounded-full">
+                                    <img src="/assets/images/gymuzzi.jpg" alt="Gym Logo" className="w-11 h-15 object-cover rounded-full" />
                                 </div>
                             </div>
                             <h1 className="text-2xl font-extrabold uppercase !leading-snug text-white md:text-3xl">
-                                OTP <span className="text-red-600">VERIFICATION</span>
+                                OTP <span className="text-[#DBF900]">VERIFICATION</span>
                             </h1>
                             <p className="text-sm font-bold leading-normal text-gray-300">Enter the 6-digit code sent to your email</p>
                         </div>
@@ -221,19 +221,19 @@ export default function OtpVerification() {
                                 disabled={isLoading || otp.join('').length !== 6}
                                 type="text"
                                 onClick={verifyOtp}
-                                style={{ color: 'white' }}
-                                className="!mt-6 w-full border-0 uppercase shadow-xl bg-gradient-to-r from-red-700 to-red-500 text-white hover:from-red-600 hover:to-red-400 active:from-red-800 active:to-red-600 transition-all font-bold py-6 h-auto"
+                                className="!mt-6 w-full border-0 uppercase shadow-xl text-black font-bold py-6 transition-all"
+                                style={{
+                                    backgroundColor: '#DBF900',
+                                    color: 'black',
+                                }}
                             >
                                 {isLoading ? (
-                                    <div className="flex items-center justify-center">
-                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path
-                                                className="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                            ></path>
-                                        </svg>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <img
+                                            src="/assets/images/gymuzzi.jpg" // <-- Use your loader image here
+                                            alt="loading"
+                                            className="w-6 h-6 object-contain"
+                                        />
                                         VERIFYING...
                                     </div>
                                 ) : (
