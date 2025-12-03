@@ -125,7 +125,17 @@ const EarningsDashboard = () => {
                 gymOwnerReceives: data.payment.amount - (data.commission?.amount || 0),
             };
 
+            // 1️⃣ Add new transaction to UI
             setTransactions((prev) => [newTxn, ...prev]);
+
+            // 2️⃣ 🔥 Update real-time totals
+            setApiStats((prev) => ({
+                totalGymEarnings: prev.totalGymEarnings + newTxn.gymOwnerReceives,
+                totalAdminEarnings: prev.totalAdminEarnings + newTxn.adminCommission,
+                totalTransactions: prev.totalTransactions + 1,
+            }));
+
+            // 3️⃣ Notification
             message.success(`New payment of ₹${newTxn.paymentAmount} received`);
         });
 

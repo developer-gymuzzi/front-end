@@ -1,4 +1,4 @@
-// ✨ FULL UPDATED CODE WITH PERFECT SKELETON & NO BUTTON LOADERS ✨
+// ✨ FULL UPDATED CODE WITH REFACTORED MODAL + PHONE NUMBER ✨
 
 import { useEffect, useState } from "react";
 import { Button } from "@nextui-org/react";
@@ -9,7 +9,7 @@ import { AppDispatch, IRootState } from "../../store";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { message } from "antd";
-import { MessageCircleMore } from "lucide-react";
+import { Eye, MessageCircleMore } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function CompanyList() {
@@ -21,7 +21,6 @@ export default function CompanyList() {
 
   const navigate = useNavigate();
   const dispatch: AppDispatch = useDispatch();
-  const loading = useSelector((state: IRootState) => state.customerConfig.loading);
 
   const endpoint = import.meta.env.VITE_API_LIVEHOST;
   const token = Cookies.get("token");
@@ -35,7 +34,15 @@ export default function CompanyList() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+
+  // ---------- VIEW MODAL STATES ----------
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewData, setViewData] = useState<any>(null);
+
+  const openViewModal = (ticket: any) => {
+    setViewData(ticket);
+    setShowViewModal(true);
+  };
 
   // ---------------- FETCH TICKETS ----------------
   const fetchTickets = async (page: number, limit: number, filterValues: any) => {
@@ -55,7 +62,6 @@ export default function CompanyList() {
 
       if (data.success) {
         setTickets(data.data);
-        setTotalPages(data.totalPages);
       } else {
         message.error("Failed to load tickets");
       }
@@ -135,7 +141,7 @@ export default function CompanyList() {
     return val.charAt(0).toUpperCase() + val.slice(1);
   };
 
-  // ---------------- NEW CLEAN PERFECT SKELETON ROW ----------------
+  // ---------------- SKELETON ----------------
   const SkeletonRow = () => (
     <tr className="border-b animate-pulse">
       <td className="py-4"><div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
@@ -180,11 +186,7 @@ export default function CompanyList() {
           )}
         </div>
 
-        <Filter
-          onSearch={handleSearch}
-          filterValues={filters}
-          key={JSON.stringify(filters)}
-        />
+        <Filter onSearch={handleSearch} filterValues={filters} key={JSON.stringify(filters)} />
       </div>
 
       {/* TABLE */}
@@ -206,75 +208,161 @@ export default function CompanyList() {
             </thead>
 
             <tbody>
-              {isLoading
-                ? Array.from({ length: pageSize }).map((_, index) => (
-                    <SkeletonRow key={index} />
-                  ))
-                : tickets.length === 0
-                ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-8 text-gray-500">
-                      No tickets found
-                    </td>
-                  </tr>
-                )
-                : tickets.map((entry: any, index: number) => {
-                    const rowIndex = (currentPage - 1) * pageSize + (index + 1);
+              {isLoading ? (
+                Array.from({ length: pageSize }).map((_, index) => <SkeletonRow key={index} />)
+              ) : tickets.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-8 text-gray-500">
+                    No tickets found
+                  </td>
+                </tr>
+              ) : (
+                tickets.map((entry: any, index: number) => {
+                  const rowIndex = (currentPage - 1) * pageSize + (index + 1);
 
-                    return (
-                      <tr
-                        key={entry._id}
-                        className="border-b hover:bg-gray-50 dark:hover:bg-gray-900 transition"
-                      >
-                        <td>{rowIndex}</td>
-                        <td>{entry.user?.name || "---"}</td>
-                        <td>{entry.user?.email || "---"}</td>
-                        <td>{formatRoleLabel(entry.user?.role || "---")}</td>
-                        <td>{entry.subject || "---"}</td>
+                  return (
+                    <tr key={entry._id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-900">
+                      <td>{rowIndex}</td>
+                      <td>{entry.user?.name || "---"}</td>
+                      <td>{entry.user?.email || "---"}</td>
+                      <td>{formatRoleLabel(entry.user?.role || "---")}</td>
+                      <td>{entry.subject}</td>
 
-                        <td>
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                              entry.status === "open"
-                                ? "bg-green-100 text-green-800"
-                                : entry.status === "pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {entry.status.charAt(0).toUpperCase() +
-                              entry.status.slice(1)}
-                          </span>
-                        </td>
+                      <td>
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                            entry.status === "open"
+                              ? "bg-green-100 text-green-800"
+                              : entry.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
+                        </span>
+                      </td>
 
-                        {/* ACTION BUTTONS */}
-                        <td className="flex items-center gap-3">
+                      {/* ACTION BUTTONS */}
+                      <td className="flex items-center gap-3">
+
+                        {/* ALWAYS SHOW VIEW BUTTON */}
+                        <button
+                          onClick={() => openViewModal(entry)}
+                          className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 hover:bg-yellow-200 transition"
+                        >
+                             <Eye size={18} className="text-green-600" />
+                        </button>
+
+                        {/* CHAT BUTTON */}
+                        <button
+                          onClick={() => handleClick(entry._id)}
+                          disabled={openingTicketId === entry._id}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 disabled:opacity-50"
+                        >
+                          <MessageCircleMore className="w-4 h-4" />
+                          Chat
+                        </button>
+
+                        {/* CLOSE BUTTON */}
+                        {entry.status !== "closed" && (
                           <button
-                            onClick={() => handleClick(entry._id)}
-                            disabled={openingTicketId === entry._id}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
+                            onClick={() => handleCloseTicket(entry._id)}
+                            disabled={closingTicketId === entry._id}
+                            className="px-3 py-1.5 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 disabled:opacity-50"
                           >
-                            <MessageCircleMore className="w-4 h-4" />
-                            Chat
+                            Close
                           </button>
+                        )}
 
-                          {entry.status !== "closed" && (
-                            <button
-                              onClick={() => handleCloseTicket(entry._id)}
-                              disabled={closingTicketId === entry._id}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
-                            >
-                              Close
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* ---------- VIEW MODAL ---------- */}
+      {showViewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-md max-h-[90vh] overflow-y-auto p-6 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800">
+
+            {/* HEADER */}
+            <h2 className="text-2xl font-bold mb-5 text-gray-900 dark:text-white border-b pb-3">
+              Ticket Details
+            </h2>
+
+            <div className="space-y-4">
+
+              {/* SUBJECT */}
+              <div>
+                <p className="font-semibold text-gray-600 dark:text-gray-400">Subject</p>
+                <p className="text-gray-900 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mt-1 break-words">
+                  {viewData?.subject || "---"}
+                </p>
+              </div>
+
+              {/* DESCRIPTION */}
+              <div>
+                <p className="font-semibold text-gray-600 dark:text-gray-400">Description</p>
+                <p className="text-gray-900 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mt-1 break-words whitespace-pre-line">
+                  {viewData?.description || "---"}
+                </p>
+              </div>
+
+              {/* USER INFO */}
+              <div>
+                <p className="font-semibold text-gray-600 dark:text-gray-400">Raised By</p>
+                <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mt-1 space-y-1">
+                  <p className="text-gray-900 dark:text-gray-200"><span className="font-medium">Name:</span> {viewData?.user?.name}</p>
+                  <p className="text-gray-900 dark:text-gray-200"><span className="font-medium">Email:</span> {viewData?.user?.email || "No Email"}</p>
+                  <p className="text-gray-900 dark:text-gray-200"><span className="font-medium">Phone:</span> {viewData?.user?.phone || "No Number"}</p>
+                  <p className="text-gray-900 dark:text-gray-200"><span className="font-medium">Role:</span> {formatRoleLabel(viewData?.user?.role)}</p>
+                </div>
+              </div>
+
+              {/* CREATED DATE */}
+              <div>
+                <p className="font-semibold text-gray-600 dark:text-gray-400">Ticket Raised On</p>
+                <p className="text-gray-900 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mt-1">
+                  {new Date(viewData?.createdAt).toLocaleString()}
+                </p>
+              </div>
+
+              {/* STATUS */}
+              <div>
+                <p className="font-semibold text-gray-600 dark:text-gray-400">Status</p>
+                <span
+                  className={`inline-block px-3 py-1 mt-1 text-sm rounded-full font-semibold capitalize
+                    ${
+                      viewData?.status === "open"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : viewData?.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                    }`}
+                >
+                  {viewData?.status}
+                </span>
+              </div>
+
+            </div>
+
+            {/* CLOSE BUTTON */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowViewModal(false)}
+                className="px-5 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 text-gray-900 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
