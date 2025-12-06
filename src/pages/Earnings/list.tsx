@@ -90,6 +90,7 @@ const EarningsDashboard = () => {
 
             if (newFilters.gym) url += `&gym=${newFilters.gym}`;
             if (newFilters.owner) url += `&owner=${newFilters.owner}`;
+            if (newFilters.ownerId) url += `&ownerId=${newFilters.ownerId}`
             if (newFilters.user) url += `&user=${newFilters.user}`;
             if (newFilters.transactionId) url += `&transactionId=${newFilters.transactionId}`;
 

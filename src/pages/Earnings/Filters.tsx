@@ -17,13 +17,12 @@ export default function FilterComponent({
 
     // FILTER STATES
     const [gymName, setGymName] = useState('');
-    const [ownerName, setOwnerName] = useState(''); // Gym owner
-    const [userName, setUserName] = useState(''); // Payer
+    const [ownerName, setOwnerName] = useState(''); // Gym owner name
+    const [ownerId, setOwnerId] = useState(''); // ⭐ NEW — Gym owner ID
+    const [userName, setUserName] = useState(''); // User name
     const [transactionId, setTransactionId] = useState('');
 
-    const [dateType, setDateType] = useState<
-        'none' | 'today' | 'yesterday' | 'single' | 'range'
-    >('none');
+    const [dateType, setDateType] = useState<'none' | 'today' | 'yesterday' | 'single' | 'range'>('none');
 
     const [singleDate, setSingleDate] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -35,6 +34,7 @@ export default function FilterComponent({
 
         setGymName(activeFilters.gym || '');
         setOwnerName(activeFilters.owner || '');
+        setOwnerId(activeFilters.ownerId || ''); // ⭐ Load owner ID
         setUserName(activeFilters.user || '');
         setTransactionId(activeFilters.transactionId || '');
 
@@ -44,11 +44,13 @@ export default function FilterComponent({
         setEndDate(activeFilters.endDate || '');
     }, [activeFilters, isPopoverOpen]);
 
+
     // APPLY FILTERS
     const handleSearch = () => {
         const filters: any = {
             gym: gymName.trim(),
             owner: ownerName.trim(),
+            ownerId: ownerId.trim(), // ⭐ Pass Owner ID
             user: userName.trim(),
             transactionId: transactionId.trim(),
         };
@@ -66,10 +68,12 @@ export default function FilterComponent({
         setIsPopoverOpen(false);
     };
 
-    // RESET ALL FILTERS
+
+    // RESET FILTERS
     const handleReset = () => {
         setGymName('');
         setOwnerName('');
+        setOwnerId(''); // ⭐ Reset owner ID
         setUserName('');
         setTransactionId('');
         setDateType('none');
@@ -80,6 +84,7 @@ export default function FilterComponent({
         onApplyFilters({});
         setIsPopoverOpen(false);
     };
+
 
     return (
         <div>
@@ -108,7 +113,7 @@ export default function FilterComponent({
                             />
                         </div>
 
-                        {/* OWNER */}
+                        {/* OWNER NAME */}
                         <div className="input-field mb-3">
                             <label className="block text-gray-700">Gym Owner Name</label>
                             <input
@@ -120,7 +125,19 @@ export default function FilterComponent({
                             />
                         </div>
 
-                        {/* USER */}
+                        {/* ⭐ OWNER ID */}
+                        <div className="input-field mb-3">
+                            <label className="block text-gray-700">Gym Owner ID</label>
+                            <input
+                                type="text"
+                                value={ownerId}
+                                onChange={(e) => setOwnerId(e.target.value)}
+                                placeholder="Enter gym owner ID..."
+                                className="w-full border border-gray-300 rounded-md p-2"
+                            />
+                        </div>
+
+                        {/* USER NAME */}
                         <div className="input-field mb-3">
                             <label className="block text-gray-700">User Name (Paid By)</label>
                             <input
@@ -151,9 +168,7 @@ export default function FilterComponent({
                             <select
                                 className="w-full border p-2 rounded-md"
                                 value={dateType}
-                                onChange={(e) =>
-                                    setDateType(e.target.value as any)
-                                }
+                                onChange={(e) => setDateType(e.target.value as any)}
                             >
                                 <option value="none">None</option>
                                 <option value="today">Today</option>
@@ -166,16 +181,12 @@ export default function FilterComponent({
                         {/* SINGLE DATE */}
                         {dateType === 'single' && (
                             <div className="mb-3">
-                                <label className="block text-gray-700">
-                                    Select Date
-                                </label>
+                                <label className="block text-gray-700">Select Date</label>
                                 <input
                                     type="date"
                                     className="w-full border p-2 rounded-md"
                                     value={singleDate}
-                                    onChange={(e) =>
-                                        setSingleDate(e.target.value)
-                                    }
+                                    onChange={(e) => setSingleDate(e.target.value)}
                                 />
                             </div>
                         )}
@@ -184,30 +195,22 @@ export default function FilterComponent({
                         {dateType === 'range' && (
                             <div className="flex gap-2 mb-3">
                                 <div className="w-1/2">
-                                    <label className="block text-gray-700">
-                                        Start Date
-                                    </label>
+                                    <label className="block text-gray-700">Start Date</label>
                                     <input
                                         type="date"
                                         className="w-full border p-2 rounded-md"
                                         value={startDate}
-                                        onChange={(e) =>
-                                            setStartDate(e.target.value)
-                                        }
+                                        onChange={(e) => setStartDate(e.target.value)}
                                     />
                                 </div>
 
                                 <div className="w-1/2">
-                                    <label className="block text-gray-700">
-                                        End Date
-                                    </label>
+                                    <label className="block text-gray-700">End Date</label>
                                     <input
                                         type="date"
                                         className="w-full border p-2 rounded-md"
                                         value={endDate}
-                                        onChange={(e) =>
-                                            setEndDate(e.target.value)
-                                        }
+                                        onChange={(e) => setEndDate(e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -215,12 +218,8 @@ export default function FilterComponent({
 
                         {/* BUTTONS */}
                         <div className="flex gap-2 mt-3">
-                            <button className="reset-btn" onClick={handleReset}>
-                                Cancel
-                            </button>
-                            <button className="Search-btn" onClick={handleSearch}>
-                                Search
-                            </button>
+                            <button className="reset-btn" onClick={handleReset}>Cancel</button>
+                            <button className="Search-btn" onClick={handleSearch}>Search</button>
                         </div>
                     </div>
                 </PopoverContent>

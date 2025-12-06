@@ -176,9 +176,10 @@ export default function PaymentRequestList() {
                         <thead>
                             <tr className="border-b bg-gray-50">
                                 <th>S.No</th>
+                                <th>UserId</th>
                                 <th>User</th>
                                 <th>Email</th>
-                                <th>Phone</th>
+                                
                                 <th>Primary Account</th>
                                 <th>Amount</th>
                                 <th>Status</th>
@@ -206,9 +207,10 @@ export default function PaymentRequestList() {
                                       return (
                                           <tr key={item._id} className="border-b hover:bg-gray-50">
                                               <td>{serial}</td>
+                                               <td>{item.user?._id || '---'}</td>
                                               <td>{item.user?.name || '---'}</td>
                                               <td>{item.user?.email || '---'}</td>
-                                              <td>{item.user?.phone || '---'}</td>
+                                             
 
                                               {/* PRIMARY ACCOUNT */}
                                               <td>
@@ -222,7 +224,7 @@ export default function PaymentRequestList() {
                                                   )}
                                               </td>
 
-                                              <td className="font-semibold">${item.amount}</td>
+                                              <td className="font-semibold">{item.amount}</td>
 
                                               <td>
                                                   <span
