@@ -212,7 +212,7 @@ const renderNotificationMenu = () => {
                 <div className="relative bg-white flex w-full items-center px-5 py-2.5 ">
                     <div className="horizontal-logo flex lg:hidden justify-between items-center">
                         <Link to="/" className="main-logo flex items-center shrink-0">
-                            <img className="w-[140px]" src="/assets/images/gym_logo.png" alt="logo" />
+                            <img className="w-[100px]" src="/assets/images/gymuzzi.jpg" alt="logo" />
                         </Link>
                     </div>
 
