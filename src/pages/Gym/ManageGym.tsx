@@ -67,12 +67,12 @@ export default function ManageServices() {
                         <div className="flex flex-wrap gap-3 items-center mt-3">
                             {Object.entries(filters).map(([key, value]) =>
                                 value ? (
-                                    <Button key={key} className="yellow-color" onClick={() => removeFilter(key)}>
+                                    <Button key={key} className="bg-yellow" onClick={() => removeFilter(key)}>
                                         {`${value}`} <RxCross2 />
                                     </Button>
                                 ) : null
                             )}
-                            <h5 className="text-yellow cursor-pointer" onClick={clearAllFilters}>
+                            <h5 className="text-black cursor-pointer" onClick={clearAllFilters}>
                                 Clear all filters
                             </h5>
                         </div>

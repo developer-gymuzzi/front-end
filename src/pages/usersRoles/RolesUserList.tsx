@@ -195,12 +195,12 @@ const handleUnblock = async (userId: string) => {
                             {Object.entries(appliedFilters)
                                 .filter(([_, val]) => val)
                                 .map(([key, value]) => (
-                                    <Button key={key} className="yellow-color" onClick={() => removeFilter(key)}>
+                                    <Button key={key} className="bg-yellow" onClick={() => removeFilter(key)}>
                                         {formatRoleLabel(value)} <RxCross2 />
                                     </Button>
                                 ))}
 
-                            <h5 className="text-yellow cursor-pointer" onClick={clearAllFilters}>
+                            <h5 className="text-black cursor-pointer" onClick={clearAllFilters}>
                                 Clear all filters
                             </h5>
                         </div>
