@@ -151,7 +151,7 @@ const Header = () => {
 
     // Notification dropdown menu
 const renderNotificationMenu = () => {
-    const topFive = notifications.slice(0, 5); // ⭐ only first 5
+    const topFive = notifications.slice(0, 5);
 
     return (
         <Menu className="max-w-sm w-[320px] p-0">

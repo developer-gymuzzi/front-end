@@ -1,22 +1,180 @@
-'use client';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+
+interface DashboardApiResponse {
+    success: 0 | 1;
+    data: {
+        tickets: {
+            total: number;
+            open: number;
+            closed: number;
+            pending: number;
+        };
+        members: number;
+        revenue: number;
+        weeklyVisits: number[];
+        recentGyms: {
+            _id: string;
+            name: string;
+            earnings: number;
+            isPendingApproval: 'approved' | 'rejected' | string;
+            createdAt: string;
+        }[];
+    };
+}
+interface ChartProps {
+    weeklyVisits: number[];
+}
 
 export default function Component() {
-    const chartData = [
-        { day: 'Sun', visits: 30, x: 50, y: 180 },
-        { day: 'Mon', visits: 45, x: 100, y: 150 },
-        { day: 'Tue', visits: 25, x: 150, y: 200 },
-        { day: 'Wed', visits: 60, x: 200, y: 120 },
-        { day: 'Thu', visits: 50, x: 250, y: 140 },
-        { day: 'Fri', visits: 70, x: 300, y: 100 },
-        { day: 'Sat', visits: 55, x: 350, y: 130 },
-    ];
+    const [data, setData] = useState<DashboardApiResponse['data'] | null>(null);
+    const [Loading, setLoading] = useState(true);
 
-    const pathData = chartData.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = Cookies.get('token');
+
+                if (!token) {
+                    console.error('No token found in cookies');
+                    return;
+                }
+
+                console.log('Token from cookies:', token);
+
+                const response = await axios.get(`${import.meta.env.VITE_API_LIVEHOST}/v1/admin/list/dashboard/analytics`, {
+                    headers: {
+                        token: token,
+                    },
+                });
+
+                console.log('API Raw Response:', response.data);
+
+                if (response.data.success) {
+                    setData(response.data.data);
+                    setLoading(false);
+                } else {
+                    console.log('API returned success: false', response.data);
+                }
+            } catch (error: any) {
+                if (error.response) {
+                    console.error('Response error:', error.response.status, error.response.data);
+                } else if (error.request) {
+                    console.error('No response:', error.request);
+                } else {
+                    console.error('Other error:', error.message);
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const WeeklyVisitsChart: React.FC<ChartProps> = ({ weeklyVisits }) => {
+        const maxVisits = Math.max(...weeklyVisits, 10);
+        const chartWidth = 600;
+        const chartHeight = 450;
+        const padding = { top: 35, right: 40, bottom: 50, left: 50 };
+
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        const chartData = weeklyVisits.map((visits, index) => {
+            const x = padding.left + (index * (chartWidth - padding.left - padding.right)) / (weeklyVisits.length - 1);
+            const y = padding.top + ((maxVisits - visits) / maxVisits) * (chartHeight - padding.top - padding.bottom);
+            return { x, y, visits };
+        });
+
+        const getPath = () => chartData.map((point, index) => (index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`)).join(' ');
+        return (
+            <div className="relative">
+                <svg width="100%" height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+                    {/* Grid */}
+                    <defs>
+                        <pattern id="grid" width="60" height="80" patternUnits="userSpaceOnUse">
+                            <path d="M 0 0 L 0 80 M 0 0 L 60 0" fill="none" stroke="#f0f0f0" strokeWidth="1" />
+                        </pattern>
+                        <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.2} />
+                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+                        </linearGradient>
+                    </defs>
+
+                    <rect width={chartWidth} height={chartHeight} fill="url(#grid)" />
+
+                    {/* Horizontal grid + Y labels */}
+                    {[0, maxVisits / 2, maxVisits].map((value, idx) => {
+                        const y = padding.top + ((maxVisits - value) / maxVisits) * (chartHeight - padding.top - padding.bottom);
+                        return (
+                            <g key={idx}>
+                                <line x1={padding.left} y1={y} x2={chartWidth - padding.right} y2={y} stroke="#e5e7eb" strokeDasharray="5,5" />
+                                <text x={padding.left - 10} y={y + 4} textAnchor="end" fontSize="12" fill="#374151">
+                                    {Math.round(value)}
+                                </text>
+                            </g>
+                        );
+                    })}
+
+                    {/* Area under the line */}
+                    <path d={`${getPath()} L ${chartData[chartData.length - 1].x} ${chartHeight - padding.bottom} L ${chartData[0].x} ${chartHeight - padding.bottom} Z`} fill="url(#areaGradient)" />
+
+                    {/* Line */}
+                    <path d={getPath()} stroke="#8b5cf6" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+
+                    {/* Dots on line - with proper label positioning */}
+                    {chartData.map((point, idx) => {
+                        // Determine if label should be above or below based on position
+                        // If the point is in the top 25% of the chart, put label below
+                        const isNearTop = point.y > chartHeight * 0.25;
+                        const labelY = isNearTop ? point.y + 25 : point.y - 18;
+
+                        return (
+                            <g key={idx}>
+                                {/* White background for dot */}
+                                <circle cx={point.x} cy={point.y} r={7} fill="white" stroke="white" strokeWidth={3} />
+                                {/* Colored dot */}
+                                <circle cx={point.x} cy={point.y} r={5} fill="#8b5cf6" stroke="white" strokeWidth={2} />
+
+                                {/* Value label with conditional positioning */}
+                                <text x={point.x} y={labelY} textAnchor="middle" fontSize="12" fill="#8b5cf6" fontWeight={600} className="font-sans">
+                                    {point.visits}
+                                </text>
+                            </g>
+                        );
+                    })}
+                    {/* X-axis days */}
+                    {days.map((day, index) => {
+                        const x = padding.left + (index * (chartWidth - padding.left - padding.right)) / (days.length - 1);
+
+                        return (
+                            <text key={index} x={x} y={chartHeight - padding.bottom + 40} textAnchor="middle" fontSize="12" fill="#6b7280">
+                                {day}
+                            </text>
+                        );
+                    })}
+
+                    {/* Axes */}
+                    <line x1={padding.left} y1={padding.top} x2={padding.left} y2={chartHeight - padding.bottom} stroke="#d1d5db" strokeWidth={1} />
+                    <line x1={padding.left} y1={chartHeight - padding.bottom} x2={chartWidth - padding.right} y2={chartHeight - padding.bottom} stroke="#d1d5db" strokeWidth={1} />
+                </svg>
+            </div>
+        );
+    };
+    if (Loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="flex flex-col items-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-gray-600 text-lg font-medium">Loading Dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
             <div className="max-w-10xl mx-auto">
-                {/* Stats Cards - Enhanced with Filters */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 ">
                     {/* Total Tickets */}
                     <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl p-6 shadow-md border border-blue-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group ">
@@ -27,26 +185,13 @@ export default function Component() {
                         <div className="flex items-center justify-between mb-5 relative z-10">
                             <div className="flex items-center space-x-2">
                                 <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></div>
-                                <p className="text-gray-700 text-sm font-semibold uppercase tracking-wide">Total Tickets</p>
-                            </div>
-
-                            <div className="relative">
-                                <select className="appearance-none bg-white/80 backdrop-blur-sm border border-blue-300 rounded-xl px-3 py-1.5 pr-6 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-sm">
-                                    <option value="all">Filter</option>
-                                    <option value="open">Open</option>
-                                    <option value="closed">Closed</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-blue-500">
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
+                                <p className="text-gray-700 text-xl font-semibold uppercase tracking-wide">Total Open Tickets</p>
                             </div>
                         </div>
 
                         {/* Number */}
                         <div className="flex flex-col items-center justify-center mt-2 relative z-10">
-                            <p className="text-5xl font-extrabold text-blue-700 group-hover:text-blue-800 transition-colors duration-300 leading-tight">84</p>
+                            <p className="text-5xl font-extrabold text-blue-700 group-hover:text-blue-800 transition-colors duration-300 leading-tight">{data?.tickets.open ?? 0}</p>
                             <p className="text-xs text-gray-500 mt-1 tracking-wider">Active Tickets</p>
                         </div>
                     </div>
@@ -60,31 +205,14 @@ export default function Component() {
                         <div className="flex items-center justify-between mb-6 relative z-10">
                             <div className="flex items-center space-x-2">
                                 <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                                <p className="text-gray-700 text-sm font-semibold uppercase tracking-wide">Total Revenue</p>
-                            </div>
-
-                            {/* Filter Dropdown */}
-                            <div className="relative">
-                                <select className="appearance-none bg-white/90 backdrop-blur-sm border border-green-300 rounded-xl px-3 py-1.5 pr-7 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer shadow-sm transition-all duration-200">
-                                    <option value="month">Filter</option>
-                                    <option value="month">This Month</option>
-                                    <option value="quarter">This Quarter</option>
-                                    <option value="year">This Year</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-green-500">
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
+                                <p className="text-gray-700 text-xl font-semibold uppercase tracking-wide">Total Revenue</p>
                             </div>
                         </div>
 
                         {/* Main Revenue Value */}
                         <div className="flex flex-col items-center justify-center mt-3 relative z-10">
                             <div className="flex items-center space-x-2">
-                                {/*    Animated Icon */}
-
-                                <p className="text-4xl font-extrabold text-green-700 group-hover:text-green-800 transition-colors duration-300 leading-tight">$24,580</p>
+                                <p className="text-4xl font-extrabold text-green-700 group-hover:text-green-800 transition-colors duration-300 leading-tight"> {data?.revenue ?? 0}</p>
                             </div>
                             <p className="text-xs text-gray-500 mt-2 tracking-wide font-medium">Total Earnings</p>
                         </div>
@@ -98,29 +226,14 @@ export default function Component() {
                         <div className="flex items-center justify-between mb-6 relative z-10">
                             <div className="flex items-center space-x-2">
                                 <div className="w-2.5 h-2.5 bg-purple-500 rounded-full animate-pulse"></div>
-                                <p className="text-gray-700 text-sm font-semibold uppercase tracking-wide">Total Members</p>
-                            </div>
-
-                            {/* Filter Dropdown */}
-                            <div className="relative">
-                                <select className="appearance-none bg-white/90 backdrop-blur-sm border border-purple-300 rounded-xl px-3 py-1.5 pr-7 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer shadow-sm transition-all duration-200">
-                                    <option value="month">Filter</option>
-                                    <option value="day">This Day</option>
-                                    <option value="week">This Week</option>
-                                    <option value="month">This Month</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-purple-500">
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
+                                <p className="text-gray-700 text-xl font-semibold uppercase tracking-wide">Total Members</p>
                             </div>
                         </div>
 
                         {/* Main Members Value */}
                         <div className="flex flex-col items-center justify-center mt-3 relative z-10">
                             <div className="flex items-center space-x-2">
-                                <p className="text-4xl font-extrabold text-purple-700 group-hover:text-purple-800 transition-colors duration-300 leading-tight">1,247</p>
+                                <p className="text-4xl font-extrabold text-purple-700 group-hover:text-purple-800 transition-colors duration-300 leading-tight">{data?.members ?? 0}</p>
                             </div>
                             <p className="text-xs text-gray-500 mt-2 tracking-wide font-medium">Active Members</p>
                         </div>
@@ -128,143 +241,94 @@ export default function Component() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Recent Gyms Status - Enhanced */}
                     <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900">Recent Gyms Status</h2>
                                 <p className="text-gray-500 text-sm mt-1">Latest gym approvals and updates</p>
                             </div>
-                            <button className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-xl text-sm font-semibold transition-colors duration-200 flex items-center space-x-2">
-                                <span>View All</span>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
                         </div>
                         <div className="space-y-4">
-                            {[
-                                { name: 'Powerhouse Gym', status: 'Approved', members: 324, tickets: 12, date: 'May 20, 2025', color: 'green' },
-                                { name: 'Elite Fitness Center', status: 'Pending', members: 187, tickets: 8, date: 'May 18, 2025', color: 'yellow' },
-                                { name: 'Iron Paradise', status: 'Rejected', members: 256, tickets: 15, date: 'May 15, 2025', color: 'red' },
-                            ].map((gym, index) => (
-                                <div
-                                    key={index}
-                                    className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 hover:border-purple-300 transition-all duration-300 group hover:shadow-md"
-                                >
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h3 className="font-bold text-gray-900 text-lg group-hover:text-purple-700 transition-colors">{gym.name}</h3>
-                                        <span className={`bg-${gym.color}-100 text-${gym.color}-800 px-3 py-1 rounded-full text-sm font-semibold`}>{gym.status}</span>
-                                    </div>
-                                    <p className="text-gray-500 text-sm mb-3">Last updated: {gym.date}</p>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-4">
-                                            <div className="flex items-center space-x-1">
-                                                <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                                                    />
-                                                </svg>
-                                                <span className="text-sm text-gray-600">{gym.members} Members</span>
-                                            </div>
-                                            <div className="flex items-center space-x-1">
-                                                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                                    />
-                                                </svg>
-                                                <span className="text-sm text-gray-600">{gym.tickets} Tickets</span>
+                            {data?.recentGyms?.slice(0, 3).map((gym) => {
+                                // Map status to Tailwind colors
+                                const statusColors: Record<string, string> = {
+                                    approved: 'green',
+                                    pending: 'yellow',
+                                    rejected: 'red',
+                                };
+                                const color = statusColors[gym.isPendingApproval] || 'gray';
+
+                                const formattedDate = new Date(gym.createdAt).toLocaleString('en-GB', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                });
+
+                                return (
+                                    <div
+                                        key={gym._id}
+                                        className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 hover:border-purple-300 transition-all duration-300 group hover:shadow-md"
+                                    >
+                                        {/* Header: Gym name and status */}
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="font-bold text-gray-900 text-lg group-hover:text-purple-700 transition-colors">{gym.name}</h3>
+                                            <span className={`bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-sm font-semibold`}>
+                                                {gym.isPendingApproval.charAt(0).toUpperCase() + gym.isPendingApproval.slice(1)}
+                                            </span>
+                                        </div>
+
+                                        {/* Created Date */}
+                                        <p className="text-black text-sm mb-3">Created At {formattedDate}</p>
+
+                                        {/* Stats */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="flex items-center space-x-1">
+                                                    <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                                                        />
+                                                    </svg>
+                                                    <span className="text-sm text-gray-600">{gym.earnings} Earnings</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <button className="text-gray-400 hover:text-purple-600 transition-colors">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-                                                />
-                                            </svg>
-                                        </button>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
-                    {/* Weekly Visits Chart - Enhanced */}
+                    {/* Weekly Visits Chart - Corrected and Enhanced */}
                     <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center justify-between mb-10">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900">Weekly Visits Analytics</h2>
                                 <p className="text-gray-500 text-sm mt-1">Member visit trends and patterns</p>
                             </div>
-                            <div className="flex bg-gray-100 rounded-xl p-1">
-                                <button className="px-3 py-1 text-sm rounded-lg bg-white shadow-sm text-purple-600 font-semibold">Week</button>
-                                <button className="px-3 py-1 text-sm rounded-lg text-gray-500 hover:text-gray-700 transition-colors">Month</button>
-                                <button className="px-3 py-1 text-sm rounded-lg text-gray-500 hover:text-gray-700 transition-colors">Year</button>
+                            <div className="flex rounded-xl p-1">
+                                <button className="px-4 py-3 text-sm rounded-lg bg-purple-100 shadow-sm text-purple-600 font-semibold">Week</button>
                             </div>
                         </div>
-                        <div className="relative">
-                            <div className="h-64 relative">
-                                <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-sm text-gray-500 py-4">
-                                    <span>70</span>
-                                    <span>53</span>
-                                    <span>35</span>
-                                    <span>18</span>
-                                    <span>0</span>
-                                </div>
-                                <div className="ml-8 h-full relative">
-                                    <div className="absolute inset-0">
-                                        {[0, 1, 2, 3, 4].map((i) => (
-                                            <div key={i} className="absolute w-full border-t border-gray-200" style={{ top: `${i * 25}%` }} />
-                                        ))}
-                                    </div>
-                                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 240">
-                                        <defs>
-                                            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
-                                                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-                                            </linearGradient>
-                                        </defs>
-                                        <path d={`${pathData} L 350 240 L 50 240 Z`} fill="url(#areaGradient)" />
-                                        <path d={pathData} stroke="#8b5cf6" strokeWidth="3" fill="none" className="drop-shadow-sm" />
-                                        {chartData.map((point, index) => (
-                                            <circle key={index} cx={point.x} cy={point.y} r="4" fill="#8b5cf6" className="hover:r-6 transition-all cursor-pointer" />
-                                        ))}
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="flex justify-between mt-4 ml-8 text-sm text-gray-500">
-                                {chartData.map((point) => (
-                                    <span key={point.day} className="font-medium">
-                                        {point.day}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
+
+                        <WeeklyVisitsChart weeklyVisits={data?.weeklyVisits || [0, 0, 0, 0, 0, 0, 0]} />
+
                         <div className="flex items-center justify-between mt-6">
                             <div className="flex items-center space-x-3">
                                 <div className="w-4 h-4 bg-purple-600 rounded-full"></div>
                                 <span className="text-sm font-semibold text-gray-900">Weekly Visits</span>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm text-gray-600">
-                                    Total this week: <span className="font-bold text-gray-900">335 visits</span>
-                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Quick Actions - Enhanced */}
-                {/* <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300"> */}
                 <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center mt-10">Quick Actions</h2>
 
                 <div className="flex justify-center">
@@ -301,8 +365,6 @@ export default function Component() {
                         </button>
                     </div>
                 </div>
-
-                {/* </div> */}
             </div>
         </div>
     );
