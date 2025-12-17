@@ -175,6 +175,14 @@ export default function ChatScreen() {
         setPendingImagePublicId(null);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault(); // stop new line
+        sendMessage();
+    }
+};
+
+
     // ---------------- IMAGE UPLOAD ----------------
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -265,7 +273,7 @@ export default function ChatScreen() {
 
                     <input id="chatImage" ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
 
-                    <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={1} placeholder="Type a message..." className="flex-grow p-3 border rounded-xl resize-none" />
+                    <textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={handleKeyDown} rows={1} placeholder="Type a message..." className="flex-grow p-3 border rounded-xl resize-none" />
 
                     <Button
                         type="primary"
