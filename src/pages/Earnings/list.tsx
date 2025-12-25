@@ -83,7 +83,7 @@ const EarningsDashboard = () => {
     });
 
     // ===================== LOAD DATA =====================
-    const loadData = async (page = 1, newFilters = filters) => {
+    const loadData = async (page = 1, newFilters = activeFilters) => {
         try {
             const token = Cookies.get('token');
             let url = `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/list/earnings/listing?page=${page}`;
@@ -115,7 +115,7 @@ const EarningsDashboard = () => {
     // ===================== SOCKET =====================
     useEffect(() => {
         connectSocket();
-        loadData(1);
+        loadData(1, activeFilters);
 
         socket.on('transaction:new', (data: any) => {
             const newTxn: TransactionGroup = {
@@ -400,7 +400,7 @@ const EarningsDashboard = () => {
 
                 <button
                     disabled={!pagination.hasNextPage}
-                    onClick={() => loadData(pagination.currentPage + 1)}
+                    onClick={() => loadData(pagination.currentPage + 1, activeFilters)}
                     className={`px-4 py-2 rounded ${pagination.hasNextPage ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-500'}`}
                 >
                     Next
