@@ -30,6 +30,7 @@ const AdminMessage = lazy(() => import('../pages/ticket/messages'));
 const Request = lazy(() => import('../pages/Requests/list'));
 const AdminRequest = lazy(() => import('../pages/Requests/adminList'));
 const AllNotificationsPage = lazy(() => import('../pages/AllNotificationsPage'));
+const Topup = lazy(() => import('../pages/Top-up/list'));
 
 const routes = [
     {
@@ -132,6 +133,15 @@ const routes = [
         element: (
             <ProtectedRoute allowedRoles={['admin']}>
                 <Earning />
+            </ProtectedRoute>
+        ),
+        layout: 'default',
+    },
+        {
+        path: '/top-ups',
+        element: (
+            <ProtectedRoute allowedRoles={['admin']}>
+                <Topup />
             </ProtectedRoute>
         ),
         layout: 'default',
