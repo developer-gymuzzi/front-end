@@ -18,7 +18,7 @@ export default function TopupFilter({ onSearch, filterValues }: any) {
         </button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[420px]">
+      <PopoverContent className="items-stretch w-[500px] z-[9999]">
         <div className="p-4">
           <h3 className="text-lg font-semibold mb-3">Filters</h3>
 
@@ -58,7 +58,7 @@ export default function TopupFilter({ onSearch, filterValues }: any) {
             </select>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex gap-2 mt-3">
             <button
               className="reset-btn"
               onClick={() => onSearch({ transactionId: "", userId: "", paymentMethod: "" })}
