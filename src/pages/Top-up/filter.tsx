@@ -42,7 +42,7 @@ export default function TopupFilter({ onSearch, filterValues }: any) {
             />
           </div>
 
-          <div className="mb-3">
+          {/* <div className="mb-3">
             <label>Payment Method</label>
             <select
               name="paymentMethod"
@@ -56,7 +56,7 @@ export default function TopupFilter({ onSearch, filterValues }: any) {
               <option value="netbanking">Net Banking</option>
               <option value="wallet">Wallet</option>
             </select>
-          </div>
+          </div> */}
 
           <div className="flex gap-2 mt-3">
             <button

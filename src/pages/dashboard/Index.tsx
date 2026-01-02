@@ -41,7 +41,7 @@ export default function Component() {
                     return;
                 }
 
-                console.log('Token from cookies:', token);
+                
 
                 const response = await axios.get(`${import.meta.env.VITE_API_LIVEHOST}/v1/admin/list/dashboard/analytics`, {
                     headers: {
@@ -49,7 +49,7 @@ export default function Component() {
                     },
                 });
 
-                console.log('API Raw Response:', response.data);
+               
 
                 if (response.data.success) {
                     setData(response.data.data);
