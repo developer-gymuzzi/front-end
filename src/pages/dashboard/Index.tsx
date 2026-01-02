@@ -41,15 +41,11 @@ export default function Component() {
                     return;
                 }
 
-                
-
                 const response = await axios.get(`${import.meta.env.VITE_API_LIVEHOST}/v1/admin/list/dashboard/analytics`, {
                     headers: {
                         token: token,
                     },
                 });
-
-               
 
                 if (response.data.success) {
                     setData(response.data.data);

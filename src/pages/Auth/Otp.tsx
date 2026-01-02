@@ -118,7 +118,7 @@ export default function OtpVerification() {
                 const { role } = response.data.user;
 
                 if (role === 'admin') {
-                    navigate('/companylist');
+                    navigate('/dashboard');
                 } else if (role === 'gym_owner') {
                     navigate('/gym_ownerGym');
                 } else {
