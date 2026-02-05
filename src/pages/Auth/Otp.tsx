@@ -83,7 +83,6 @@ export default function OtpVerification() {
             setIsLoading(false);
         }
     };
-
     const verifyOtp = async (e: any) => {
         e?.preventDefault?.();
 
@@ -100,35 +99,44 @@ export default function OtpVerification() {
         }
 
         setIsLoading(true);
+
         try {
             const endpoint = import.meta.env.VITE_API_LIVEHOST;
 
-            const response = await axios.post(`${endpoint}/v1/auth/verification`, {
+            const { data } = await axios.post(`${endpoint}/v1/auth/verification`, {
                 email: clientEmail,
                 verificationCode: otpValue,
             });
 
-            if (response.data.success === 1) {
-                message.success('OTP verified successfully!');
-
-                Cookies.set('token', response.data.token, { expires: 7 });
-                localStorage.setItem('userRole', response.data.user.role);
-                localStorage.setItem('userId', response.data.user.userId);
-
-                const { role } = response.data.user;
-
-                if (role === 'admin') {
-                    navigate('/dashboard');
-                } else if (role === 'gym_owner') {
-                    navigate('/gym_ownerGym');
-                } else {
-                    navigate('/');
-                }
-            } else {
-                setError(response.data.message || 'Verification failed');
-                message.error(response.data.message || 'Invalid OTP');
+            if (data.success !== 1) {
+                setError(data.message || 'Verification failed');
+                return;
             }
-        } catch (error) {
+
+            const permissions: string[] = data.user.permissions || [];
+            const isSuperAdmin = permissions.includes('*');
+
+            // ✅ STORE AUTH DATA
+            Cookies.set('token', data.token, { expires: 7 });
+
+            localStorage.setItem('userId', data.user.userId);
+            localStorage.setItem('userRole', data.user.role);
+
+            // 🔐 RBAC STORAGE
+            localStorage.setItem('permissions', JSON.stringify(permissions));
+            localStorage.setItem('isSuperAdmin', JSON.stringify(isSuperAdmin));
+
+            message.success('OTP verified successfully!');
+
+            // ✅ NAVIGATION
+            if (data.user.role === 'admin') {
+                navigate('/dashboard');
+            } else if (data.user.role === 'gym_owner') {
+                navigate('/gym_ownerGym');
+            } else {
+                navigate('/');
+            }
+        } catch (err) {
             setError('Verification failed. Please try again.');
             message.error('Something went wrong. Try again.');
         } finally {

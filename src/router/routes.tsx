@@ -11,6 +11,7 @@ const ManageTrash = lazy(() => import('../pages/Manage_site/manageTrash'));
 const Addpepople = lazy(() => import('../pages/HRM/Trainers/Add_gaurd'));
 const AddSite = lazy(() => import('../pages/Manage_site/AddorEditSite'));
 const AddShift = lazy(() => import('../pages/Schedule/addShift'));
+const Roles = lazy(() => import('../pages/Permission/role-list'));
 // const Guardshift = lazy(() => import('../pages/guard/shift'));
 const Permissions = lazy(() => import('../pages/Permission/crm-permissions'));
 const Editpermissions = lazy(() => import('../pages/Permission/role-editor'));
@@ -231,13 +232,18 @@ const routes = [
         layout: 'default',
     },
     {
-        path: '/crm-permissions',
+        path: '/permissions',
         element: <Permissions />,
         layout: 'default',
     },
     {
-        path: '/crm-permissions/edit/:role_id',
+        path: '/permission/roles/edit/:roleId',
         element: <Editpermissions />,
+        layout: 'default',
+    },
+    {
+        path: '/roles',
+        element: <Roles />,
         layout: 'default',
     },
     {

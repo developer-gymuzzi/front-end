@@ -3,51 +3,49 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useLocation } from 'react-router-dom';
 import { toggleSidebar } from '../../store/themeConfigSlice';
-import AnimateHeight from 'react-animate-height';
 import { IRootState } from '../../store';
 import { useState, useEffect } from 'react';
-import IconMenuDashboard from '../../../public/assets/sidebar/Dashboard';
-import HRM from '../../../public/assets/sidebar/HRM';
-import Inventory from '../../../public/assets/sidebar/Inventory';
-import Schedule from '../../../public/assets/sidebar/Schedule';
-import Timeprocessing from '../../../public/assets/sidebar/timeprocessing';
-import Down from '../../../public/assets/sidebar/IconDownwhite';
-import Manageservices from '../../../public/assets/sidebar/Manageservices';
-import CRMPermissionIcon from '../../../public/assets/sidebar/CRMPermissions';
+
+/* ================= RBAC HELPERS ================= */
+
+const getPermissions = (): string[] => {
+    try {
+        return JSON.parse(localStorage.getItem('permissions') || '[]');
+    } catch {
+        return [];
+    }
+};
+
+const isSuperAdmin = (): boolean => {
+    return JSON.parse(localStorage.getItem('isSuperAdmin') || 'false');
+};
+
+const hasPermission = (perm: string): boolean => {
+    if (isSuperAdmin()) return true;
+    return getPermissions().includes(perm);
+};
+
+/* ================= COMPONENT ================= */
+
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
-    const [errorSubMenu, setErrorSubMenu] = useState(false);
-    const userRole = localStorage.getItem('userRole');
-
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const semidark = useSelector((state: IRootState) => state.themeConfig.semidark);
-    interface Company {
-        logo: string;
-    }
 
     const location = useLocation();
     const dispatch = useDispatch();
     const { t } = useTranslation();
+
     const toggleMenu = (value: string) => {
-        setCurrentMenu((oldValue) => {
-            return oldValue === value ? '' : value;
-        });
+        setCurrentMenu((oldValue) => (oldValue === value ? '' : value));
     };
 
     useEffect(() => {
-        const selector = document.querySelector('.sidebar ul a[href="' + window.location.pathname + '"]');
+        const selector = document.querySelector(
+            '.sidebar ul a[href="' + window.location.pathname + '"]'
+        );
         if (selector) {
             selector.classList.add('active');
-            const ul: any = selector.closest('ul.sub-menu');
-            if (ul) {
-                let ele: any = ul.closest('li.menu').querySelectorAll('.nav-link') || [];
-                if (ele.length) {
-                    ele = ele[0];
-                    setTimeout(() => {
-                        ele.click();
-                    });
-                }
-            }
         }
     }, []);
 
@@ -57,214 +55,141 @@ const Sidebar = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
+
     return (
         <div className={semidark ? 'dark' : ''}>
             <nav
-                className={`sidebar fixed min-h-screen h-full top-0 bottom-0 w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] z-50 transition-all duration-300  ${
+                className={`sidebar fixed min-h-screen h-full top-0 bottom-0 w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] z-50 transition-all duration-300 ${
                     semidark ? 'text-white-dark' : ''
                 }`}
             >
                 <div className="bg-[url(/assets/images/sidebar_bg.png)] dark:bg-black h-full">
                     <div className="flex justify-center items-center px-4 py-3">
-                        {/* <NavLink to="/" className="main-logo flex items-center shrink-0">
-                            {activeCompanyData?.logo ? (
-                                <img className="w-[140px]" src={activeCompanyData.logo} alt="logo" />
-                            ) : null}
-                        </NavLink> */}
-
                         <img className="w-[120px]" src="/assets/images/gymuzzi.jpg" alt="logo" />
                     </div>
+
                     <PerfectScrollbar className="h-[calc(100vh-80px)] relative mt-6">
                         <ul className="relative font-semibold space-y-0.5 p-4 py-0">
                             <li className="nav-item">
                                 <ul>
-                                    <li className="nav-item">
-                                        <NavLink to="/dashboard" className="group" onClick={() => toggleMenu('')}>
-                                            <div className="flex items-center">
-                                                {/* <IconMenuDashboard className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Dashboard')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
 
-                                    {/* <li className="nav-item">
-                                        <NavLink to="/inventory" className="group" onClick={() => toggleMenu('')}>
-                                            <div className="flex items-center">
-                                                <Inventory className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Inventory')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li> */}
-                                    {userRole === 'admin' && (
-                                        <>
-                                            <li className="nav-item">
-                                                <NavLink to="/earning" className="group" onClick={() => toggleMenu('')}>
-                                                    <div className="flex items-center">
-                                                        {/* <HRM className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Earning')}</span>
-                                                    </div>
-                                                </NavLink>
-                                            </li>
-
-                                            <li className="nav-item">
-                                                <NavLink to="/top-ups" className="group" onClick={() => toggleMenu('')}>
-                                                    <div className="flex items-center">
-                                                        {/* <HRM className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Top-ups')}</span>
-                                                    </div>
-                                                </NavLink>
-                                            </li>
-
-                                            <li className="nav-item">
-                                                <NavLink to="/companylist" className="group" onClick={() => toggleMenu('')}>
-                                                    <div className="flex items-center">
-                                                        {/* <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('People')}</span>
-                                                    </div>
-                                                </NavLink>
-                                            </li>
-
-                                            <li className="nav-item">
-                                                <NavLink to="/adminRequest" className="group" onClick={() => toggleMenu('')}>
-                                                    <div className="flex items-center">
-                                                        {/* <Schedule className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Requests')}</span>
-                                                    </div>
-                                                </NavLink>
-                                            </li>
-                                        </>
-                                    )}
-
-                                    {userRole === 'admin' && (
-                                        <>
-                                            <li className="nav-item">
-                                                <NavLink to="/gym" className="group" onClick={() => toggleMenu('')}>
-                                                    <div className="flex items-center">
-                                                        {/* <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Gym')}</span>
-                                                    </div>
-                                                </NavLink>
-                                            </li>
-
-                                            <li className="nav-item">
-                                                <NavLink to="/adminticket" className="group" onClick={() => toggleMenu('')}>
-                                                    <div className="flex items-center">
-                                                        {/* <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Ticket')}</span>
-                                                    </div>
-                                                </NavLink>
-                                            </li>
-                                        </>
-                                    )}
-
-                                    {userRole === 'gym_owner' && (
-                                        <>
-                                            <li className="nav-item">
-                                                <NavLink to="/gym_ownerGym" className="group" onClick={() => toggleMenu('')}>
-                                                    <div className="flex items-center">
-                                                        {/* <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Gym')}</span>
-                                                    </div>
-                                                </NavLink>
-                                            </li>
-
-                                            <li className="nav-item">
-                                                <NavLink to="/request" className="group" onClick={() => toggleMenu('')}>
-                                                    <div className="flex items-center">
-                                                        {/* <Timeprocessing className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" /> */}
-                                                        <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Requests')}</span>
-                                                    </div>
-                                                </NavLink>
-                                            </li>
-                                        </>
-                                    )}
-
-                                    {/* <li className="menu nav-item">
-                                            <button type="button" className={`${currentMenu === 'Manage Site' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Manage Site')}>
-                                                <div className="flex items-center">
-                                                    <HRM className="group-hover:!text-primary shrink-0" />
-                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">
-                                                        {t('Manage Site')}
-                                                    </span>
-                                                </div>
-
-                                                <div className={currentMenu !== 'Manage Site' ? 'rtl:rotate-180 -rotate-180' : ''}>
-                                                    <Down className='IconCaretDown' />
-                                                </div>
-                                            </button>
-
-                                            <AnimateHeight duration={300} height={currentMenu === 'Manage Site' ? 'auto' : 0}>
-                                                <ul className="sub-menu text-gray-500">
-                                                    <li>
-                                                        <NavLink to="/manage_customer">{t('Customers')}</NavLink>
-                                                    </li>
-                                                    <li>
-                                                        <NavLink to="/manage_site">{t('Sites')}</NavLink>
-                                                    </li>
-
-                                                </ul>
-                                            </AnimateHeight>
-                                        </li> */}
-
-                                    {/* 
+                                    {/* ================= DASHBOARD ================= */}
+                                  
                                         <li className="nav-item">
-                                            <NavLink to="/manage_services" className="group" onClick={() => toggleMenu('')}>
+                                            <NavLink to="/dashboard" className="group" onClick={() => toggleMenu('')}>
                                                 <div className="flex items-center">
-                                                    <Manageservices className="group-hover:shrink-0 " />
-                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Manage Services')}</span>
-                                                </div>
-                                            </NavLink>
-                                        </li> */}
-
-                                    <li className="nav-item">
-                                        <NavLink to="/crm-permissions" className="group" onClick={() => toggleMenu('')}>
-                                            <div className="flex items-center">
-                                                {/* <CRMPermissionIcon className="group-hover:shrink-0 " /> */}
-                                                <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Settings')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
-
-                                    {/* <li className="nav-item">
-                                            <NavLink to="/guard/shift" className="group" onClick={() => toggleMenu('')}>
-                                                <div className="flex items-center">
-                                                    <Schedule className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Guard Shifts')}</span>
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Dashboard')}
+                                                    </span>
                                                 </div>
                                             </NavLink>
                                         </li>
-                                */}
+                                   
 
-                                    {/*                            
+                                    {/* ================= EARNINGS ================= */}
+                                    {hasPermission('EARNINGS_VIEW') && (
                                         <li className="nav-item">
-                                            <NavLink to="/clock" className="group" onClick={() => toggleMenu('')}>
+                                            <NavLink to="/earning" className="group" onClick={() => toggleMenu('')}>
                                                 <div className="flex items-center">
-                                                    <HRM className="group-hover:!text-[#A1AEC0] shrink-0 text-[#A1AEC0]" />
-                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">{t('Clock IN/OUT')}</span>
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Earning')}
+                                                    </span>
                                                 </div>
                                             </NavLink>
-                                        </li> */}
+                                        </li>
+                                    )}
 
-                                    {/* <li className="menu nav-item">
-                                        <button type="button" className={`${currentMenu === 'Setting' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Setting')}>
-                                            <div className="flex items-center">
-                                                <Setting className="group-hover:shrink-0 " />
-                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Setting')}</span>
-                                            </div>
+                                    {/* ================= TOPUPS ================= */}
+                                    {hasPermission('TOPUPS_VIEW') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/top-ups" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Top-ups')}
+                                                    </span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
 
-                                            <div className={currentMenu !== 'Setting' ? 'rtl:rotate-180 -rotate-180' : ''}>
-                                                <Down className='IconCaretDown' />
-                                            </div>
-                                        </button>
+                                    {/* ================= PEOPLE ================= */}
+                                    {hasPermission('PEOPLE_VIEW') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/companylist" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('People')}
+                                                    </span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
 
-                                        <AnimateHeight duration={300} height={currentMenu === 'Setting' ? 'auto' : 0}>
-                                            <ul className="sub-menu text-gray-500">
-                                                <li>
-                                                    <NavLink to="/Forms">{t('Forms')}</NavLink>
-                                                </li>
-                                            </ul>
-                                        </AnimateHeight>
-                                    </li> */}
+                                    {/* ================= REQUESTS ================= */}
+                                    {hasPermission('REQUESTS_VIEW') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/adminRequest" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Requests')}
+                                                    </span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+
+                                    {/* ================= GYMS ================= */}
+                                    {hasPermission('GYMS_VIEW') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/gym" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Gym')}
+                                                    </span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+
+                                    {/* ================= TICKETS ================= */}
+                                    {hasPermission('TICKETS_VIEW') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/adminticket" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Ticket')}
+                                                    </span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+
+                                    {/* ================= ROLES ================= */}
+                                    {hasPermission('ROLES_MANAGE') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/roles" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Roles')}
+                                                    </span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+
+                                    {/* ================= SETTINGS ================= */}
+                                    {hasPermission('SETTINGS_VIEW') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/permissions" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Settings')}
+                                                    </span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+
                                 </ul>
                             </li>
                         </ul>

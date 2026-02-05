@@ -88,6 +88,7 @@ export const fetchUsers = createAsyncThunk(
                 params: { page, limit, name, email, role },
                 headers: {
                     'Content-Type': 'application/json',
+                     token: token,
                 },
             });
 
@@ -135,6 +136,7 @@ export const fetchGym = createAsyncThunk(
                 },
                 headers: {
                     'Content-Type': 'application/json',
+                     token: token,
                 },
             });
 
