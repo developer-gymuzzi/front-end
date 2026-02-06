@@ -21,9 +21,9 @@ interface PaymentTxn {
     amount: number;
     description: string;
     createdAt: string;
-    from: User;
-    to: User;
-    gym: Gym;
+    from: User | null;
+    to: User | null;
+    gym: Gym | null;
 }
 
 interface CommissionTxn {
@@ -90,7 +90,7 @@ const EarningsDashboard = () => {
 
             if (newFilters.gym) url += `&gym=${newFilters.gym}`;
             if (newFilters.owner) url += `&owner=${newFilters.owner}`;
-            if (newFilters.ownerId) url += `&ownerId=${newFilters.ownerId}`
+            if (newFilters.ownerId) url += `&ownerId=${newFilters.ownerId}`;
             if (newFilters.user) url += `&user=${newFilters.user}`;
             if (newFilters.transactionId) url += `&transactionId=${newFilters.transactionId}`;
 
@@ -151,7 +151,17 @@ const EarningsDashboard = () => {
 
         if (searchTerm) {
             const t = searchTerm.toLowerCase();
-            list = list.filter((g) => g.payment.from.name.toLowerCase().includes(t) || g.payment.to.name.toLowerCase().includes(t) || g.payment.gym.name.toLowerCase().includes(t));
+            list = list.filter((g) => {
+  const fromName = g.payment.from?.name?.toLowerCase() ?? '';
+  const toName = g.payment.to?.name?.toLowerCase() ?? '';
+  const gymName = g.payment.gym?.name?.toLowerCase() ?? '';
+
+  return (
+    fromName.includes(t) ||
+    toName.includes(t) ||
+    gymName.includes(t)
+  );
+});
         }
 
         return list;
@@ -266,12 +276,12 @@ const EarningsDashboard = () => {
                                 ? value === 'today'
                                     ? 'Today'
                                     : value === 'yesterday'
-                                    ? 'Yesterday'
-                                    : value === 'single'
-                                    ? activeFilters.date
-                                    : value === 'range'
-                                    ? `${activeFilters.startDate} → ${activeFilters.endDate}`
-                                    : value
+                                      ? 'Yesterday'
+                                      : value === 'single'
+                                        ? activeFilters.date
+                                        : value === 'range'
+                                          ? `${activeFilters.startDate} → ${activeFilters.endDate}`
+                                          : value
                                 : String(value);
 
                         return (
@@ -354,16 +364,16 @@ const EarningsDashboard = () => {
                                     <td className="px-6 py-4">{formatDate(group.payment.createdAt)}</td>
 
                                     <td className="px-6 py-4">
-                                        {group.payment.from.name}
-                                        <div className="text-gray-500 text-xs">{group.payment.from.email}</div>
+                                        {group.payment.from?.name?? '-'}
+                                        <div className="text-gray-500 text-xs">{group.payment.from?.email?? ''}</div>
                                     </td>
 
                                     <td className="px-6 py-4">
-                                        {group.payment.to.name}
-                                        <div className="text-gray-500 text-xs">{group.payment.to.email}</div>
+                                        {group.payment.to?.name?? '-'}
+                                        <div className="text-gray-500 text-xs">{group.payment.to?.email?? ''}</div>
                                     </td>
 
-                                    <td className="px-6 py-4">{group.payment.gym.name}</td>
+                                    <td className="px-6 py-4">{group.payment.gym?.name?? '-'}</td>
 
                                     <td className="px-6 py-4 text-blue-600">₹{group.paymentAmount}</td>
                                     <td className="px-6 py-4 text-green-600">₹{group.adminCommission}</td>
@@ -435,19 +445,19 @@ const EarningsDashboard = () => {
 
                                 <div>
                                     <p className="text-sm text-gray-600">User (From)</p>
-                                    <p className="font-semibold">{selectedTransaction.payment.from.name}</p>
-                                    <p className="text-xs text-gray-500">{selectedTransaction.payment.from.email}</p>
+                                    <p className="font-semibold">{selectedTransaction.payment.from?.name ?? 'N/A'}</p>
+                                    <p className="text-xs text-gray-500">{selectedTransaction.payment.from?.email ?? ''}</p>
                                 </div>
 
                                 <div>
                                     <p className="text-sm text-gray-600">Gym Owner (To)</p>
-                                    <p className="font-semibold">{selectedTransaction.payment.to.name}</p>
-                                    <p className="text-xs text-gray-500">{selectedTransaction.payment.to.email}</p>
+                                    <p className="font-semibold">{selectedTransaction.payment.to?.name ?? 'N/A'}</p>
+                                    <p className="text-xs text-gray-500">{selectedTransaction.payment.to?.email ?? ''}</p>
                                 </div>
 
                                 <div>
                                     <p className="text-sm text-gray-600">Gym</p>
-                                    <p className="font-semibold">{selectedTransaction.payment.gym.name}</p>
+                                    <p className="font-semibold">{selectedTransaction.payment.gym?.name ?? 'N/A'}</p>
                                 </div>
 
                                 <div>
