@@ -90,12 +90,21 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
 
     // 🔥 Generate QR as PNG
 const generateQR = async (payload: string) => {
-    const cleanPayload = payload?.trim();
+    if (!payload) return '';
+
+    // 🔥 CLEAN STRING PROPERLY
+    const cleanPayload = payload
+        .replace(/\r/g, '')
+        .replace(/\n/g, '')
+        .replace(/\s+/g, '')
+        .trim();
+
+    console.log("Final QR Payload:", cleanPayload);
 
     return await QRCode.toDataURL(cleanPayload, {
-        width: 400,                 // Bigger size
-        margin: 6,                  // Bigger quiet zone
-        errorCorrectionLevel: 'H',  // Highest correction
+        width: 400,
+        margin: 6,
+        errorCorrectionLevel: 'H',
         color: {
             dark: '#000000',
             light: '#FFFFFF',
