@@ -104,7 +104,7 @@ export default function CustomGymForm() {
                 owner: gymData.owner || { _id: '', name: '', email: '' },
                 earnings: gymData.earnings || 0,
                 commissionPercentage: gymData.commissionPercentage || 20,
-                gymtype: gymData.gymtype || 'gym',
+                gymtype: gymData.gymtype ?? '',
                 isPendingApproval: gymData.isPendingApproval || 'pending',
                 capacity: gymData.capacity || 0,
                 price: gymData.price || 0,

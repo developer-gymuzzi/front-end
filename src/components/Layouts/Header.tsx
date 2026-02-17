@@ -91,8 +91,15 @@ const Header = () => {
 
     const handleSingleNotificationClick = async (notificationId: string) => {
         try {
-            await axios.put(`${endpoint}/v1/admin/list/markNotify/${notificationId}`);
+            const token = Cookies.get('token');
+             const { data } = await axios.put(`${endpoint}/v1/admin/list/markNotify/${notificationId}`, {
+                headers: {
+                    token: token,
+                },
+            });
+            if (data.success) {
             setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
+             }
         } catch (error) {
             message.error('Failed to mark as read');
         }

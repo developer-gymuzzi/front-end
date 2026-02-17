@@ -152,16 +152,12 @@ const EarningsDashboard = () => {
         if (searchTerm) {
             const t = searchTerm.toLowerCase();
             list = list.filter((g) => {
-  const fromName = g.payment.from?.name?.toLowerCase() ?? '';
-  const toName = g.payment.to?.name?.toLowerCase() ?? '';
-  const gymName = g.payment.gym?.name?.toLowerCase() ?? '';
+                const fromName = g.payment.from?.name?.toLowerCase() ?? '';
+                const toName = g.payment.to?.name?.toLowerCase() ?? '';
+                const gymName = g.payment.gym?.name?.toLowerCase() ?? '';
 
-  return (
-    fromName.includes(t) ||
-    toName.includes(t) ||
-    gymName.includes(t)
-  );
-});
+                return fromName.includes(t) || toName.includes(t) || gymName.includes(t);
+            });
         }
 
         return list;
@@ -364,16 +360,16 @@ const EarningsDashboard = () => {
                                     <td className="px-6 py-4">{formatDate(group.payment.createdAt)}</td>
 
                                     <td className="px-6 py-4">
-                                        {group.payment.from?.name?? '-'}
-                                        <div className="text-gray-500 text-xs">{group.payment.from?.email?? ''}</div>
+                                        {group.payment.from?.name ?? '-'}
+                                        <div className="text-gray-500 text-xs">{group.payment.from?.email ?? ''}</div>
                                     </td>
 
                                     <td className="px-6 py-4">
-                                        {group.payment.to?.name?? '-'}
-                                        <div className="text-gray-500 text-xs">{group.payment.to?.email?? ''}</div>
+                                        {group.payment.to?.name ?? '-'}
+                                        <div className="text-gray-500 text-xs">{group.payment.to?.email ?? ''}</div>
                                     </td>
 
-                                    <td className="px-6 py-4">{group.payment.gym?.name?? '-'}</td>
+                                    <td className="px-6 py-4">{group.payment.gym?.name ?? '-'}</td>
 
                                     <td className="px-6 py-4 text-blue-600">₹{group.paymentAmount}</td>
                                     <td className="px-6 py-4 text-green-600">₹{group.adminCommission}</td>
@@ -473,7 +469,7 @@ const EarningsDashboard = () => {
                         </div>
 
                         {/* COMMISSION CARD */}
-                        {selectedTransaction.commission && (
+                       {selectedTransaction.commission && (
                             <div className="p-6 bg-green-50 border-t">
                                 <h3 className="text-lg font-bold text-green-900 mb-3">Admin Commission</h3>
 
@@ -495,8 +491,8 @@ const EarningsDashboard = () => {
 
                                     <div>
                                         <p className="text-sm text-gray-600">To (Admin)</p>
-                                        <p className="font-semibold">{selectedTransaction.commission.to.name}</p>
-                                        <p className="text-xs text-gray-500">{selectedTransaction.commission.to.email}</p>
+                                        <p className="font-semibold">{selectedTransaction.commission.to?.name ?? 'N/A'}</p>
+                                        <p className="text-xs text-gray-500">{selectedTransaction.commission.to?.email ?? ''}</p>
                                     </div>
 
                                     <div className="col-span-2">
