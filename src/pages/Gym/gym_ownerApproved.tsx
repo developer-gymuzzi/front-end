@@ -89,19 +89,19 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
     };
 
     // 🔥 Generate QR as PNG
-    const generateQR = async (payload: string) => {
-        const cleanPayload = payload?.trim();
+const generateQR = async (payload: string) => {
+    const cleanPayload = payload?.trim();
 
-        return await QRCode.toDataURL(cleanPayload, {
-            width: 300,
-            margin: 2,
-            errorCorrectionLevel: 'H',
-            color: {
-                dark: '#000000',
-                light: '#ffffff',
-            },
-        });
-    };
+    return await QRCode.toDataURL(cleanPayload, {
+        width: 400,                 // Bigger size
+        margin: 6,                  // Bigger quiet zone
+        errorCorrectionLevel: 'H',  // Highest correction
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF',
+        },
+    });
+};
 
     // 🔥 Show Modal with PNG QR
     const showQrModal = async (qrPayload: string) => {
@@ -261,7 +261,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                         <img
                             src={qrImage}
                             alt="QR Code"
-                            width={250}
+                            width={300}
                         />
                     )}
 
