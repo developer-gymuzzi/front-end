@@ -323,6 +323,7 @@ export default function CustomGymForm() {
                 consent2: formData.consent2,
                 consent3: formData.consent3,
                 signature: formData.signature,
+                commissionPercentage: formData.commissionPercentage,
 
                 operationHours: formData.operationHours,
                 amenities,
