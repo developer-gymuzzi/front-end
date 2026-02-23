@@ -158,12 +158,15 @@ export default function CompanyList() {
         setCurrentPage(1);
     };
 
-    const formatRoleLabel = (val: string) => {
-        if (val === 'gym_owner') return 'Gym Owner';
-        if (val === 'admin') return 'Admin';
-        if (val === 'user') return 'User';
-        return val.charAt(0).toUpperCase() + val.slice(1);
-    };
+const formatRoleLabel = (val?: string) => {
+    if (!val) return '---';
+
+    if (val === 'gym_owner') return 'Gym Owner';
+    if (val === 'admin') return 'Admin';
+    if (val === 'user') return 'User';
+
+    return val.charAt(0).toUpperCase() + val.slice(1);
+};
 
     /* ---------- SKELETON ---------- */
     const SkeletonRow = () => (
