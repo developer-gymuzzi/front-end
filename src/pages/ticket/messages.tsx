@@ -116,6 +116,22 @@ export default function ChatScreen() {
             socketInitialized.current = true;
         }
 
+        const onTicketStatus = (update: { ticketId: string; status: string }) => {
+            if (update.ticketId !== ticketId) return;
+            setTicketInfo((prev) => (prev ? { ...prev, status: update.status } : prev));
+        };
+
+        // The server refused the last message: drop its optimistic bubble
+        const onTicketError = (error: { ticketId: string; message: string }) => {
+            if (error.ticketId !== ticketId) return;
+            setMessages((prev) => {
+                const index = prev.map((m) => m.id.startsWith('tmp-')).lastIndexOf(true);
+                return index === -1 ? prev : prev.filter((_, i) => i !== index);
+            });
+            setTicketInfo((prev) => (prev ? { ...prev, status: 'closed' } : prev));
+            toast.error(error.message);
+        };
+
         const onConnect = () => {
             userRole === 'admin'
                 ? socket.emit('join-admin')
@@ -150,10 +166,14 @@ export default function ChatScreen() {
 
         socket.on('connect', onConnect);
         socket.on('ticket_message', onTicketMessage);
+        socket.on('ticket_status', onTicketStatus);
+        socket.on('ticket_error', onTicketError);
 
         return () => {
             socket.off('connect', onConnect);
             socket.off('ticket_message', onTicketMessage);
+            socket.off('ticket_status', onTicketStatus);
+            socket.off('ticket_error', onTicketError);
         };
     }, [ticketId]);
 
@@ -165,8 +185,10 @@ export default function ChatScreen() {
 
     /* ================= SEND MESSAGE (UNCHANGED) ================= */
 
+    const isClosed = ticketInfo?.status === 'closed';
+
     const sendMessage = () => {
-        if (!message.trim() && !pendingImage) return;
+        if (isClosed || (!message.trim() && !pendingImage)) return;
 
         const optimisticMessage: ChatMessage = {
             id: `tmp-${Date.now()}`,
@@ -268,6 +290,11 @@ export default function ChatScreen() {
                 <div ref={messagesEndRef} />
             </div>
 
+            {isClosed ? (
+                <div className="p-4 bg-white border-t text-center text-sm text-gray-500">
+                    This ticket is closed. No more messages can be sent.
+                </div>
+            ) : (
             <div className="p-4 bg-white border-t flex flex-col gap-3">
                 {pendingImage && (
                     <div className="flex gap-3 items-center">
@@ -306,6 +333,7 @@ export default function ChatScreen() {
                     />
                 </div>
             </div>
+            )}
         </div>
     );
 }

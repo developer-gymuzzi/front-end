@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@nextui-org/react';
 import { RxCross2 } from 'react-icons/rx';
 import Filter from './filter';
@@ -11,6 +11,7 @@ import { Eye, MessageCircleMore, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Pagination } from '@nextui-org/react';
 import { getApiError } from '../../utils/apiError';
+import socket, { connectSocket } from '../../socket';
 
 export default function CompanyList() {
     const [tickets, setTickets] = useState<any[]>([]);
@@ -84,16 +85,36 @@ export default function CompanyList() {
         fetchTickets(currentPage, pageSize, appliedFilters);
     }, [currentPage, pageSize, appliedFilters]);
 
+    // Keep the list live; the ref always holds the current page and filters
+    const refreshTickets = useRef(() => {});
+    refreshTickets.current = () => fetchTickets(currentPage, pageSize, appliedFilters);
+
+    useEffect(() => {
+        connectSocket();
+
+        const onTicketChange = () => refreshTickets.current();
+
+        socket.on('ticket_created', onTicketChange);
+        socket.on('ticket_status', onTicketChange);
+
+        return () => {
+            socket.off('ticket_created', onTicketChange);
+            socket.off('ticket_status', onTicketChange);
+        };
+    }, []);
+
     /* ---------- OPEN TICKET ---------- */
-    const handleClick = async (id: string) => {
+    const handleClick = async (id: string, status: string) => {
         setOpeningTicketId(id);
         try {
-            await axios.patch(
-                `${endpoint}/v1/admin/approve/openTicket/${id}`,
-                {},
-                { headers: { token } }
-            );
-            await fetchTickets(currentPage, pageSize, appliedFilters);
+            // Only a new ticket moves to open: a closed one stays closed when viewed
+            if (status === 'pending') {
+                await axios.patch(
+                    `${endpoint}/v1/admin/approve/openTicket/${id}`,
+                    {},
+                    { headers: { token } }
+                );
+            }
             navigate(`/adminmessages/${id}`);
         } catch (error) {
             message.error(getApiError(error, 'Failed to open ticket'));
@@ -325,7 +346,7 @@ const formatRoleLabel = (val?: string) => {
 
                                                 <button
                                                     onClick={() =>
-                                                        handleClick(entry._id)
+                                                        handleClick(entry._id, entry.status)
                                                     }
                                                     disabled={
                                                         openingTicketId ===
