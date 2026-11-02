@@ -25,6 +25,7 @@ import Cookies from "js-cookie";
 import { useSelector, useDispatch } from "react-redux";
 import type { IRootState, AppDispatch } from "../store";
 import { profile as fetchProfile } from "../store/customerConfigSlice";
+import { getPasswordError } from "../utils/apiError";
 
 /* ---------------------------- UI COMPONENTS ---------------------------- */
 const Card = ({ children, className = "" }: any) => (
@@ -200,7 +201,6 @@ export default function ProfilePage() {
         `${endpoint}/v1/auth/update`,
         {
           name: formData.name,
-          phone: formData.phone,
           gender: formData.gender,
           dob: formData.dob,
           profileImage: uploadedImageUrl,
@@ -231,6 +231,20 @@ export default function ProfilePage() {
     try {
       if (!formData.email && (!formData.currentPassword || !formData.newPassword)) {
         message.error("Nothing to update");
+        return;
+      }
+
+      if (formData.newPassword) {
+        const passwordError = getPasswordError(formData.newPassword);
+        if (passwordError) {
+          message.error(passwordError);
+          return;
+        }
+      }
+
+      const emailChanged = formData.email.trim().toLowerCase() !== (profile?.email || "").toLowerCase();
+      if ((emailChanged || formData.newPassword) && !formData.currentPassword) {
+        message.error("Enter your current password to save these changes");
         return;
       }
 
@@ -377,7 +391,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label>Phone</Label>
                 {isEditing ? (
-                  <Input value={formData.phone} onChange={(e:any) => handleInputChange("phone", e.target.value)} />
+                  <Input value={formData.phone} disabled />
                 ) : (
                   <div className="p-3 bg-gray-50 rounded-xl border-2 border-transparent">{profile.phone || "Not provided"}</div>
                 )}

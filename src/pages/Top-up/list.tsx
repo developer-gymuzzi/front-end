@@ -5,6 +5,8 @@ import { Eye } from "lucide-react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import TopupDetailsModal from "./TopupDetailsModal";
+import { getApiError } from "../../utils/apiError";
+import { message } from "antd";
 
 // ================= INTERFACES =================
 interface User {
@@ -70,6 +72,7 @@ export default function TopupList() {
       }
     } catch (error) {
       console.error(error);
+      message.error(getApiError(error, "Failed to load top-ups"));
     } finally {
       setLoading(false);
     }

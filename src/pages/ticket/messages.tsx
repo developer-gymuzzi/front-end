@@ -69,7 +69,7 @@ export default function ChatScreen() {
             const json = await res.json();
 
             if (!json.success) {
-                toast.error('Failed to load ticket');
+                toast.error(json.message || 'Failed to load ticket');
                 return;
             }
 
@@ -214,7 +214,7 @@ export default function ChatScreen() {
 
             const uploadData = await uploadRes.json();
             if (!uploadData.success) {
-                toast.error('Image upload failed');
+                toast.error(uploadData.message || 'Image upload failed');
                 return;
             }
 

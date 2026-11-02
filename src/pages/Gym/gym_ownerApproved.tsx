@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, IRootState } from '../../store';
-import { fetchGym, GymownerGymList } from '../../store/customerConfigSlice';
+import { GymownerGymList } from '../../store/customerConfigSlice';
 import axios from 'axios';
 import { message } from 'antd';
 import Swal from 'sweetalert2';
@@ -9,6 +9,8 @@ import { Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { Modal } from 'antd';
+import { getApiError } from '../../utils/apiError';
+import Cookies from 'js-cookie';
 
 const ApprovedGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
@@ -67,24 +69,18 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                 `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/approve/approveRequest`,
                 { gymId, approvalStatus },
                 {
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { token: Cookies.get('token'), 'Content-Type': 'application/json' },
                 }
             );
 
             if (data.success) {
                 message.success(data.message);
-                dispatch(
-                    fetchGym({
-                        page: currentPage,
-                        limit: pageSize,
-                        status: 'approved',
-                    })
-                );
+                dispatch(GymownerGymList({ page: currentPage, limit: pageSize, ...filters, status: 'approved' }));
             } else {
                 message.error(data.message);
             }
         } catch (error) {
-            message.error('Something went wrong');
+            message.error(getApiError(error));
         }
     };
 

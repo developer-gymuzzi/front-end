@@ -4,6 +4,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { message } from 'antd';
 import Filter from './Filters';
+import { getApiError } from '../../utils/apiError';
 
 interface User {
     _id: string;
@@ -108,7 +109,7 @@ const EarningsDashboard = () => {
             }
         } catch (err) {
             console.log(err);
-            message.error('Failed to load earnings');
+            message.error(getApiError(err, 'Failed to load earnings'));
         }
     };
 

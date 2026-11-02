@@ -10,6 +10,7 @@ import { message } from 'antd';
 import { Eye, MessageCircleMore, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Pagination } from '@nextui-org/react';
+import { getApiError } from '../../utils/apiError';
 
 export default function CompanyList() {
     const [tickets, setTickets] = useState<any[]>([]);
@@ -72,8 +73,8 @@ export default function CompanyList() {
             } else {
                 message.error('Failed to load tickets');
             }
-        } catch {
-            message.error('Something went wrong while fetching tickets');
+        } catch (error) {
+            message.error(getApiError(error, 'Something went wrong while fetching tickets'));
         } finally {
             setIsLoading(false);
         }
@@ -94,8 +95,8 @@ export default function CompanyList() {
             );
             await fetchTickets(currentPage, pageSize, appliedFilters);
             navigate(`/adminmessages/${id}`);
-        } catch {
-            message.error('Failed to open ticket');
+        } catch (error) {
+            message.error(getApiError(error, 'Failed to open ticket'));
         } finally {
             setOpeningTicketId(null);
         }
@@ -112,8 +113,8 @@ export default function CompanyList() {
             );
             message.success('Ticket closed successfully');
             await fetchTickets(currentPage, pageSize, appliedFilters);
-        } catch {
-            message.error('Failed to close ticket');
+        } catch (error) {
+            message.error(getApiError(error, 'Failed to close ticket'));
         } finally {
             setClosingTicketId(null);
         }

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, IRootState } from '../../store';
-import { fetchGym, GymownerGymList } from '../../store/customerConfigSlice';
+import { GymownerGymList } from '../../store/customerConfigSlice';
 import { Check, X, Eye } from 'lucide-react';
 import { message } from 'antd';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import { getApiError } from '../../utils/apiError';
+import Cookies from 'js-cookie';
 
 const PendingGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
@@ -39,7 +41,7 @@ const PendingGym = ({ filters }: { filters: any }) => {
                 `${import.meta.env.VITE_API_LIVEHOST}/v1/admin/approve/approveRequest`,
                 { gymId, approvalStatus },
                 {
-                    headers: {
+                    headers: { token: Cookies.get('token'),
                         'Content-Type': 'application/json',
                     },
                 }
@@ -47,12 +49,12 @@ const PendingGym = ({ filters }: { filters: any }) => {
 
             if (data.success) {
                 message.success(data.message);
-                dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'pending' }));
+                dispatch(GymownerGymList({ page: currentPage, limit: pageSize, ...filters, status: 'pending' }));
             } else {
                 message.error(data.message);
             }
         } catch (error) {
-            message.error('Something went wrong');
+            message.error(getApiError(error));
         }
     };
 

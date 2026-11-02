@@ -14,6 +14,7 @@ import {
 import { NavLink } from "react-router-dom"
 import axios from "axios"
 import Cookies from "js-cookie"
+import { getPasswordError } from "../../utils/apiError"
 
 /* ================= TYPES ================= */
 
@@ -77,6 +78,17 @@ export default function CrmPermissions() {
   /* ================= CREATE STAFF ================= */
   const createStaff = async () => {
     try {
+      const passwordError = getPasswordError(form.password)
+      if (passwordError) {
+        alert(passwordError)
+        return
+      }
+
+      if (!form.roleId) {
+        alert("Please select a role")
+        return
+      }
+
       const token = Cookies.get("token")
 
       const { data } = await axios.post(

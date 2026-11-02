@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { Check, X } from 'lucide-react';
+import { getApiError } from '../../utils/apiError';
 
 export default function PaymentRequestList() {
     const [requests, setRequests] = useState<any[]>([]);
@@ -52,7 +53,9 @@ export default function PaymentRequestList() {
 
             if (data && data.success === 1) {
                 setRequests(Array.isArray(data.data) ? data.data : []);
-                setTotalPages(data?.pagination?.totalPages || 1);
+                const pages = data?.pagination?.totalPages || 1;
+                setTotalPages(pages);
+                if (currentPage > pages) setCurrentPage(pages);
             } else {
                 setRequests([]);
                 setTotalPages(1);
@@ -104,7 +107,7 @@ export default function PaymentRequestList() {
                 Swal.fire('Error', data.message || 'Failed to update!', 'error');
             }
         } catch (error) {
-            Swal.fire('Error', 'Something went wrong', 'error');
+            Swal.fire('Error', getApiError(error), 'error');
         } finally {
             setActionLoading(null);
         }

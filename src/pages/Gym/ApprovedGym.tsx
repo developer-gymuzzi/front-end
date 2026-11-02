@@ -9,6 +9,7 @@ import { Eye, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QRCode } from 'react-qrcode-logo';
 import Cookies from 'js-cookie';
+import { getApiError } from '../../utils/apiError';
 
 const ApprovedGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
@@ -33,6 +34,13 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
             })
         );
     }, [dispatch, currentPage, pageSize, filters]);
+
+    // Acting on the last row of the last page leaves that page empty
+    useEffect(() => {
+        if (pagination?.totalPages && currentPage > pagination.totalPages) {
+            setCurrentPage(pagination.totalPages);
+        }
+    }, [pagination, currentPage]);
 
     const handlePageChange = (page: number) => {
         if (page !== currentPage) setCurrentPage(page);
@@ -67,6 +75,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                     fetchGym({
                         page: currentPage,
                         limit: pageSize,
+                        ...filters,
                         status: 'approved',
                     })
                 );
@@ -74,7 +83,7 @@ const ApprovedGym = ({ filters }: { filters: any }) => {
                 message.error(data.message);
             }
         } catch (error) {
-            message.error('Something went wrong');
+            message.error(getApiError(error));
         }
     };
 

@@ -4,7 +4,9 @@ import { X, Plus, Edit2, Save, ChevronDown, ChevronUp, MapPin, Phone, Mail, File
 import { useLocation } from 'react-router-dom';
 import { message } from 'antd';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { getApiError } from '../../utils/apiError';
 
 export default function CustomGymForm() {
     const [isEditing, setIsEditing] = useState(false);
@@ -344,6 +346,7 @@ export default function CustomGymForm() {
             const { data } = await axios.post(`${endpoint}/v1/admin/edit/editGym`, payload, {
                 headers: {
                     'Content-Type': 'application/json',
+                    token: Cookies.get('token'),
                 },
             });
 
@@ -372,7 +375,7 @@ export default function CustomGymForm() {
             }
         } catch (err: any) {
             console.error(err);
-            message.error(err.message || 'Something went wrong while updating the gym.');
+            message.error(getApiError(err, err.message || 'Something went wrong while updating the gym.'));
         }
     };
 
@@ -430,7 +433,10 @@ export default function CustomGymForm() {
 
         if (isEditing && gymId && imageId) {
             try {
-                const { data } = await axios.delete(`${endpoint}/v1/admin/edit/gymPic`, { data: body });
+                const { data } = await axios.delete(`${endpoint}/v1/admin/edit/gymPic`, {
+                    data: body,
+                    headers: { token: Cookies.get('token') },
+                });
 
                 if (data.success) {
                     message.success('Image deleted successfully');
@@ -441,7 +447,7 @@ export default function CustomGymForm() {
                 }
             } catch (err) {
                 console.error(err);
-                message.error('Something went wrong while deleting image');
+                message.error(getApiError(err, 'Something went wrong while deleting image'));
             }
         }
     };

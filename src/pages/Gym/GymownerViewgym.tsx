@@ -26,6 +26,7 @@ import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import { useMap } from "react-leaflet"
 import Cookies from "js-cookie"
+import { getApiError } from "../../utils/apiError"
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -38,13 +39,6 @@ export default function CustomGymForm() {
   const [activeSection, setActiveSection] = useState<string | null>("basic")
   const [showHistory, setShowHistory] = useState(false)
   const [cloudinaryIds, setCloudinaryIds] = useState<string[]>([])
-  const [showLocationChangeModal, setShowLocationChangeModal] = useState(false)
-  const [locationChangeRequest, setLocationChangeRequest] = useState({
-    lat: 0,
-    lon: 0,
-    description: "",
-    address: "",
-  })
 
   const endpoint = import.meta.env.VITE_API_LIVEHOST
   const token = Cookies.get("token")
@@ -115,12 +109,6 @@ export default function CustomGymForm() {
       setAmenities(gymData.amenities || [])
       setPhotos(gymData.gymphotos || [])
       setCloudinaryIds(gymData.cloudinary_public_id || [])
-      setLocationChangeRequest({
-        lat: gymData?.location?.coordinates?.[1] || 0,
-        lon: gymData?.location?.coordinates?.[0] || 0,
-        description: "",
-        address: "",
-      })
     }
   }, [gymData])
 
@@ -204,7 +192,7 @@ export default function CustomGymForm() {
       }
     } catch (err) {
       console.error(err)
-      message.error("Something went wrong while updating the gym.")
+      message.error(getApiError(err, "Something went wrong while updating the gym."))
     }
   }
 
@@ -233,7 +221,7 @@ export default function CustomGymForm() {
 
     if (isEditing && gymId && imageIds) {
       try {
-        const { data } = await axios.delete(`${endpoint}/v1/admin/edit/gymPic`, { data: body })
+        const { data } = await axios.delete(`${endpoint}/v1/admin/edit/gymPic`, { data: body, headers: { token } })
 
         if (data.success) {
           message.success("Image deleted successfully")
@@ -243,7 +231,7 @@ export default function CustomGymForm() {
           message.error(data.message || "Failed to delete image")
         }
       } catch (err) {
-        message.error("Something went wrong while deleting image")
+        message.error(getApiError(err, "Something went wrong while deleting image"))
       }
     }
   }
@@ -305,54 +293,6 @@ export default function CustomGymForm() {
     return null
   }
 
-  const [showRequestDropdown, setShowRequestDropdown] = useState(false)
-
-  const submitRequest = async () => {
-    try {
-      // Validate required fields
-      if (!locationChangeRequest.description.trim()) {
-        message.error("Description is required")
-        return
-      }
-
-      if (!locationChangeRequest.address.trim()) {
-        message.error("Address is required")
-        return
-      }
-
-      const requestData = {
-        description: locationChangeRequest.description,
-        address: locationChangeRequest.address,
-        gymId: gymData?._id,
-        lat: locationChangeRequest.lat.toString(),
-        lon: locationChangeRequest.lon.toString(),
-      }
-
-      const { data } = await axios.post(`${endpoint}/v1/gym/addReq`, requestData, {
-        headers: {
-          token: token,
-        },
-      })
-
-      if (data.success) {
-        message.success("Request submitted successfully!")
-        setShowLocationChangeModal(false)
-        // Reset the form
-        setLocationChangeRequest({
-          lat: formData.lat,
-          lon: formData.lon,
-          description: "",
-          address: "",
-        })
-      } else {
-        message.error(data.message || "Failed to submit request")
-      }
-    } catch (error) {
-      console.error("Error submitting request:", error)
-      message.error("Something went wrong while submitting the request")
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
@@ -382,40 +322,6 @@ export default function CustomGymForm() {
                 </button>
               )}
 
-              {/* Request Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowRequestDropdown(!showRequestDropdown)}
-                  className="px-5 py-2.5 rounded-lg font-medium flex items-center transition-all bg-yellow-500 text-white hover:bg-yellow-400"
-                >
-                  Request Change <ChevronDown className="h-4 w-4 ml-2" />
-                </button>
-
-                {/* Dropdown Menu */}
-                {showRequestDropdown && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                    <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                      <button
-                        onClick={() => {
-                          setShowRequestDropdown(false)
-                          setShowLocationChangeModal(true)
-                          setLocationChangeRequest({
-                            lat: formData.lat,
-                            lon: formData.lon,
-                            description: "",
-                            address: "",
-                          })
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                        role="menuitem"
-                      >
-                        Request for change location
-                      </button>
-                      {/* Add more request options here if needed */}
-                    </div>
-                  </div>
-                )}
-              </div>
 
               <button
                 onClick={() => setIsEditing(!isEditing)}
@@ -516,294 +422,6 @@ export default function CustomGymForm() {
         </div>
       )}
 
-      {/* Location Change Request Modal */}
-      {showLocationChangeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-800">Request Location Change</h2>
-                <button onClick={() => setShowLocationChangeModal(false)} className="text-gray-500 hover:text-gray-700">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              {/* Current Location Info */}
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-lg font-medium text-gray-800 mb-2">Current Location</h3>
-                <p className="text-sm text-gray-600 mb-1">
-                  <strong>Address:</strong> {formData.address}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong>Coordinates:</strong> {formData.lat.toFixed(6)}, {formData.lon.toFixed(6)}
-                </p>
-              </div>
-
-              {/* New Location Selection */}
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Select New Location</h3>
-
-                {/* Coordinate Inputs */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={locationChangeRequest.lat}
-                      onChange={(e) =>
-                        setLocationChangeRequest((prev) => ({
-                          ...prev,
-                          lat: Number.parseFloat(e.target.value) || 0,
-                        }))
-                      }
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      placeholder="Enter latitude"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={locationChangeRequest.lon}
-                      onChange={(e) =>
-                        setLocationChangeRequest((prev) => ({
-                          ...prev,
-                          lon: Number.parseFloat(e.target.value) || 0,
-                        }))
-                      }
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      placeholder="Enter longitude"
-                    />
-                  </div>
-                </div>
-
-                {/* Interactive Map */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Click on the map to select new coordinates
-                  </label>
-                  <div className="w-full h-96 border rounded-lg overflow-hidden relative">
-                    <MapContainer
-                      center={[locationChangeRequest.lat || formData.lat, locationChangeRequest.lon || formData.lon]}
-                      zoom={16}
-                      scrollWheelZoom={true}
-                      style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-                    >
-                      <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution="&copy; OpenStreetMap contributors"
-                      />
-                      <Marker
-                        position={[
-                          locationChangeRequest.lat || formData.lat,
-                          locationChangeRequest.lon || formData.lon,
-                        ]}
-                        draggable={true}
-                        eventHandlers={{
-                          dragend: (e) => {
-                            const marker = e.target
-                            const position = marker.getLatLng()
-                            setLocationChangeRequest((prev) => ({
-                              ...prev,
-                              lat: position.lat,
-                              lon: position.lng,
-                            }))
-                            message.success(`Location updated: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`)
-                          },
-                        }}
-                      >
-                        <Popup>
-                          <div className="text-center">
-                            <strong>Selected Location</strong>
-                            <br />
-                            Lat: {locationChangeRequest.lat.toFixed(6)}
-                            <br />
-                            Lon: {locationChangeRequest.lon.toFixed(6)}
-                            <br />
-                            <small className="text-gray-600">Click map or drag marker to change</small>
-                          </div>
-                        </Popup>
-                      </Marker>
-                      <MapClickHandler
-                        onLocationSelect={(lat, lng) => {
-                          setLocationChangeRequest((prev) => ({
-                            ...prev,
-                            lat: lat,
-                            lon: lng,
-                          }))
-                          message.success(`Location selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`)
-                        }}
-                      />
-                      <ResizeMapOnLoad />
-                    </MapContainer>
-
-                    {/* Enhanced Coordinate Overlay with Pin Status */}
-                    <div className="absolute top-3 left-3 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg p-3 shadow-lg border z-10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                        <div className="text-xs font-semibold text-gray-700">📍 Pin Location</div>
-                      </div>
-                      <div className="text-sm font-mono text-gray-900">Lat: {locationChangeRequest.lat.toFixed(6)}</div>
-                      <div className="text-sm font-mono text-gray-900">Lon: {locationChangeRequest.lon.toFixed(6)}</div>
-                      <div className="text-xs text-gray-500 mt-1">Click map or drag marker</div>
-                      <div className="text-xs text-blue-600 mt-1 font-medium">No image required</div>
-                    </div>
-
-                    {/* Pin Location Status */}
-                    <div className="absolute top-3 right-3 bg-green-50 border border-green-200 rounded-lg p-2 shadow-sm z-10">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4 text-green-600" />
-                        <span className="text-xs text-green-700 font-medium">Pin Active</span>
-                      </div>
-                    </div>
-
-                    {/* Quick Pin Actions */}
-                    <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLocationChangeRequest((prev) => ({
-                            ...prev,
-                            lat: formData.lat,
-                            lon: formData.lon,
-                          }))
-                          message.info("Pin reset to original location")
-                        }}
-                        className="bg-white hover:bg-gray-50 border border-gray-300 rounded-full p-2 shadow-lg transition-all"
-                        title="Reset pin to original location"
-                      >
-                        <MapPin className="h-4 w-4 text-gray-600" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const coords = `${locationChangeRequest.lat.toFixed(6)}, ${locationChangeRequest.lon.toFixed(6)}`
-                          navigator.clipboard.writeText(coords)
-                          message.success("Pin coordinates copied!")
-                        }}
-                        className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition-all"
-                        title="Copy pin coordinates"
-                      >
-                        <span className="text-xs font-bold">📋</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Location Actions */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const coords = `${locationChangeRequest.lat}, ${locationChangeRequest.lon}`
-                      navigator.clipboard.writeText(coords)
-                      message.success("Coordinates copied to clipboard!")
-                    }}
-                    className="px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
-                  >
-                    Copy Coordinates
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      window.open(
-                        `https://www.google.com/maps?q=${locationChangeRequest.lat},${locationChangeRequest.lon}`,
-                        "_blank",
-                      )
-                    }
-                    className="px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
-                  >
-                    View in Google Maps
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                          (position) => {
-                            setLocationChangeRequest((prev) => ({
-                              ...prev,
-                              lat: position.coords.latitude,
-                              lon: position.coords.longitude,
-                            }))
-                            message.success("Current location detected!")
-                          },
-                          () => {
-                            message.error("Unable to detect current location")
-                          },
-                        )
-                      } else {
-                        message.error("Geolocation is not supported by this browser")
-                      }
-                    }}
-                    className="px-3 py-1.5 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition"
-                  >
-                    Use Current Location
-                  </button>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Update Address</label>
-                <input
-                  value={locationChangeRequest.address}
-                  onChange={(e) =>
-                    setLocationChangeRequest((prev) => ({
-                      ...prev,
-                      address: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
-                  placeholder="Please provide a reason for requesting this location change..."
-                />
-              </div>
-
-              {/* Description Field */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description/Reason for Location Change
-                </label>
-                <textarea
-                  value={locationChangeRequest.description}
-                  onChange={(e) =>
-                    setLocationChangeRequest((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  rows={4}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
-                  placeholder="Please provide a reason for requesting this location change..."
-                />
-                <p className="text-xs text-gray-500 mt-1">{locationChangeRequest.description.length}/500 characters</p>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowLocationChangeModal(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={submitRequest}
-                  disabled={!locationChangeRequest.description.trim() || !locationChangeRequest.address.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-                >
-                  Submit Request
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

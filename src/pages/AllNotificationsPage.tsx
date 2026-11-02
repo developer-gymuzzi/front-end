@@ -31,7 +31,8 @@ export default function AllNotificationsPage() {
 
     const markRead = async (id: string) => {
         try {
-            await axios.put(`${endpoint}/v1/admin/list/markNotify/${id}`);
+            const token = Cookies.get('token');
+            await axios.put(`${endpoint}/v1/admin/list/markNotify/${id}`, {}, { headers: { token } });
             setNotifications(prev => prev.filter(n => n._id !== id)); // ✔ remove instantly
         } catch (err) {
             console.error("Failed to mark read");

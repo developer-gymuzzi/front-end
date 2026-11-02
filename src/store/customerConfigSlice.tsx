@@ -5,7 +5,8 @@ import Cookies from 'js-cookie';
 
 const endpoint = import.meta.env.VITE_API_LIVEHOST;
 const apiKey = import.meta.env.VITE_API_X_HEADER_KEY;
-const token = Cookies.get('token');
+// Read the token per request: a value saved when this file loads goes stale after login
+const getToken = () => Cookies.get('token');
 
 const initialState = {
     customers: [],
@@ -24,6 +25,10 @@ const initialState = {
         rejected: 0,
     },
     AdminReqList: [],
+    // Latest list request: tabs share one list, so a slow older response must not overwrite it
+    usersRequestId: '',
+    gymRequestId: '',
+    ownerGymRequestId: '',
     GymOwnergymCounts: {
         pending: 0,
         approved: 0,
@@ -55,7 +60,7 @@ export const fetchCustomers = createAsyncThunk('customer/fetchCustomers', async 
             headers: {
                 'x-api-key': apiKey,
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${getToken()}`,
             },
         });
 
@@ -88,7 +93,7 @@ export const fetchUsers = createAsyncThunk(
                 params: { page, limit, name, email, role },
                 headers: {
                     'Content-Type': 'application/json',
-                     token: token,
+                     token: getToken(),
                 },
             });
 
@@ -136,7 +141,7 @@ export const fetchGym = createAsyncThunk(
                 },
                 headers: {
                     'Content-Type': 'application/json',
-                     token: token,
+                     token: getToken(),
                 },
             });
 
@@ -162,7 +167,7 @@ export const activeGym = createAsyncThunk('customer/activeGym', async (gymId: st
             { gymId },
             {
                 headers: {
-                    token: token,
+                    token: getToken(),
                 },
             }
         );
@@ -202,7 +207,7 @@ export const GymownerGymList = createAsyncThunk(
                 },
                 headers: {
                     'Content-Type': 'application/json',
-                    token: token,
+                    token: getToken(),
                 },
             });
             if (data.success) {
@@ -222,10 +227,9 @@ export const GymownerGymList = createAsyncThunk(
 
 export const profile = createAsyncThunk('customer/profile', async (_, { rejectWithValue }) => {
     try {
-        const token = Cookies.get('token');
         const { data } = await axios.get(`${endpoint}/v1/auth/getProfile`, {
             headers: {
-                token: token,
+                token: getToken(),
             },
         });
 
@@ -243,25 +247,7 @@ export const requestList = createAsyncThunk('customer/requestList', async (_, { 
     try {
         const { data } = await axios.get(`${endpoint}/v1/gymOwner/listing/reqList`, {
             headers: {
-                token: token,
-            },
-        });
-
-        if (data.success) {
-            return data.data;
-        } else {
-            return rejectWithValue('Failed to fetch profile data.');
-        }
-    } catch (error: any) {
-        return rejectWithValue(error?.response?.data?.message || 'Error fetching profile data.');
-    }
-});
-
-export const AdminrequestList = createAsyncThunk('customer/AdminrequestList', async (_, { rejectWithValue }) => {
-    try {
-        const { data } = await axios.get(`${endpoint}/v1/admin/list/listingreq`, {
-            headers: {
-                token: token,
+                token: getToken(),
             },
         });
 
@@ -293,24 +279,29 @@ const customerSlice = createSlice({
                 state.loading = false;
                 message.error(action.payload as string);
             })
-            .addCase(fetchUsers.pending, (state) => {
+            .addCase(fetchUsers.pending, (state, action) => {
+                state.usersRequestId = action.meta.requestId;
                 state.loading = true;
                 state.error = null;
             })
             .addCase(fetchUsers.fulfilled, (state, action) => {
+                if (state.usersRequestId !== action.meta.requestId) return;
                 state.loading = false;
                 state.users = action.payload.users;
                 state.pagination = action.payload.pagination;
             })
             .addCase(fetchUsers.rejected, (state, action) => {
+                if (state.usersRequestId !== action.meta.requestId) return;
                 state.loading = false;
                 message.error(action.payload as string);
             })
-            .addCase(fetchGym.pending, (state) => {
+            .addCase(fetchGym.pending, (state, action) => {
+                state.gymRequestId = action.meta.requestId;
                 state.loading = true;
                 state.error = null;
             })
             .addCase(fetchGym.fulfilled, (state, action) => {
+                if (state.gymRequestId !== action.meta.requestId) return;
                 state.loading = false;
                 state.gym = action.payload.gyms;
                 state.pagination = action.payload.pagination;
@@ -321,6 +312,7 @@ const customerSlice = createSlice({
                 };
             })
             .addCase(fetchGym.rejected, (state, action) => {
+                if (state.gymRequestId !== action.meta.requestId) return;
                 state.loading = false;
                 message.error(action.payload as string);
             })
@@ -337,11 +329,13 @@ const customerSlice = createSlice({
                 state.loading = false;
                 message.error(action.payload as string);
             })
-            .addCase(GymownerGymList.pending, (state) => {
+            .addCase(GymownerGymList.pending, (state, action) => {
+                state.ownerGymRequestId = action.meta.requestId;
                 state.loading = true;
                 state.error = null;
             })
             .addCase(GymownerGymList.fulfilled, (state, action) => {
+                if (state.ownerGymRequestId !== action.meta.requestId) return;
                 state.loading = false;
                 state.GymownerGym = action.payload.gyms;
                 state.gymOwnerpagination = action.payload.pagination;
@@ -352,6 +346,7 @@ const customerSlice = createSlice({
                 };
             })
             .addCase(GymownerGymList.rejected, (state, action) => {
+                if (state.ownerGymRequestId !== action.meta.requestId) return;
                 state.loading = false;
                 message.error(action.payload as string);
             })
@@ -376,18 +371,6 @@ const customerSlice = createSlice({
                 state.requests = action.payload;
             })
             .addCase(requestList.rejected, (state, action) => {
-                state.loading = false;
-                message.error(action.payload as string);
-            })
-            .addCase(AdminrequestList.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(AdminrequestList.fulfilled, (state, action) => {
-                state.loading = false;
-                state.AdminReqList = action.payload;
-            })
-            .addCase(AdminrequestList.rejected, (state, action) => {
                 state.loading = false;
                 message.error(action.payload as string);
             });

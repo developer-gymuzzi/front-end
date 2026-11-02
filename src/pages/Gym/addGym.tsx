@@ -7,6 +7,7 @@ import MapModal from "./map-modal"
 import { message } from "antd"
 import axios from "axios"
 import Cookies from "js-cookie"
+import { getApiError } from '../../utils/apiError'
 
 const Button = ({
   children,
@@ -309,6 +310,12 @@ export default function GymRegistration() {
     license_no: "",
     gymtype: "",
     amenities: [] as string[],
+    price: "",
+    open: "05:00",
+    close: "22:00",
+    consent1: false,
+    consent2: false,
+    consent3: false,
   })
 
   const endpoint = import.meta.env.VITE_API_LIVEHOST
@@ -438,10 +445,33 @@ export default function GymRegistration() {
       case 3:
         return formData.pan && formData.gst && formData.license_no
       case 4:
-        return formData.gymtype
+        return (
+          formData.gymtype &&
+          Number(formData.price) > 0 &&
+          formData.open &&
+          formData.close &&
+          formData.open !== formData.close
+        )
+      case 5:
+        return formData.consent1 && formData.consent2 && formData.consent3
       default:
         return true
     }
+  }
+
+  const uploadPhoto = async (file: File) => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || ""
+    if (!cloudName) throw new Error("Photo upload is not configured")
+
+    const body = new FormData()
+    body.append("file", file)
+    body.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UNSIGNED_GYMPHOTOS || "unsigned_gymphotos")
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, { method: "POST", body })
+    if (!res.ok) throw new Error("Photo upload failed. Please try again.")
+
+    const json = await res.json()
+    return { url: json.secure_url as string, publicId: json.public_id as string }
   }
 
   const handleSubmit = async () => {
@@ -454,29 +484,35 @@ export default function GymRegistration() {
 
     try {
 
-      const submitData = new FormData()
+      const uploads = await Promise.all(selectedFiles.map(uploadPhoto))
 
-    Object.entries(formData).forEach(([key, value]) => {
-      if (key === "amenities" && Array.isArray(value)) {
-        value.forEach((amenity) => {
-          submitData.append("amenities", amenity);
-        });
-      } else {
-        submitData.append(key, typeof value === "string" ? value : String(value));
-      }
-    });
-
-
-      selectedFiles.forEach((file) => {
-        submitData.append("gymphotos", file)
-      })
-
-      const response = await axios.post(`${endpoint}/v1/gym/registerGym`, submitData, {
-        headers: {
-          token: token,
-          "Content-Type": "multipart/form-data",
+      const response = await axios.post(
+        `${endpoint}/v1/gym/registerGym`,
+        {
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          lat: formData.lat,
+          lon: formData.lon,
+          gst: formData.gst,
+          license_no: formData.license_no,
+          gymtype: formData.gymtype,
+          amenities: formData.amenities,
+          price: Number(formData.price),
+          operationHours: { open: formData.open, close: formData.close },
+          consent1: formData.consent1,
+          consent2: formData.consent2,
+          consent3: formData.consent3,
+          gymphotos: uploads.map((upload) => upload.url),
+          cloudinary_public_id: uploads.map((upload) => upload.publicId),
         },
-      })
+        {
+          headers: {
+            token: token,
+            "Content-Type": "application/json",
+          },
+        },
+      )
 
       if (response.data.success === 1) {
         message.success(response.data.message || "Gym registered successfully!")
@@ -493,6 +529,12 @@ export default function GymRegistration() {
           license_no: "",
           gymtype: "",
           amenities: [],
+          price: "",
+          open: "05:00",
+          close: "22:00",
+          consent1: false,
+          consent2: false,
+          consent3: false,
         })
         setSelectedFiles([])
         setPreviewUrls([])
@@ -502,11 +544,7 @@ export default function GymRegistration() {
       }
     } catch (error: any) {
       console.error("Registration error:", error)
-      if (error.response?.data?.message) {
-        message.error(error.response.data.message)
-      } else {
-        message.error("Something went wrong. Please try again.")
-      }
+      message.error(getApiError(error, error.message || undefined))
     } finally {
       setIsSubmitting(false)
     }
@@ -701,6 +739,37 @@ export default function GymRegistration() {
               </Select>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Price per visit (₹) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={(e: any) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
+                  placeholder="e.g. 150"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="open">Opens at *</Label>
+                <Input
+                  id="open"
+                  type="time"
+                  value={formData.open}
+                  onChange={(e: any) => setFormData((prev) => ({ ...prev, open: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="close">Closes at *</Label>
+                <Input
+                  id="close"
+                  type="time"
+                  value={formData.close}
+                  onChange={(e: any) => setFormData((prev) => ({ ...prev, close: e.target.value }))}
+                />
+              </div>
+            </div>
+
             <div className="space-y-3">
               <Label>Amenities</Label>
               <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
@@ -768,6 +837,26 @@ export default function GymRegistration() {
                   <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB each</p>
                 </Label>
               </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Agreements *</Label>
+              {[
+                { id: "consent1", text: "I agree to the terms and conditions of the platform" },
+                { id: "consent2", text: "I confirm that all information provided is accurate and up-to-date" },
+                { id: "consent3", text: "I authorize the platform to process payments and handle member data" },
+              ].map(({ id, text }) => (
+                <div key={id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={id}
+                    checked={formData[id as "consent1" | "consent2" | "consent3"]}
+                    onCheckedChange={(checked: boolean) => setFormData((prev) => ({ ...prev, [id]: checked }))}
+                  />
+                  <Label htmlFor={id} className="text-sm">
+                    {text}
+                  </Label>
+                </div>
+              ))}
             </div>
 
             {selectedFiles.length > 0 && (

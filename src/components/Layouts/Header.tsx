@@ -14,6 +14,7 @@ import IconMenu from '../Icon/IconMenu';
 import moment from 'moment';
 import { activeGym } from '../../store/customerConfigSlice';
 import Profile from './Profile';
+import { getApiError } from '../../utils/apiError';
 
 interface ProfileData {
     profileImage?: string;
@@ -85,14 +86,14 @@ const Header = () => {
                 setNotifications(data.data || []);
             }
         } catch (error) {
-            message.error('Failed to fetch notifications');
+            message.error(getApiError(error, 'Failed to fetch notifications'));
         }
     };
 
     const handleSingleNotificationClick = async (notificationId: string) => {
         try {
             const token = Cookies.get('token');
-             const { data } = await axios.put(`${endpoint}/v1/admin/list/markNotify/${notificationId}`, {
+             const { data } = await axios.put(`${endpoint}/v1/admin/list/markNotify/${notificationId}`, {}, {
                 headers: {
                     token: token,
                 },
@@ -101,7 +102,7 @@ const Header = () => {
             setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
              }
         } catch (error) {
-            message.error('Failed to mark as read');
+            message.error(getApiError(error, 'Failed to mark as read'));
         }
     };
 

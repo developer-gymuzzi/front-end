@@ -6,6 +6,7 @@ import Animation from './Animation';
 import { Button, message } from 'antd';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { getApiError } from '../../utils/apiError';
 
 export default function OtpVerification() {
     const [isLoading, setIsLoading] = useState(false);
@@ -137,8 +138,9 @@ export default function OtpVerification() {
                 navigate('/');
             }
         } catch (err) {
-            setError('Verification failed. Please try again.');
-            message.error('Something went wrong. Try again.');
+            const errorMessage = getApiError(err, 'Verification failed. Please try again.');
+            setError(errorMessage);
+            message.error(errorMessage);
         } finally {
             setIsLoading(false);
         }

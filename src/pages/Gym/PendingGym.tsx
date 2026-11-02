@@ -8,6 +8,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { getApiError } from '../../utils/apiError';
 
 const PendingGym = ({ filters }: { filters: any }) => {
     const dispatch: AppDispatch = useDispatch();
@@ -24,6 +25,13 @@ const PendingGym = ({ filters }: { filters: any }) => {
   useEffect(() => {
     dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters  , status: 'pending', }));
   }, [dispatch, currentPage, pageSize, filters]);
+
+    // Acting on the last row of the last page leaves that page empty
+    useEffect(() => {
+        if (pagination?.totalPages && currentPage > pagination.totalPages) {
+            setCurrentPage(pagination.totalPages);
+        }
+    }, [pagination, currentPage]);
 
     const handlePageChange = (page: number) => {
         if (page !== currentPage) setCurrentPage(page);
@@ -50,12 +58,12 @@ const PendingGym = ({ filters }: { filters: any }) => {
 
             if (data.success) {
                 message.success(data.message);
-                dispatch(fetchGym({ page: currentPage, limit: pageSize, status: 'pending' })); 
+                dispatch(fetchGym({ page: currentPage, limit: pageSize, ...filters, status: 'pending' })); 
             } else {
                 message.error(data.message);
             }
         } catch (error) {
-            message.error('Something went wrong');
+            message.error(getApiError(error));
         }
     };
 

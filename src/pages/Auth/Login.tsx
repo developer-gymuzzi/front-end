@@ -14,6 +14,7 @@ import Cookies from 'js-cookie';
 import IconEye from '../../components/Icon/IconEye';
 import { Mail, Lock, Eye, EyeOff, Dumbbell } from 'lucide-react';
 import verifyToken from '../../utils/verifyToken';
+import { getApiError } from '../../utils/apiError';
 const LoginBoxed = () => {
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const navigate = useNavigate();
@@ -100,7 +101,9 @@ const LoginBoxed = () => {
             }
         } catch (error) {
             console.error('Error during login:', error);
-            toast.error('Something went wrong. Please try again.');
+            const errorMessage = getApiError(error);
+            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setIsLoading(false);
         }
