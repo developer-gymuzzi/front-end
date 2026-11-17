@@ -32,6 +32,7 @@ const Request = lazy(() => import('../pages/Requests/list'));
 const AdminRequest = lazy(() => import('../pages/Requests/adminList'));
 const AllNotificationsPage = lazy(() => import('../pages/AllNotificationsPage'));
 const Topup = lazy(() => import('../pages/Top-up/list'));
+const RewardSettings = lazy(() => import('../pages/Setting/Rewards'));
 
 const routes = [
     {
@@ -229,6 +230,15 @@ const routes = [
     {
         path: '/timeprocessing',
         element: <Customertimetable />,
+        layout: 'default',
+    },
+    {
+        path: '/rewards',
+        element: (
+            <ProtectedRoute allowedRoles={['admin']}>
+                <RewardSettings />
+            </ProtectedRoute>
+        ),
         layout: 'default',
     },
     {

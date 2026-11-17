@@ -177,6 +177,19 @@ const Sidebar = () => {
                                         </li>
                                     )}
 
+                                    {/* ================= COINS & REWARDS ================= */}
+                                    {hasPermission('REWARDS_MANAGE') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/rewards" className="group" onClick={() => toggleMenu('')}>
+                                                <div className="flex items-center">
+                                                    <span className="ltr:pl-3 rtl:pr-3 sidebartext">
+                                                        {t('Coins & Rewards')}
+                                                    </span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+
                                     {/* ================= SETTINGS ================= */}
                                     {hasPermission('SETTINGS_VIEW') && (
                                         <li className="nav-item">
