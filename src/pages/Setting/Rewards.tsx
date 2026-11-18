@@ -17,6 +17,8 @@ type RewardsForm = {
     refereeCoins: string;
     gymVisitCoins: string;
     coinExpiryDays: string;
+    redeemEnabled: boolean;
+    minRedeemCoins: string;
     streakMilestones: Milestone[];
     rechargeTiers: Tier[];
 };
@@ -28,6 +30,8 @@ type RewardsApi = {
     refereeCoins: number;
     gymVisitCoins: number;
     coinExpiryDays: number;
+    redeemEnabled: boolean;
+    minRedeemCoins: number;
     streakMilestones: { days: number; coins: number }[];
     rechargeTiers: { minAmount: number; coins: number }[];
     updatedAt: string | null;
@@ -43,6 +47,8 @@ const toForm = (r: RewardsApi): RewardsForm => ({
     refereeCoins: String(r.refereeCoins),
     gymVisitCoins: String(r.gymVisitCoins),
     coinExpiryDays: String(r.coinExpiryDays),
+    redeemEnabled: r.redeemEnabled,
+    minRedeemCoins: String(r.minRedeemCoins),
     streakMilestones: r.streakMilestones.map((m) => ({ days: String(m.days), coins: String(m.coins) })),
     rechargeTiers: r.rechargeTiers.map((t) => ({ minAmount: String(t.minAmount), coins: String(t.coins) })),
 });
@@ -173,6 +179,7 @@ export default function RewardSettings() {
             ['refereeCoins', 'New user referral reward', 0, 100000],
             ['gymVisitCoins', 'Gym visit coins', 0, 100000],
             ['coinExpiryDays', 'Coin expiry days', 1, 3650],
+            ['minRedeemCoins', 'Minimum coins to convert', 1, 1000000],
         ];
 
         const out: any = {};
@@ -183,6 +190,8 @@ export default function RewardSettings() {
             }
             out[key] = n;
         }
+
+        out.redeemEnabled = form.redeemEnabled;
 
         const days = new Set<number>();
         out.streakMilestones = [];
@@ -279,6 +288,30 @@ export default function RewardSettings() {
                             Changing the rate changes the ₹ value of every coin users already hold, not just new ones.
                         </p>
                     )}
+                </Section>
+
+                {/* ================= COIN CONVERSION ================= */}
+                <Section title="Convert coins to wallet money" hint="Lets users turn their coins into wallet balance at the coin value above. Converted money can be spent at gyms like a top-up.">
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            className="h-5 w-5 accent-[#113354]"
+                            checked={form.redeemEnabled}
+                            onChange={(e) => setForm({ ...form, redeemEnabled: e.target.checked })}
+                        />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {form.redeemEnabled ? 'Users can convert coins' : 'Coin conversion is turned off'}
+                        </span>
+                    </label>
+                    <div className="grid sm:grid-cols-2 gap-4 mt-4">
+                        <NumberField
+                            label="Minimum coins per conversion"
+                            value={form.minRedeemCoins}
+                            onChange={setField('minRedeemCoins')}
+                            suffix="coins"
+                            helper={`Smallest conversion is worth ${formatRupees(toWhole(form.minRedeemCoins) ?? NaN, rate)}`}
+                        />
+                    </div>
                 </Section>
 
                 {/* ================= ONE-TIME & PER-VISIT ================= */}
